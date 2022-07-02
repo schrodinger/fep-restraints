@@ -11,15 +11,12 @@ fi
 echo "Extracting frames."
 EXAMPLE='example/Sim01/7DHI_Salbutamol_MDSim'
 mkdir -p example/frames
-$S/run read_frames_for_fep.py -c ${EXAMPLE}.cms -t ${EXAMPLE}_trj -n 5 55 555 -o example/frames
+$S/run extract_frames_as_cms.py -c ${EXAMPLE}.cms -t ${EXAMPLE}_trj -n 5 55 555 -o example/frames
 
-# Sanitize the frames
-#echo "Sanitizing frames."
-#$S/run sanitize_cms_for_reuse.py example/frames/*.cms
-
-# Convert the frames to input files for FEP+
+# Convert the frames to MAE files suitable for FEP+
 echo "Converting frames."
 for FRAME in example/frames/*.cms; do
 	OUT_FRAME=$(echo $FRAME | sed 's/\.cms//g' )
 	$S/run membrane_cms2fep.py -o ${OUT_FRAME}_pv.mae $FRAME
 done
+
