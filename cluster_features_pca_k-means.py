@@ -69,7 +69,8 @@ if __name__ == "__main__":
             cl_file_name += '_n%02i_s%02i_k%02i_%s'%(args.n_components, args.random_state, k, os.path.basename(infile))
             print('Writing cluster information to', cl_file_name) 
             output = pd.DataFrame()
-            output[infile] = clusters
+            output['Frame_ID'] = np.arange(len(clusters))
+            output['Cluster_ID'] = clusters
             output.to_csv(cl_file_name)
 
         # Write summary information
@@ -93,5 +94,5 @@ if __name__ == "__main__":
     ssd['Sum_Squ_Dist'] = sum_sqrd 
     ssd.to_csv(file_name_ssd, index=False)
 
-    # TODO: Create plots or save necessary detailed information
+    # TODO: Create plots or save
 

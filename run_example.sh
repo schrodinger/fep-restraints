@@ -25,6 +25,16 @@ echo "Calculating clusters via k-means"
 CLUSTERS="example/results/clusters_on_pca"
 $S/run cluster_features_pca_k-means.py -i $DIS -o $CLUSTERS
 
+# Write clusters as trajectories
+echo "Writing clusters as trajectories"
+EX_NAME='clusters_on_pca_n03_s42_k04_ca-dist_7DHI'
+mkdir -p example/cl_traj
+$S/run extract_clusters_as_trj.py \
+	-c example/Sim01/7DHI_Salbutamol_MDSim.cms \
+	-t example/Sim01/7DHI_Salbutamol_MDSim_trj \
+	-n example/results/${EX_NAME}_Sim01.csv \
+	-o example/cl_traj/${EX_NAME}
+
 # Write selected frames from a trajectory
 echo "Extracting frames."
 mkdir -p example/frames
