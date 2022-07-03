@@ -16,9 +16,14 @@ echo "Extracting C-alpha distances."
 mkdir -p example/results
 CHN="R"
 RES="109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316"
-OUT="example/results/ca-dist_7DHI_Sim01.csv"
+DIS="example/results/ca-dist_7DHI_Sim01.csv"
 $S/run read_ca-distances_from_trajectory.py \
-	-c ${TOP} -t ${TRJ} -l ${CHN} -r ${RES} -o ${OUT}
+	-c ${TOP} -t ${TRJ} -l ${CHN} -r ${RES} -o ${DIS}
+
+# Perform clustering in principal component space of the C-alpha distances
+echo "Calculating clusters via k-means"
+CLUSTERS="example/results/clusters.csv"
+$S/run cluster_features_pca_k-means.py -i $DIS -o $CLUSTERS
 
 # Write selected frames from a trajectory
 echo "Extracting frames."

@@ -45,7 +45,7 @@ def read_features_from_csv(csv_file):
         Data for the features. Format: [frames, frame_data].
 
     """ 
-    df = pd.read_csv(csv_file) # skip the index column
+    df = pd.read_csv(csv_file) 
     feature_names = list(df.keys()[1:]) # start from 1 to skip the time column
     feature_data = np.zeros([len(df),len(feature_names)])
     for i,f in enumerate(feature_names):
@@ -71,12 +71,15 @@ def read_features_from_csv_files(csv_names):
 
     """ 
     all_data = []
+    origin = []
     old_feat = None
     for i,csv in enumerate(csv_names):
         new_feat, new_data = read_features_from_csv(csv)
         all_data.append(new_data)
+        origin += [i for j in range(len(new_data))]
         if i > 0 and old_feat != new_feat:
             print('Warning: Inconsistent feature names!')
         old_feat = new_feat.copy()
     all_data = np.concatenate(all_data)
-    return new_feat, all_data
+    origin = np.array(origin, dtype=int)
+    return new_feat, all_data, origin
