@@ -64,4 +64,4 @@ if __name__ == "__main__":
             results[name] = dist_values
     else:
         results[distance_names[0]] = dists
-    results.to_csv(args.outputfile)
+    results.to_csv(args.outputfile, index=False)
