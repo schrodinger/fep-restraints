@@ -1,3 +1,4 @@
+import os.path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -35,10 +36,11 @@ if __name__ == "__main__":
     pc = pca.components_
     print(pca.explained_variance_ratio_) 
 
-    # Perform k-means clustering in PC space.
-    # Try various k values.
+    # Perform k-means clustering in PC space for various k values.
     sum_sqrd = []
-    for ik, k in enumerate(args.n_clusters):
+    for ik, k in enumerate(args.n_clusters):  
+
+        # Define the algorithm
         kmeans = KMeans(
             n_clusters = k, 
             init = 'k-means++', 
@@ -48,27 +50,43 @@ if __name__ == "__main__":
         pc_new = kmeans.fit_transform(pc.T)
         # Calculate the sum of squared distances for this k.
         sum_sqrd.append(kmeans.inertia_) 
+
         # Determine clusters and their centers.
         clusters = kmeans.fit_predict(pc.T)
         centers = kmeans.cluster_centers_
         sizes = [np.sum(clusters==ic) for ic in range(k)]
-        # Find centroids and their index and origin.
+        cids = np.arange(k)
+
+        # Find centroids and their indices and origin files.
         centroids = np.argmin(pc_new, axis=0)
         cc_orig_sim = origin[centroids]
-        cc_orig_idx = orig_id[centroids]
+        cc_orig_id = orig_id[centroids]
+        cc_orig_fn = [args.input_files[o] for o in cc_orig_sim]
+
         # Write information about these clusters to a csv file
-        file_name_k = args.output_base + '_n%02i_s%02i_k%02i.csv'%(args.n_components, args.random_state, k)
-        print('Writing cluster information to', file_name_k)
-        results = pd.DataFrame()
-        results['Cluster_ID'] = np.arange(k)
-        results['Size'] = sizes
-        results['Centroid_Original_File'] = [args.input_files[o] for o in cc_orig_sim]
-        results['Centroid_Original_Index'] = cc_orig_idx
-        results.to_csv(file_name_k, index=False)
-        print(cc_orig_sim, cc_orig_idx)
+        for infile in args.input_files:
+            cl_file_name = args.output_base
+            cl_file_name += '_n%02i_s%02i_k%02i_%s'%(args.n_components, args.random_state, k, os.path.basename(infile))
+            print('Writing cluster information to', cl_file_name) 
+            output = pd.DataFrame()
+            output[infile] = clusters
+            output.to_csv(cl_file_name)
+
+        # Write summary information
+        summary_name = args.output_base 
+        summary_name += '_n%02i_s%02i_k%02i_summary.csv'%(args.n_components, args.random_state, k)
+        print('Writing summary information to', summary_name)
+        output = pd.DataFrame()
+        results = [cids, sizes, cc_orig_fn, cc_orig_id]
+        columns = ['Cluster_ID', 'Size', 'Centroid_Original_File', 'Centroid_Original_Index']
+        for col, res in zip(columns, results):
+            output[col] = res
+        output.to_csv(summary_name, index=False)
+        print(output)
 
     # Write information about all k values in this study
-    file_name_ssd = args.output_base + '_n%02i_s%02i_ssd.csv'%(args.n_components, args.random_state)
+    file_name_ssd = args.output_base 
+    file_name_ssd += '_n%02i_s%02i_ssd.csv'%(args.n_components, args.random_state)
     print('Writing the sums of the squared distances to', file_name_ssd)
     ssd = pd.DataFrame()
     ssd['Num_Clusters'] = args.n_clusters
