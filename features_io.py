@@ -83,6 +83,6 @@ def read_features_from_csv_files(csv_names):
             print('Warning: Inconsistent feature names!')
         old_feat = new_feat.copy()
     all_data = np.concatenate(all_data)
-    orig_sim = np.array(orig_sim, dtype=int
-    orig_idx = np.array(orig_idx, dtype=int))
+    orig_sim = np.array(orig_sim, dtype=int)
+    orig_idx = np.array(orig_idx, dtype=int)
     return new_feat, all_data, orig_sim, orig_idx
