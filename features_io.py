@@ -71,15 +71,17 @@ def read_features_from_csv_files(csv_names):
 
     """ 
     all_data = []
-    origin = []
+    orig_sim = []
+    orig_idx = []
     old_feat = None
     for i,csv in enumerate(csv_names):
         new_feat, new_data = read_features_from_csv(csv)
         all_data.append(new_data)
-        origin += [i for j in range(len(new_data))]
+        orig_sim += [i for j in range(len(new_data))]
+        orig_idx += [j for j in range(len(new_data))]
         if i > 0 and old_feat != new_feat:
             print('Warning: Inconsistent feature names!')
         old_feat = new_feat.copy()
     all_data = np.concatenate(all_data)
-    origin = np.array(origin, dtype=int)
-    return new_feat, all_data, origin
+    orig_sim = np.array(orig_sim, dtype=int)
+    return new_feat, all_data, orig_sim, orig_idx
