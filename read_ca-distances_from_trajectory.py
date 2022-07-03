@@ -3,6 +3,7 @@
 import pandas as pd
 from schrodinger.application.desmond.packages import analysis
 from trajectory_io import load_trajectory, get_an_aid
+from features_io import write_features_to_csv
 
 
 def get_an_aid(cms_model, asl_string):
@@ -60,12 +61,4 @@ if __name__ == "__main__":
     #compute result
     dists = analysis.analyze(tr, *analyzers)
 
-    # create and write csv file
-    results = pd.DataFrame()
-    results['time (ps)'] = frame_time
-    if (len(distance_names) > 1):  # dists is a two dimensional array
-        for name, dist_values in zip(distance_names, dists):
-            results[name] = dist_values
-    else:
-        results[distance_names[0]] = dists
-    results.to_csv(args.outputfile, index=False)
+    write_features_to_csv(args.outputfile, dists, distance_names, frame_time)
