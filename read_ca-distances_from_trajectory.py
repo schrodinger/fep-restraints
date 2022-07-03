@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 
+import pandas as pd
+from schrodinger.application.desmond.packages import analysis
+from trajectory_io import load_trajectory, get_an_aid
+
+
 def get_an_aid(cms_model, asl_string):
     aid_list = cms_model.select_atom(asl_string)
     if (len(aid_list) != 1):
         raise Exception("The number of chosen atoms is %d."%(len(aid_list)))
     else:
         return(aid_list[0])
+
 
 if __name__ == "__main__":
     """ to calculate the distancses between one or multiple pairs of atoms from a trjactory 
@@ -18,10 +24,7 @@ if __name__ == "__main__":
     asn329 and asn310 (A), (res.num 329) AND (atom.ptype " CA ") AND (chain.name A), (res.num 310) AND (atom.ptype " CA ") AND (chain.name A)
     ----------------------------------------------------------------------------------------------------------------------------------------
     """
-    
-    from schrodinger.application.desmond.packages import analysis, traj, topo
-    import pandas as pd
-    
+       
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', dest='cms_file', type=str, help='cms file')
@@ -35,15 +38,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # load data
-    msys_model, cms_model = topo.read_cms(args.cms_file)
-    if ((not args.xtc_file) and (not args.trj_dir)):
-        raise Exception("Neither the xtc file nor the trajectory directory is found.")
-    elif (args.xtc_file and args.trj_dir):
-        raise Exception("Both the xtc file and the trajectory directory are found.")
-    elif (args.xtc_file):
-        tr = traj.read_traj(args.xtc_file)  # xtc format trajectory
-    else:
-        tr = traj.read_traj(args.trj_dir)  # trj format trajectory
+    msys_model, cms_model, tr = load_trajectory(args.cms_file, args.xtc_file, args.trj_dir)
                         
     # time
     frame_time = []

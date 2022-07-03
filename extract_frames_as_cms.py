@@ -21,5 +21,5 @@ if __name__ == "__main__":
     parser.add_argument('-o', dest='output_dir', type=str, help='name of the output dir', default='.')        
     args = parser.parse_args()
 
-    cms_model, trj = load_trajectory(args.cms_file, args.xtc_file, args.trj_dir)
+    msys_model, cms_model, trj = load_trajectory(args.cms_file, args.xtc_file, args.trj_dir)
     write_frames(cms_model, trj, args.frame_numbers, args.output_dir)

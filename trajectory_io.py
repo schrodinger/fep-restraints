@@ -22,7 +22,7 @@ def load_trajectory(cms_file, xtc_file, trj_dir):
         trj = traj.read_traj(xtc_file)  # xtc format trajectory
     else:
         trj = traj.read_traj(trj_dir)  # trj format trajectory
-    return cms_model, trj
+    return msys_model, cms_model, trj
 
 
 def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None):
