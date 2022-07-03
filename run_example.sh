@@ -27,13 +27,14 @@ $S/run cluster_features_pca_k-means.py -i $DIS -o $CLUSTERS
 
 # Write clusters as trajectories
 echo "Writing clusters as trajectories"
-EX_NAME='clusters_on_pca_n03_s42_k04_ca-dist_7DHI'
+EX_NAME='clusters_on_pca_n03_s42_k04'
 mkdir -p example/cl_traj
 $S/run extract_clusters_as_trj.py \
 	-c example/Sim01/7DHI_Salbutamol_MDSim.cms \
 	-t example/Sim01/7DHI_Salbutamol_MDSim_trj \
-	-n example/results/${EX_NAME}_Sim01.csv \
-	-o example/cl_traj/${EX_NAME}
+	-n example/results/${EX_NAME}_ca-dist_7DHI_Sim01.csv \
+	-o example/cl_traj/${EX_NAME}_ca-dist_7DHI \
+	-d example/results/${EX_NAME}_summary.csv
 
 # Write selected frames from a trajectory
 echo "Extracting frames."

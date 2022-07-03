@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     # Print some information
     print("Origin:")
-    for o in np.unique(origin):
+    for o in np.sort(np.unique(origin)):
         n_frames = np.sum(origin==o)
         top_file = args.input_files[o]
         print(" - %s: %5i frames"%(top_file, n_frames))
@@ -81,8 +81,8 @@ if __name__ == "__main__":
         summary_name += '_n%02i_s%02i_k%02i_summary.csv'%(args.n_components, args.random_state, k)
         print('Writing summary information to', summary_name)
         output = pd.DataFrame()
-        results = [cids, sizes, cc_orig_fn, cc_orig_id]
-        columns = ['Cluster_ID', 'Size', 'Centroid_Original_File', 'Centroid_Original_Index']
+        results = [cids, sizes, cc_orig_fn, cc_orig_sim, cc_orig_id]
+        columns = ['Cluster_ID', 'Size', 'Centroid_Original_File', 'COrig_File_ID', 'Centroid_Original_Index']
         for col, res in zip(columns, results):
             output[col] = res
         output.to_csv(summary_name, index=False)
