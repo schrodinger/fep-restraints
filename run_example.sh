@@ -22,7 +22,7 @@ $S/run read_ca-distances_from_trajectory.py \
 
 # Perform clustering in principal component space of the C-alpha distances
 echo "Calculating clusters via k-means"
-CLUSTERS="example/results/clusters.csv"
+CLUSTERS="example/results/clusters_on_pca"
 $S/run cluster_features_pca_k-means.py -i $DIS -o $CLUSTERS
 
 # Write selected frames from a trajectory
