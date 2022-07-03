@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from torch import _sobol_engine_initialize_state_
-from features_io import read_features_from_csv_files
+from io_features import read_features_from_csv_files
 
 if __name__ == "__main__":
     """ 

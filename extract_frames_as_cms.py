@@ -5,7 +5,7 @@ from schrodinger import structure
 import pandas as pd
 import os.path
 
-from trajectory_io import load_trajectory, write_frames
+from io_trajectory import load_trajectory, write_frames
 
 if __name__ == "__main__":
     """ 

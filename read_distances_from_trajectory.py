@@ -2,8 +2,8 @@
 
 import pandas as pd
 from schrodinger.application.desmond.packages import analysis
-from trajectory_io import load_trajectory, get_an_aid
-from features_io import write_features_to_csv
+from io_trajectory import load_trajectory, get_an_aid
+from io_features import write_features_to_csv
 
 if __name__ == "__main__":
     """ to calculate the distancses between one or multiple pairs of atoms from a trjactory 

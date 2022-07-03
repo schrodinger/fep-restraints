@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import os.path
 
-from trajectory_io import load_trajectory, write_frames, get_an_aid
+from io_trajectory import load_trajectory, write_frames, get_an_aid
       
 
 if __name__ == "__main__":

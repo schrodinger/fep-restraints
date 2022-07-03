@@ -2,8 +2,8 @@
 
 import pandas as pd
 from schrodinger.application.desmond.packages import analysis
-from trajectory_io import load_trajectory, get_an_aid
-from features_io import write_features_to_csv
+from io_trajectory import load_trajectory, get_an_aid
+from io_features import write_features_to_csv
 
 
 def get_an_aid(cms_model, asl_string):
