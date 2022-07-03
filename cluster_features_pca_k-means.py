@@ -34,6 +34,7 @@ if __name__ == "__main__":
     pca = PCA(n_components=args.n_components)
     pca.fit(data.T)
     pc = pca.components_
+    print('PC shape:', pc.shape)
     print(pca.explained_variance_ratio_) 
 
     # Perform k-means clustering in PC space for various k values.
@@ -47,7 +48,7 @@ if __name__ == "__main__":
             random_state = args.random_state
         )
         # Fit and transform the data to cluster-distance space.
-        pc_new = kmeans.fit_transform(pc.T)
+        cdist = kmeans.fit_transform(pc.T)
         # Calculate the sum of squared distances for this k.
         sum_sqrd.append(kmeans.inertia_) 
 
@@ -58,12 +59,12 @@ if __name__ == "__main__":
         cids = np.arange(k)
 
         # Find centroids and their indices and origin files.
-        centroids = np.argmin(pc_new, axis=0)
+        centroids = np.argmin(cdist, axis=0)
         cc_orig_sim = origin[centroids]
         cc_orig_id = orig_id[centroids]
         cc_orig_fn = [args.input_files[o] for o in cc_orig_sim]
 
-        # Write information about these clusters to a csv file
+        # Write information about these clusters and their components to a csv file
         for infile in args.input_files:
             cl_file_name = args.output_base
             cl_file_name += '_n%02i_s%02i_k%02i_%s'%(args.n_components, args.random_state, k, os.path.basename(infile))
@@ -71,6 +72,8 @@ if __name__ == "__main__":
             output = pd.DataFrame()
             output['Frame_ID'] = np.arange(len(clusters))
             output['Cluster_ID'] = clusters
+            for i, pci in enumerate(pc):
+                output['PC%02i'%(i+1)] = pci
             output.to_csv(cl_file_name)
 
         # Write summary information
