@@ -16,7 +16,7 @@ if __name__ == "__main__":
     
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', nargs='+', dest='cms_files', type=str, help='cms files')
+    parser.add_argument('-c', dest='cms_file', type=str, help='cms file')
     parser.add_argument('-t', nargs='+', dest='trj_files', type=str, help='trajecotry files or directories')    
     parser.add_argument('-n', nargs='+', dest='frame_number_files', type=str, help='files with frame numbers (zero-based) and properties')
     parser.add_argument('-p', dest='property', type=str, help='name of the column where the cluster ID is saved', default='Cluster_ID')
@@ -26,11 +26,10 @@ if __name__ == "__main__":
 
 
     # Write all CMS files
-    for cms in args.cms_files:
-        _, cms_model = topo.read_cms(cms)
-        #aid_list = cms_model.select_atom(args.selection)
-        with structure.StructureWriter(args.output_name+'.cms') as writer:
-            writer.append(cms_model.fsys_ct)
+    _, cms_model = topo.read_cms(args.cms_file)
+    #aid_list = cms_model.select_atom(args.selection)
+    with structure.StructureWriter(args.output_name+'.cms') as writer:
+        writer.append(cms_model.fsys_ct)
 
     # Find all cluster IDs
     if args.definitions_file is None:
