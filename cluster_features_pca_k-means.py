@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument('-i', dest='input_files', nargs='+', type=str, help='input csv files')
     parser.add_argument('-o', dest='output_base', type=str, help='base name of the output files', default='pca-clusters')
     parser.add_argument('-n', dest='n_components', type=int, help='number of top principal components to consider', default=3) 
-    parser.add_argument('-k', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4])     
+    parser.add_argument('-k', nargs='+', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4])     
     parser.add_argument('-s', dest='random_state', type=int, help='random state for k-means algorithm', default=42)      
     args = parser.parse_args()
 
