@@ -36,6 +36,13 @@ $S/run extract_clusters_as_trj.py \
 	-o example/cl_traj/${EX_NAME}_ca-dist_7DHI \
 	-d example/results/${EX_NAME}_summary.csv
 
+# Extract centroids
+$S/run extract_centroids.py \
+        -c example/Sim01/7DHI_Salbutamol_MDSim.cms \
+        -t example/Sim01/7DHI_Salbutamol_MDSim_trj \
+        -o example/cl_traj/${EX_NAME}_ca-dist_7DHI \
+        -d example/results/${EX_NAME}_summary.csv
+
 # Write selected frames from a trajectory
 echo "Extracting frames."
 mkdir -p example/frames

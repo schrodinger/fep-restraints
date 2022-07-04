@@ -31,8 +31,7 @@ if __name__ == "__main__":
     with structure.StructureWriter(args.output_name+'.cms') as writer:
         writer.append(cms_model.fsys_ct)
 
-
-    # Find all cluster IDs and write centroids if defined
+    # Find all cluster IDs
     if args.definitions_file is None:
         cl_ids = []
         for csv in args.frame_number_files:
@@ -42,15 +41,6 @@ if __name__ == "__main__":
     else:
         def_df = pd.read_csv(args.definitions_file)
         cl_ids = np.array(def_df['Cluster_ID']) 
-        # Write centroids
-        c_files = np.array(def_df['COrig_File_ID'])
-        c_frames = np.array(def_df['Centroid_Original_Index'])
-        for cl_id, c_file, c_frame in zip( cl_ids, c_files, c_frames ):
-            trj = traj.read_traj(args.trj_files[c_file])
-            out_dir = os.path.dirname(args.output_name)
-            out_fn = os.path.basename(args.output_name) + '_centroid%02i'%cl_id
-            write_frames(cms_model, trj, [c_frame], out_dir, frame_names=[out_fn])
-
 
     # Go through all cluster IDs
     for value in cl_ids:
