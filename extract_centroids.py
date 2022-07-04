@@ -16,7 +16,7 @@ if __name__ == "__main__":
     
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', dest='cms_file', type=str, help='cms file')
+    parser.add_argument('-c', nargs='+', dest='cms_files', type=str, help='cms files')
     parser.add_argument('-t', nargs='+', dest='trj_files', type=str, help='trajecotry files or directories')    
     parser.add_argument('-d', dest='definitions_file', type=str, help='csv file with definitions of cluster IDs, input files, and centroids. Input trajectories must be passed in the order that corresponds to the feature files', default=None)
     parser.add_argument('-o', dest='output_name', type=str, help='name of the output files')  
@@ -29,9 +29,9 @@ if __name__ == "__main__":
     c_frames = np.array(def_df['Centroid_Original_Index'])
 
     # Get the trajectory and save the frame with the centroid
-    msys_model, cms_model = topo.read_cms(args.cms_file)
     for cl_id, c_file, c_frame in zip( cl_ids, c_files, c_frames ):
+        _, top = topo.read_cms(args.cms_files[c_file])
         trj = traj.read_traj(args.trj_files[c_file])
         out_dir = os.path.dirname(args.output_name)
         out_fn = os.path.basename(args.output_name) + '_centroid%02i'%cl_id
-        write_frames(cms_model, trj, [c_frame], out_dir, frame_names=[out_fn])
+        write_frames(top, trj, [c_frame], out_dir, frame_names=[out_fn])
