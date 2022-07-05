@@ -41,27 +41,20 @@ if __name__ == "__main__":
     else:
         def_df = pd.read_csv(args.definitions_file)
         cl_ids = np.array(def_df['Cluster_ID']) 
+    print('Cluster IDs:', cl_ids)
 
     # Go through all cluster IDs
     for value in cl_ids:
-        # Find the numbers of the frames in the cluster
-        frame_numbers = []
-        for csv in args.frame_number_files:
-            frame_num_csv = []
+        # Find the frames in the cluster
+        frame_list = []
+        for csv, trj in zip(args.frame_number_files, args.trj_files):
             num_df = pd.read_csv(csv)
             clust_id = num_df[args.property]
-            frame_id = np.array(num_df.index)
-            for fr, cl in zip(frame_id, clust_id):
-                if cl == value:
-                    frame_num_csv.append(fr)
-            frame_numbers.append(frame_num_csv)
-        # Find and write the frames corresponding to the selected numbers 
-        frame_list = []
-        for trj, num in zip( args.trj_files, frame_numbers ):
             trajectory = traj.read_traj(trj)
-            for f, frame in enumerate(trajectory):
-                # Only proceed if the current frame is among the selected
-                if f in num:
+            print( 'Length of CSV file:', len(clust_id), ' Length of trajectory:', len(trajectory))
+            assert len(clust_id) == len(trajectory)
+            for clid, frame in zip(clust_id, trajectory):
+                if clid == value:
                     frame_list.append(frame)
         traj_name = args.output_name+'_cluster%02i'%value+'.xtc'
         traj.write_traj(frame_list, traj_name)
