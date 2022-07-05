@@ -28,7 +28,6 @@ if __name__ == "__main__":
     _, cms_model_ref = topo.read_cms(args.reference_fn) 
     aid_list_ref = cms_model_ref.select_atom(args.reference_asl) 
     coords_ref = cms_model_ref.getXYZ()[aid_list_ref]
-    print('Reference coordinate:', coords_ref)
 
     # Create list in which to store the distances
     distances = []
@@ -44,7 +43,6 @@ if __name__ == "__main__":
         # Loop through trajectory
         model = cms_model.copy()
         for f, frame in enumerate(trajectory):
-            print('Frame:', frame)
             topo.update_ct(model.fsys_ct, model, frame)
 
             # TODO: Align frame to reference structure
@@ -57,6 +55,8 @@ if __name__ == "__main__":
     # TODO: Write RMSF on average structure
     # TODO: Write RMSF on reference structure
      
-    with structure.StructureWriter(args.output_name+'.cms') as writer:
+    with structure.StructureWriter(args.output_filename+'.cms') as writer:
         writer.append(cms_model.fsys_ct)
+        for st in cms_model.comp_ct:
+            writer.append(st)
 

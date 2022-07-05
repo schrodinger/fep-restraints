@@ -56,9 +56,10 @@ CMS=example/cl_traj/${EX_NAME}_ca-dist_7DHI.cms
 for CLUSTER in 00 01 02 03; do
 	REF="example/cl_traj/${EX_NAME}_ca-dist_7DHI_centroid${CLUSTER}.cms"
 	TRJ="example/cl_traj/${EX_NAME}_ca-dist_7DHI_cluster${CLUSTER}.xtc"
+	OUT="example/cl_traj/${EX_NAME}_ca-dist_7DHI_cluster${CLUSTER}_rmsf"
 	$S/run calculate_rmsf_from_trajectory.py \
-		-c "$CMS" -t "$TRJ" -s "$SEL" \
-		--ref_file $REF --ref_sel "$SEL" 
+		-c "$CMS" -t "$TRJ" -s "$SEL" -o "$OUT"\
+		--ref_file "$REF" --ref_sel "$SEL" 
 done
 
 # Write selected frames from a trajectory
