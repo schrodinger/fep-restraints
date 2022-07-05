@@ -23,6 +23,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     names, data, origin, orig_id = read_features_from_csv_files(args.input_files)
+    print(origin)
 
     # Print some information
     print("Origin:")
@@ -66,13 +67,14 @@ if __name__ == "__main__":
         cc_orig_fn = [args.input_files[o] for o in cc_orig_sim]
 
         # Write information about these clusters and their components to a csv file
-        for infile in args.input_files:
+        for ii, infile in enumerate(args.input_files):
             cl_file_name = args.output_base
             cl_file_name += '_n%02i_s%02i_k%02i_%s'%(args.n_components, args.random_state, k, os.path.basename(infile))
             print('Writing cluster information to', cl_file_name) 
+            is_from_origin = origin==ii
             output = pd.DataFrame()
-            output['Frame_ID'] = np.arange(len(clusters))
-            output['Cluster_ID'] = clusters
+            output['Frame_ID'] = np.arange(np.sum(is_from_origin))
+            output['Cluster_ID'] = clusters[is_from_origin]
             if args.write_pc:
                 for i, pci in enumerate(pc):
                     output['PC%02i'%(i+1)] = pci
