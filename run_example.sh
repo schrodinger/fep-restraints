@@ -8,7 +8,7 @@ else
 fi
 
 EXAMPLE='example/Sim01/7DHI_Salbutamol_MDSim'
-TOP=${EXAMPLE}.cms
+TOP=${EXAMPLE}-out.cms
 TRJ=${EXAMPLE}_trj
 
 # Read desired C-alpha distances from a trajectory
@@ -30,7 +30,7 @@ echo "Writing clusters as trajectories"
 EX_NAME='clusters_on_pca_n03_s42_k04'
 mkdir -p example/cl_traj
 $S/run extract_clusters_as_trj.py \
-	-c example/Sim01/7DHI_Salbutamol_MDSim.cms \
+	-c example/Sim01/7DHI_Salbutamol_MDSim-out.cms \
 	-t example/Sim01/7DHI_Salbutamol_MDSim_trj \
 	-n example/results/${EX_NAME}_ca-dist_7DHI_Sim01.csv \
 	-o example/cl_traj/${EX_NAME}_ca-dist_7DHI \
@@ -43,15 +43,33 @@ $S/run extract_centroids.py \
         -o example/cl_traj/${EX_NAME}_ca-dist_7DHI \
         -d example/results/${EX_NAME}_summary.csv
 
+echo "Converting centroids"
+for FRAME in example/cl_traj/*centroid*.cms; do
+       OUT_FRAME=$(echo $FRAME | sed 's/\.cms//g' )
+       $S/run membrane_cms2fep.py -o ${OUT_FRAME}_pv.mae $FRAME
+done
+
+# Calculate RMSF of each cluster
+SEL="backbone and chain ${CHN}"
+#SEL="chain $CHN backbone and at.name CA and res.num $RES"
+CMS=example/cl_traj/${EX_NAME}_ca-dist_7DHI.cms
+for CLUSTER in 00 01 02 03; do
+	REF="example/cl_traj/${EX_NAME}_ca-dist_7DHI_centroid${CLUSTER}.cms"
+	TRJ="example/cl_traj/${EX_NAME}_ca-dist_7DHI_cluster${CLUSTER}.xtc"
+	$S/run calculate_rmsf_from_trajectory.py \
+		-c "$CMS" -t "$TRJ" -s "$SEL" \
+		--ref_file $REF --ref_sel "$SEL" 
+done
+
 # Write selected frames from a trajectory
-echo "Extracting frames."
-mkdir -p example/frames
-$S/run extract_frames_as_cms.py -c ${EXAMPLE}.cms -t ${EXAMPLE}_trj -n 5 55 555 -o example/frames
+#echo "Extracting frames."
+#mkdir -p example/frames
+#$S/run extract_frames_as_cms.py -c ${EXAMPLE}.cms -t ${EXAMPLE}_trj -n 5 55 555 -o example/frames
 
 # Convert the frames to MAE files suitable for FEP+
-echo "Converting frames."
-for FRAME in example/frames/*.cms; do
-	OUT_FRAME=$(echo $FRAME | sed 's/\.cms//g' )
-	$S/run membrane_cms2fep.py -o ${OUT_FRAME}_pv.mae $FRAME
-done
+#echo "Converting frames."
+#for FRAME in example/frames/*.cms; do
+#	OUT_FRAME=$(echo $FRAME | sed 's/\.cms//g' )
+#	$S/run membrane_cms2fep.py -o ${OUT_FRAME}_pv.mae $FRAME
+#done
 
