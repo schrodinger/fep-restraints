@@ -50,13 +50,12 @@ for FRAME in example/cl_traj/*centroid*.cms; do
 done
 
 # Calculate RMSF of each cluster
-SEL="backbone and chain ${CHN}"
-#SEL="chain $CHN backbone and at.name CA and res.num $RES"
+SEL="(res.num ${RES}) AND (atom.ptype \" CA \") AND (chain.name ${CHN})"
 CMS=example/cl_traj/${EX_NAME}_ca-dist_7DHI.cms
 for CLUSTER in 00 01 02 03; do
 	REF="example/cl_traj/${EX_NAME}_ca-dist_7DHI_centroid${CLUSTER}.cms"
 	TRJ="example/cl_traj/${EX_NAME}_ca-dist_7DHI_cluster${CLUSTER}.xtc"
-	OUT="example/cl_traj/${EX_NAME}_ca-dist_7DHI_cluster${CLUSTER}_rmsf"
+	OUT="example/cl_traj/${EX_NAME}_ca-dist_7DHI_cluster${CLUSTER}"
 	$S/run calculate_rmsf_from_trajectory.py \
 		-c "$CMS" -t "$TRJ" -s "$SEL" -o "$OUT"\
 		--ref_file "$REF" --ref_sel "$SEL" 
