@@ -22,6 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', dest='property', type=str, help='name of the column where the cluster ID is saved', default='Cluster_ID')
     parser.add_argument('-d', dest='definitions_file', type=str, help='csv file with definitions of cluster IDs, input files, and centroids. Input trajectories must be passed in the order that corresponds to the feature files', default=None)
     parser.add_argument('-o', dest='output_name', type=str, help='name of the output files')  
+    parser.add_argument('-s', dest='selection', type=str, help='select which atoms to write', default='protein and ligand')
     args = parser.parse_args()
 
 
