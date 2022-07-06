@@ -9,19 +9,37 @@ import os.path
 from io_trajectory import load_trajectory, write_frames, get_an_aid
 
 
-def write_frame(cms_model, frame, out_fname):
-    model = cms_model.copy()   
-    for i, ct in enumerate(model.comp_ct):
-        ct_aids = model.get_fullsys_ct_atom_index_range(i)
-        ct_gids = model.convert_to_gids(ct_aids, with_pseudo=False)
-        topo.update_ct(ct, model, frame, is_fullsystem=False, allaid_gids=ct_gids)
-    model.synchronize_fsys_ct()
+def write_frame(out_fname, cms_model, frame, sigma=None):
+    model = cms_model.copy()
+    if frame is not None:      
+        for i, ct in enumerate(model.comp_ct):
+            ct_aids = model.get_fullsys_ct_atom_index_range(i)
+            ct_gids = model.convert_to_gids(ct_aids, with_pseudo=False)
+            topo.update_ct(ct, model, frame, is_fullsystem=False, allaid_gids=ct_gids)
+        model.synchronize_fsys_ct()
+    # Add the RMSF as the atom sigma
+    if sigma is not None:
+        for a, atom in enumerate(model.fsys_ct.atom):
+            atom.property['r_desmond_sigma'] = sigma[a]
     # Write the structure to the designated name
     with structure.StructureWriter(out_fname) as writer:
         writer.append(model.fsys_ct)
         for st in model.comp_ct:
             writer.append(st)
     return model
+
+
+def write_coordinates(out_fname, cms_model, xyz, sigma=None):
+    model = cms_model.copy()  
+    # Update the coordinates. 
+    model.fsys_ct.setXYZ(xyz)
+    # Add the RMSF as the atom sigma
+    if sigma is not None:
+        for a, atom in enumerate(model.fsys_ct.atom):
+            atom.property['r_desmond_sigma'] = sigma[a]
+    # Write the structure to the designated name.
+    with structure.StructureWriter(out_fname) as writer:
+        writer.append(model.fsys_ct)
 
 
 if __name__ == "__main__":
@@ -39,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument('--ref_sel', dest='reference_asl', type=str, help='selection for the reference file')
     args = parser.parse_args()
 
-
+    # Read the reference structure
     _, cms_model_ref = topo.read_cms(args.reference_fn) 
     aidlist_ref = cms_model_ref.select_atom(args.reference_asl) 
     indices_ref = [aid-1 for aid in aidlist_ref]
@@ -73,27 +91,18 @@ if __name__ == "__main__":
             squared_distances.append(np.mean((pos_new[indices_write]-pos_all[indices_write])**2,axis=1))
     pos_sel_aligned = np.array(pos_sel_aligned)
     squared_distances = np.array(squared_distances)
-    print(pos_sel_aligned.shape)
-    print(squared_distances.shape)
 
     # Calculate the average position of each selected atom
     pos_average = np.mean(pos_sel_aligned, axis=0)
-    print(pos_average.shape)
 
     # Calculate the RMSF for each atom
     rmsf_per_atom = np.sqrt(np.mean(squared_distances, axis=0))
     rmsd_per_frame = np.sqrt(np.mean(squared_distances, axis=1))
     
     # Write RMSF on average structure
-    out_fname_avg = args.output_filename+'_rmsf_avg.cms'
-    write_frame(cms_model, frame, out_fname_avg)
+    out_fn_avg = args.output_filename+'_rmsf_avg.cms'
+    write_coordinates(out_fn_avg, cms_model, pos_average, sigma=rmsf_per_atom)
     
     # Write RMSF on reference structure
-    out_fname_ref = args.output_filename+'_rmsf_ref.cms'
-    write_frame(cms_model, frame, out_fname_ref)
-
-    # TODO:
-    # - write RMSF to averaged structure
-    # - write RMSF to reference structure
-
-
+    out_fn_ref = args.output_filename+'_rmsf_ref.cms'
+    write_frame(out_fn_ref, cms_model_ref, frame=None, sigma=rmsf_per_atom)
