@@ -51,6 +51,7 @@ done
 
 # Calculate RMSF of each cluster
 SEL="(res.num ${RES}) AND (atom.ptype \" CA \") AND (chain.name ${CHN})"
+#WRITE="(atom.ptype \" CA \") AND (chain.name ${CHN})"
 CMS=example/cl_traj/${EX_NAME}_ca-dist_7DHI.cms
 for CLUSTER in 00 01 02 03; do
 	REF="example/cl_traj/${EX_NAME}_ca-dist_7DHI_centroid${CLUSTER}.cms"
