@@ -72,15 +72,14 @@ if __name__ == "__main__":
     # Read the reference structure
     _, cms_model_ref = topo.read_cms(args.reference_fn) 
     aidlist_ref = cms_model_ref.select_atom(args.reference_asl) 
-    aidlist_ref_write = cms_model_ref.select_atom('all') # Other selections do not work yet.
-    indices_ref = [aid-1 for aid in aidlist_ref]
-    pos_ref = cms_model_ref.getXYZ()[aidlist_ref]
+    gidlist_ref = topo.aids2gids(cms_model_ref, aidlist_ref, include_pseudoatoms=False)
+    pos_ref = cms_model_ref.getXYZ()[gidlist_ref]
 
     # Load selection files
     with open(args.sel_file) as sf:
-        selections_align = [line for line in sf]
+        selections_align = [line.rstrip() for line in sf]
     with open(args.write_sel_file) as sf:
-        selections_write = [line for line in sf]
+        selections_write = [line.rstrip() for line in sf]
 
     # Create list in which to store the new positions and distances
     pos_sel_aligned = []
@@ -93,10 +92,10 @@ if __name__ == "__main__":
         trajectory = traj.read_traj(trj)
         print('Alignment selection:', str(sel_align))
         aidlist_align = cms_model.select_atom(str(sel_align))
+        gidlist_align = topo.aids2gids(cms_model, aidlist_align, include_pseudoatoms=False)
         print('Output Selection:', str(sel_write))
         aidlist_write = cms_model.select_atom(str(sel_write)) 
-        indices_align = [aid-1 for aid in aidlist_align]
-        indices_write = [aid-1 for aid in aidlist_write]
+        gidlist_write = topo.aids2gids(cms_model, aidlist_write, include_pseudoatoms=False)
         # Loop through trajectory
         model = cms_model.copy()
         ct = model.fsys_ct
@@ -105,11 +104,11 @@ if __name__ == "__main__":
             topo.update_ct(ct, model, frame)
             # Align frame to reference structure
             pos_all = ct.getXYZ()
-            pos_sel = pos_all[indices_align]
+            pos_sel = pos_all[gidlist_align]
             pos_new = analysis.align_pos(pos_all, pos_sel, pos_ref)
             # Calculate distances to reference structure and append them to the list
-            pos_sel_aligned.append(pos_new[indices_write])
-            squared_distances.append(np.mean((pos_new[indices_write]-pos_all[indices_write])**2,axis=1))
+            pos_sel_aligned.append(pos_new[gidlist_write])
+            squared_distances.append(np.mean((pos_new[gidlist_write]-pos_all[gidlist_write])**2,axis=1))
     pos_sel_aligned = np.array(pos_sel_aligned)
     squared_distances = np.array(squared_distances)
 
@@ -119,6 +118,9 @@ if __name__ == "__main__":
     # Calculate the RMSF for each atom
     rmsf_per_atom = np.sqrt(np.mean(squared_distances, axis=0))
     rmsd_per_frame = np.sqrt(np.mean(squared_distances, axis=1))
+    
+    output = pd.DataFrame(rmsf_per_atom)
+    output.to_csv(args.output_filename+'.csv')
     
     # Write RMSF on reference structure
     #out_fn_ref = args.output_filename+'_rmsf_ref.cms'
