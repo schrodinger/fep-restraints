@@ -87,6 +87,10 @@ if __name__ == "__main__":
         output = pd.DataFrame()
         results = [cids, sizes, cc_orig_fn, cc_orig_sim, cc_orig_id]
         columns = ['Cluster_ID', 'Size', 'Centroid_Original_File', 'COrig_File_ID', 'Centroid_Original_Index']
+        if args.write_pc:
+            for i in range(len(centers[0])):
+                columns += ['Center_PC%02i'%(i+1)]
+                results += [centers[:,i]]
         for col, res in zip(columns, results):
             output[col] = res
         output.to_csv(summary_name, index=False)
@@ -100,6 +104,3 @@ if __name__ == "__main__":
     ssd['Num_Clusters'] = args.n_clusters
     ssd['Sum_Squ_Dist'] = sum_sqrd 
     ssd.to_csv(file_name_ssd, index=False)
-
-    # TODO: Create plots or save
-
