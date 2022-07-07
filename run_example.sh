@@ -9,28 +9,14 @@ fi
 scp -r boltio:/nfs/working/scidev/voegele/GPCR-Functional-Response/B2AR/analysis/definitions/restraints_*.txt example/
 
 # The systems to analyze
-SYSTEMS="2RH1_Carazolol  3P0G_BI-167107  5JQH_Carazolol  7DHI_Salbutamol"
-
-# Write common subsets of the trajectories, to be used for RMSF-restraints
-mkdir -p example/subset 
-SYSTEMS="2RH1_Carazolol  3P0G_BI-167107  5JQH_Carazolol  7DHI_Salbutamol"
-for SYS in $SYSTEMS; do
-	CMS="example/Sim01/${SYS}_MDSim-out.cms"
-	TRJ="example/Sim01/${SYS}_MDSim_trj"
-	OUT="example/subset/${SYS}_MDSim_subset"
-	echo $SYS
-	SEL="$(grep $SYS example/restraints_subset_selections.txt | sed "s/${SYS}: //g")"
-	echo "Selecting the subsystem: $SEL"
-	$S/run trj_extract_subsystem.py "$CMS" "$OUT" -t "$TRJ" -asl "$SEL"
-done
+SYSTEMS="2RH1_Carazolol 3P0G_BI-167107 5JQH_Carazolol 7DHI_Salbutamol"
 
 # Read desired C-alpha distances from a trajectory
 echo "Extracting C-alpha distances."
 mkdir -p example/results
 for SYS in $SYSTEMS; do
-	EXAMPLE="example/Sim01/${SYS}_MDSim"
-	TOP=${EXAMPLE}-out.cms
-	TRJ=${EXAMPLE}_trj
+	TOP=example/Sim01/${SYS}_MDSim-out.cms
+	TRJ=example/Sim01/${SYS}_MDSim_trj
 	CHN=$(grep $SYS example/restraints_bindingpocket_chains.txt | sed "s/${SYS}: //g")
 	RES=$(grep $SYS example/restraints_bindingpocket_residues.txt | sed "s/${SYS}: //g")
 	DIS="example/results/ca-dist_${SYS}.csv"
@@ -53,19 +39,11 @@ mkdir -p example/cl_traj
 EX_NAME='clusters_on_pca_n03_s42_k04'
 for SYS in $SYSTEMS; do
 	$S/run extract_clusters_as_trj.py \
-	-c example/subset/${SYS}_MDSim_subset-out.cms \
-	-t example/subset/${SYS}_MDSim_subset_trj \
+	-c example/Sim01/${SYS}_MDSim-out.cms \
+	-t example/Sim01/${SYS}_MDSim_trj \
 	-n example/results/${EX_NAME}_ca-dist_${SYS}.csv \
 	-o example/cl_traj/${EX_NAME}_ca-dist_${SYS} \
 	-d example/results/${EX_NAME}_summary.csv
-done
-
-# Concatenate clusters
-REFSYS="2RH1_Carazolol"
-for CLUSTER in 00 01 02 03; do
-	BASE=example/cl_traj/${EX_NAME}_ca-dist
-	$S/run trj_merge.py ${BASE}_${REFSYS}.cms ${BASE}_*_cluster${CLUSTER}.xtc \
-		-o example/cl_traj/${EX_NAME}_ca-dist_cluster${CLUSTER}
 done
 
 # Extract centroids
@@ -88,14 +66,6 @@ for FRAME in example/cl_traj/*centroid*.cms; do
        $S/run membrane_cms2fep.py -o ${OUT_FRAME}_pv.mae $FRAME
 done
 
-# Calculate RMSF of each cluster
-REFCMS=example/cl_traj/${EX_NAME}_ca-dist_${REFSYS}.cms
-CHN=$(grep $SYS example/restraints_bindingpocket_chains.txt | sed "s/${REFSYS}: //g")
-RES=$(grep $SYS example/restraints_bindingpocket_residues.txt | sed "s/${REFSYS}: //g")
-for CLUSTER in 00 01 02 03; do
-        REFCMS=example/cl_traj/${EX_NAME}_ca-dist_${REFSYS}.cms
-        $S/run calculate_rmsf_from_trajectory.py -c $REFCMS -t example/cl_traj/${EX_NAME}_ca-dist_cluster${CLUSTER}.xtc
-done
 
 
 # --- OLD ---

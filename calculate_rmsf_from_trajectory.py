@@ -62,7 +62,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', nargs='+', dest='cms_files', type=str, help='cms files')
     parser.add_argument('-t', nargs='+', dest='trj_files', type=str, help='trajecotry files or directories')    
-    parser.add_argument('-s', nargs='+', dest='selection', type=str, help='alignment selection for each trajectory')
+    parser.add_argument('-s', dest='sel_file', type=str, help='alignment selections for each trajectory, each line is one selection', default='selections.txt')
+    parser.add_argument('-w', dest='write_sel_file', type=str, help='selection file for which atoms to use in each trajectory')
     parser.add_argument('-o', dest='output_filename', type=str, help='name of the output files')  
     parser.add_argument('--ref_file', dest='reference_fn', type=str, help='reference file to align and calculate RMSF to')
     parser.add_argument('--ref_sel', dest='reference_asl', type=str, help='alignment selection for the reference file')
@@ -75,22 +76,31 @@ if __name__ == "__main__":
     indices_ref = [aid-1 for aid in aidlist_ref]
     pos_ref = cms_model_ref.getXYZ()[aidlist_ref]
 
+    # Load selection files
+    with open(args.sel_file) as sf:
+        selections_align = [line for line in sf]
+    with open(args.write_sel_file) as sf:
+        selections_write = [line for line in sf]
+
     # Create list in which to store the new positions and distances
     pos_sel_aligned = []
     squared_distances = []
     # Loop through all trajectories, align, and calculate distances
-    for cms, trj, sel in zip(args.cms_files, args.trj_files, args.selection):
+    for cms, trj, sel_align, sel_write in zip(args.cms_files, args.trj_files, selections_align, selections_write):
         # Read the trajectory
         _, cms_model = topo.read_cms(cms)
         print('Number of atoms in the system:', cms_model.atom_total)
         trajectory = traj.read_traj(trj)
-        aidlist_align = cms_model.select_atom(sel)
-        aidlist_write = cms_model.select_atom('all') # Other selections do not work yet.
+        print('Alignment selection:', str(sel_align))
+        aidlist_align = cms_model.select_atom(str(sel_align))
+        print('Output Selection:', str(sel_write))
+        aidlist_write = cms_model.select_atom(str(sel_write)) 
         indices_align = [aid-1 for aid in aidlist_align]
         indices_write = [aid-1 for aid in aidlist_write]
         # Loop through trajectory
         model = cms_model.copy()
         ct = model.fsys_ct
+        print('Reading:', cms, trj)
         for f, frame in enumerate(trajectory):
             topo.update_ct(ct, model, frame)
             # Align frame to reference structure
@@ -111,10 +121,10 @@ if __name__ == "__main__":
     rmsd_per_frame = np.sqrt(np.mean(squared_distances, axis=1))
     
     # Write RMSF on reference structure
-    out_fn_ref = args.output_filename+'_rmsf_ref.cms'
-    _ = write_coordinates(out_fn_ref, cms_model_ref, xyz=None, sigma=rmsf_per_atom)
+    #out_fn_ref = args.output_filename+'_rmsf_ref.cms'
+    #_ = write_coordinates(out_fn_ref, cms_model_ref, xyz=None, sigma=rmsf_per_atom)
 
     # Write RMSF on average structure
-    out_fn_avg = args.output_filename+'_rmsf_avg.cms'
-    _ = write_coordinates(out_fn_avg, cms_model_ref, pos_average, sigma=rmsf_per_atom)
+    #out_fn_avg = args.output_filename+'_rmsf_avg.cms'
+    #_ = write_coordinates(out_fn_avg, cms_model_ref, pos_average, sigma=rmsf_per_atom)
     
