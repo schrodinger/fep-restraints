@@ -31,7 +31,7 @@ for SYS in $SYSTEMS; do
 	ALL_DIS="$ALL_DIS example/results/ca-dist_${SYS}.csv"
 done
 CLUSTERS="example/results/clusters_on_pca"
-$S/run cluster_features_pca_k-means.py -i $ALL_DIS -o $CLUSTERS
+$S/run cluster_features_pca_k-means.py -i $ALL_DIS -o $CLUSTERS -w
 
 # Write clusters as trajectories
 echo "Writing clusters as trajectories"

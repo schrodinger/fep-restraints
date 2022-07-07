@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', dest='n_components', type=int, help='number of top principal components to consider', default=3) 
     parser.add_argument('-k', nargs='+', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4])     
     parser.add_argument('-s', dest='random_state', type=int, help='random state for k-means algorithm', default=42)      
-    parser.add_argument('-w', dest='write_pc', type=bool, help='write coordinates in PC space', default=False) 
+    parser.add_argument('-w', dest='write_pc', action='store_true', help='write coordinates in PC space', default=False) 
     args = parser.parse_args()
 
     names, data, origin, orig_id = read_features_from_csv_files(args.input_files)
@@ -77,7 +77,7 @@ if __name__ == "__main__":
             output['Cluster_ID'] = clusters[is_from_origin]
             if args.write_pc:
                 for i, pci in enumerate(pc):
-                    output['PC%02i'%(i+1)] = pci
+                    output['PC%02i'%(i+1)] = pci[is_from_origin]
             output.to_csv(cl_file_name)
 
         # Write summary information
