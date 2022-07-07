@@ -35,7 +35,7 @@ for CLUSTER in 00 01 02 03; do
 	done
 
 	# Run the RMSF calculation
-	$S/run calculate_rmsf_from_trajectory.py \
+	$S/run calculate_rmsf_from_trajectories.py \
 		-c $ALLTOP -t $ALLTRJ \
 		-s selections_align.tmp \
 		-w selections_write.tmp \
