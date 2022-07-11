@@ -5,6 +5,7 @@ else
 	echo "No example trajectory detected. Attempting download."
 	mkdir -p example
 	scp -r boltio:/nfs/working/scidev/voegele/GPCR-Functional-Response/B2AR/MDSim/*_MDSim/Sim01 example/
+	scp -r boltio:/nfs/working/scidev/voegele/GPCR-Functional-Response/B2AR/ABFEP_centroids_fcvar/b01f50_ABFEP_k3c0 example/
 fi
 scp -r boltio:/nfs/working/scidev/voegele/GPCR-Functional-Response/B2AR/analysis/definitions/restraints_*.txt example/
 
