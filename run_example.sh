@@ -1,12 +1,23 @@
+BOLTDIR='/nfs/working/scidev/voegele/GPCR-Functional-Response/'
+mkdir -p example
+
 # Download the example trajectory if it is not there
 if [ -d example/Sim01 ]; then
 	echo "Example trajectory detected."
 else
 	echo "No example trajectory detected. Attempting download."
-	mkdir -p example
-	scp -r boltio:/nfs/working/scidev/voegele/GPCR-Functional-Response/B2AR/MDSim/*_MDSim/Sim01 example/
-	scp -r boltio:/nfs/working/scidev/voegele/GPCR-Functional-Response/B2AR/ABFEP_centroids_fcvar/b01f50_ABFEP_k3c0 example/
+	scp -r boltio:$BOLTDIR/B2AR/MDSim/*_MDSim/Sim01 example/
 fi
+
+# Download the example simulation directory if it is not there
+if [ -d example/ABFEP_k3c0 ]; then
+        echo "Example simulation directory detected."
+else
+        echo "No example simulation directory detected. Attempting download."
+	scp -r boltio:$BOLTDIR/B2AR/ABFEP_centroids_fcvar/ABFEP_k3c0 example/
+fi
+
+# Download all definitions
 scp -r boltio:/nfs/working/scidev/voegele/GPCR-Functional-Response/B2AR/analysis/definitions/restraints_*.txt example/
 
 # The systems to analyze
