@@ -14,13 +14,12 @@ def select_subset_model(cms_model, aid):
     aid_del = set(aid_all) - set(aid)
     model = cms_model.copy()
     model.deleteAtoms(aid_del)
-    print('The new model has %s atoms.'%model.atom_total)
-    print('The new model has %s atoms.'%len(model.atom)) 
     return model
 
 
 def write_frame(out_fname, old_model, frame, sigma=None):
     model = old_model.copy()
+    print("Writing to model with %i atoms."%(len(model.atom)))
     if frame is not None:      
         for i, ct in enumerate(model.comp_ct):
             ct_aids = model.get_fullsys_ct_atom_index_range(i)
@@ -39,8 +38,8 @@ def write_frame(out_fname, old_model, frame, sigma=None):
     return model
 
 
-def write_coordinates(out_fname, cms_model, xyz=None, sigma=None):
-    model = cms_model.copy()  
+def write_coordinates(out_fname, model, xyz=None, sigma=None):
+    print("Writing to model with %i atoms."%(len(model.atom))) 
     # Update the coordinates. 
     if xyz is not None:
         model.fsys_ct.setXYZ(xyz)
@@ -66,12 +65,13 @@ if __name__ == "__main__":
     parser.add_argument('-w', dest='write_sel_file', type=str, help='selection file for which atoms to use in each trajectory')
     parser.add_argument('-o', dest='output_filename', type=str, help='name of the output files')  
     parser.add_argument('--ref_file', dest='reference_fn', type=str, help='reference file to align and calculate RMSF to')
-    parser.add_argument('--ref_sel', dest='reference_asl', type=str, help='alignment selection for the reference file')
+    parser.add_argument('--ref_sel_align', dest='ref_asl_align', type=str, help='alignment selection for the reference file')
+    parser.add_argument('--ref_sel_write', dest='ref_asl_write', type=str, help='output selection for the reference file')
     args = parser.parse_args()
 
     # Read the reference structure
     _, cms_model_ref = topo.read_cms(args.reference_fn) 
-    aidlist_ref = cms_model_ref.select_atom(args.reference_asl) 
+    aidlist_ref = cms_model_ref.select_atom(args.ref_asl_align) 
     gidlist_ref = topo.aids2gids(cms_model_ref, aidlist_ref, include_pseudoatoms=False)
     pos_ref = cms_model_ref.getXYZ()[gidlist_ref]
 
@@ -112,21 +112,29 @@ if __name__ == "__main__":
     pos_sel_aligned = np.array(pos_sel_aligned)
     squared_distances = np.array(squared_distances)
 
-    # Calculate the average position of each selected atom
+    # Calculate the average position of each selected atom.
     pos_average = np.mean(pos_sel_aligned, axis=0)
 
-    # Calculate the RMSF for each atom
+    # Calculate the RMSF for each atom.
     rmsf_per_atom = np.sqrt(np.mean(squared_distances, axis=0))
     rmsd_per_frame = np.sqrt(np.mean(squared_distances, axis=1))
-    
+    print("Calculated RMSF for %i atoms and %i frames."%(len(rmsf_per_atom), len(rmsd_per_frame)))
+
+    # Write the RMSF to a CSV file.    
     output = pd.DataFrame(rmsf_per_atom)
     output.to_csv(args.output_filename+'.csv')
     
-    # Write RMSF on reference structure
-    #out_fn_ref = args.output_filename+'_rmsf_ref.cms'
-    #_ = write_coordinates(out_fn_ref, cms_model_ref, xyz=None, sigma=rmsf_per_atom)
+    # Get the subset model to write.
+    aidlist_write_ref = cms_model_ref.select_atom(str(args.ref_asl_write))
+    cms_model_ref_new = select_subset_model(cms_model_ref, aidlist_write_ref )
+    print('The new model has %s atoms.'%cms_model_ref_new.atom_total)
+    print('The new model has %s atoms.'%len(cms_model_ref_new.atom)) 
+    
+    # Write the RMSF on reference structure.
+    out_fn_ref = args.output_filename+'_rmsf_ref.cms'
+    _ = write_coordinates(out_fn_ref, cms_model_ref_new, xyz=None, sigma=rmsf_per_atom)
 
-    # Write RMSF on average structure
-    #out_fn_avg = args.output_filename+'_rmsf_avg.cms'
-    #_ = write_coordinates(out_fn_avg, cms_model_ref, pos_average, sigma=rmsf_per_atom)
+    # Write the RMSF on average structure.
+    out_fn_avg = args.output_filename+'_rmsf_avg.cms'
+    _ = write_coordinates(out_fn_avg, cms_model_ref_new, pos_average, sigma=rmsf_per_atom)
     
