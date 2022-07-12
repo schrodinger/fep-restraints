@@ -35,10 +35,10 @@ for CLUSTER in 00 01 02 03; do
 	done
 
 	# Run the RMSF calculation
-	REFSEL_WRITE=$(grep $REFSYS example/restraints_subset_selections.txt | sed "s/${REFSYS}: //g")
+	OUTSEL=$(grep $REFSYS example/restraints_subset_selections.txt | sed "s/${REFSYS}: //g")
 	$S/run calculate_rmsf_from_trajectories.py \
 		-c $ALLTOP -t $ALLTRJ -s selections_align.tmp -w selections_write.tmp \
-		--ref_file $REFTOP --ref_sel_align "$REFSEL" --ref_sel_write "$REFSEL_WRITE" \
+		--ref_file $REFTOP --ref_sel_align "$REFSEL" --ref_sel_write "$OUTSEL" \
 		-o example/rmsf/${EX_NAME}_cluster${CLUSTER} 
 
 	rm selections_align.tmp

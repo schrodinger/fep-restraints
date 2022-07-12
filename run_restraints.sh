@@ -18,7 +18,7 @@ done
 
 DIR="example/b01f50_ABFEP_k3c0_mikolai"
 SEL="protein AND backbone AND a.ptype CA"
-REF="$DIR/ABFEP_k3c0_pv.maegz"
+REF="example/rmsf/clusters_on_pca_n03_s42_k04_cluster02_rmsf_avg.cms"
 
 rm -rf $DIR
 cp -r example/ABFEP_k3c0 $DIR
