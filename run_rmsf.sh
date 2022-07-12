@@ -39,7 +39,7 @@ for CLUSTER in 00 01 02 03; do
 	$S/run calculate_rmsf_from_trajectories.py \
 		-c $ALLTOP -t $ALLTRJ -s selections_align.tmp -w selections_write.tmp \
 		--ref_file $REFTOP --ref_sel_align "$REFSEL" --ref_sel_write "$OUTSEL" \
-		-o example/rmsf/${EX_NAME}_cluster${CLUSTER} 
+		-o example/rmsf/${EX_NAME}_cluster${CLUSTER} --align_avg 
 
 	rm selections_align.tmp
 	rm selections_write.tmp

@@ -67,13 +67,15 @@ if __name__ == "__main__":
     parser.add_argument('--ref_file', dest='reference_fn', type=str, help='reference file to align and calculate RMSF to')
     parser.add_argument('--ref_sel_align', dest='ref_asl_align', type=str, help='alignment selection for the reference file')
     parser.add_argument('--ref_sel_write', dest='ref_asl_write', type=str, help='output selection for the reference file')
+    parser.add_argument('--align_avg', dest='align_avg', action='store_true', help='align the final average structure to the reference, using all atoms in the output selection.', default=False) 
     args = parser.parse_args()
 
     # Read the reference structure
     _, cms_model_ref = topo.read_cms(args.reference_fn) 
     aidlist_ref = cms_model_ref.select_atom(args.ref_asl_align) 
     gidlist_ref = topo.aids2gids(cms_model_ref, aidlist_ref, include_pseudoatoms=False)
-    pos_ref = cms_model_ref.getXYZ()[gidlist_ref]
+    pos_ref_all = cms_model_ref.getXYZ()
+    pos_ref = pos_ref_all[gidlist_ref]
 
     # Load selection files
     with open(args.sel_file) as sf:
@@ -114,6 +116,9 @@ if __name__ == "__main__":
 
     # Calculate the average position of each selected atom.
     pos_average = np.mean(pos_sel_aligned, axis=0)
+    # ... and align it to the reference, using all atoms
+    if args.align_avg:
+        pos_average = analysis.align_pos(pos_average, pos_average, pos_ref_all[gidlist_write])
 
     # Calculate the RMSF for each atom.
     rmsf_per_atom = np.sqrt(np.mean(squared_distances, axis=0))
@@ -124,7 +129,7 @@ if __name__ == "__main__":
     output = pd.DataFrame(rmsf_per_atom)
     output.to_csv(args.output_filename+'.csv')
     
-    # Get the subset model to write.
+    # Get the model of the subset to write to the structures.
     aidlist_write_ref = cms_model_ref.select_atom(str(args.ref_asl_write))
     cms_model_ref_new = select_subset_model(cms_model_ref, aidlist_write_ref )
     print('The new model has %s atoms.'%cms_model_ref_new.atom_total)
