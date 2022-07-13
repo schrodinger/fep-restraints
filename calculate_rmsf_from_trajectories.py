@@ -110,9 +110,10 @@ if __name__ == "__main__":
             pos_new = analysis.align_pos(pos_all, pos_sel, pos_ref)
             # Calculate distances to reference structure and append them to the list
             pos_sel_aligned.append(pos_new[gidlist_write])
-            squared_distances.append(np.mean((pos_new[gidlist_write]-pos_all[gidlist_write])**2,axis=1))
+            squared_distances.append(np.sum((pos_new[gidlist_write]-pos_ref_all[gidlist_write])**2, axis=1))
     pos_sel_aligned = np.array(pos_sel_aligned)
     squared_distances = np.array(squared_distances)
+    print(squared_distances.shape)
 
     # Calculate the average position of each selected atom.
     pos_average = np.mean(pos_sel_aligned, axis=0)
