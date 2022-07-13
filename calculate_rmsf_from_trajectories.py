@@ -74,6 +74,7 @@ if __name__ == "__main__":
     _, cms_model_ref = topo.read_cms(args.reference_fn) 
     aidlist_ref = cms_model_ref.select_atom(args.ref_asl_align) 
     gidlist_ref = topo.aids2gids(cms_model_ref, aidlist_ref, include_pseudoatoms=False)
+    print("The reference selection has %i atoms."%(len(gidlist_ref)))
     pos_ref_all = cms_model_ref.getXYZ()
     pos_ref = pos_ref_all[gidlist_ref]
 
@@ -95,6 +96,7 @@ if __name__ == "__main__":
         print('Alignment selection:', str(sel_align))
         aidlist_align = cms_model.select_atom(str(sel_align))
         gidlist_align = topo.aids2gids(cms_model, aidlist_align, include_pseudoatoms=False)
+        print("Selected %i atoms for alignment."%(len(gidlist_align)))
         print('Output Selection:', str(sel_write))
         aidlist_write = cms_model.select_atom(str(sel_write)) 
         gidlist_write = topo.aids2gids(cms_model, aidlist_write, include_pseudoatoms=False)
