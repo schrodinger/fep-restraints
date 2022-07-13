@@ -125,17 +125,21 @@ if __name__ == "__main__":
     rmsf_per_atom = np.sqrt(np.mean(squared_distances, axis=0))
     rmsd_per_frame = np.sqrt(np.mean(squared_distances, axis=1))
     print("Calculated RMSF for %i atoms and %i frames."%(len(rmsf_per_atom), len(rmsd_per_frame)))
-
-    # Write the RMSF to a CSV file.    
-    output = pd.DataFrame(rmsf_per_atom)
-    output.to_csv(args.output_filename+'.csv')
-    
+   
     # Get the model of the subset to write to the structures.
     aidlist_write_ref = cms_model_ref.select_atom(str(args.ref_asl_write))
     cms_model_ref_new = select_subset_model(cms_model_ref, aidlist_write_ref )
     print('The new model has %s atoms.'%cms_model_ref_new.atom_total)
     print('The new model has %s atoms.'%len(cms_model_ref_new.atom)) 
-    
+
+    # Write the RMSF to a CSV file.  
+    output = pd.DataFrame()
+    output['RMSF'] = rmsf_per_atom
+    output['pdbres'] = [a.pdbres for a in cms_model_ref_new.atom]
+    output['resnum'] = [a.resnum for a in cms_model_ref_new.atom]
+    output['pdbname'] = [a.pdbname for a in cms_model_ref_new.atom]
+    output.to_csv(args.output_filename+'.csv')
+
     # Write the RMSF on reference structure.
     out_fn_ref = args.output_filename+'_rmsf_ref.cms'
     _ = write_coordinates(out_fn_ref, cms_model_ref_new, xyz=None, sigma=rmsf_per_atom)
