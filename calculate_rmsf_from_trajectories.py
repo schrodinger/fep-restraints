@@ -68,6 +68,7 @@ if __name__ == "__main__":
     parser.add_argument('--ref_sel_align', dest='ref_asl_align', type=str, help='alignment selection for the reference file')
     parser.add_argument('--ref_sel_write', dest='ref_asl_write', type=str, help='output selection for the reference file')
     parser.add_argument('--align_avg', dest='align_avg', action='store_true', help='align the final average structure to the reference, using all atoms in the output selection.', default=False) 
+    parser.add_argument('--threshold', dest='threshold', type=float, help='threshold RMSD to exclude frames', default=None)
     args = parser.parse_args()
 
     # Read the reference structure
@@ -111,8 +112,13 @@ if __name__ == "__main__":
             pos_sel = pos_all[gidlist_align]
             pos_new = analysis.align_pos(pos_all, pos_sel, pos_ref)
             # Calculate distances to reference structure and append them to the list
-            pos_sel_aligned.append(pos_new[gidlist_write])
-            squared_distances.append(np.sum((pos_new[gidlist_write]-pos_ref_all[gidlist_write])**2, axis=1))
+            new_squ_dist = np.sum((pos_new[gidlist_write]-pos_ref_all[gidlist_write])**2, axis=1)
+            frame_rmsd = np.sqrt(np.mean(new_squ_dist))
+            if f%100 == 0: 
+                print("RMSD in frame %04i: %1.4f"%(f, frame_rmsd))
+            if args.threshold is not None and frame_rmsd < args.threshold: 
+                squared_distances.append(new_squ_dist)
+                pos_sel_aligned.append(pos_new[gidlist_write])
     pos_sel_aligned = np.array(pos_sel_aligned)
     squared_distances = np.array(squared_distances)
     print(squared_distances.shape)
