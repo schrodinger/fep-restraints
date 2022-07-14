@@ -24,7 +24,7 @@ def construct_atom_asl(st: Structure, atom: _StructureAtom, asl: str) -> str:
         return suffix_asl
     raise UserWarning("Unable to find an appropriate ASL to uniquely identify an atom")
 
-def structure_to_restraints(st: Structure, asl: str, fc=50.0, bw=None) -> dict:
+def structure_to_restraints(st: Structure, asl: str, fc=50.0, bw=None, sf=1.0) -> dict:
     '''Take a structure and create position restraint (posre) terms from it.
 
     If the matched atom has a r_desmond_sigma property it will be assigned to posre_fbhw, otherwise posre_harm.
@@ -42,7 +42,7 @@ def structure_to_restraints(st: Structure, asl: str, fc=50.0, bw=None) -> dict:
         if bw is None: # read sigma from the structure
             # The property 'dictionary' has no equivalent to the get method to make this easier
             if ('r_desmond_sigma' in atom.property) and (atom.property['r_desmond_sigma']):
-                atom_restraint['sigma'] = atom.property['r_desmond_sigma']
+                atom_restraint['sigma'] = sf*atom.property['r_desmond_sigma']
                 restraints['posre_fbhw'].append(atom_restraint)
             else:
                 restraints['posre_harm'].append(atom_restraint)
@@ -96,6 +96,10 @@ def parse_cmdline(argv):
             default=50.0,
             type=float,
             help="Force constant (kcal/mol/A**2)")
+    parser.add_argument("-s", "--sf",
+            default=1.0,
+            type=float,
+            help="Scaling factor for the sigma from the reference structure. The half-width of the flat bottom will be sf*sigma.")
     parser.add_argument("-b", "--bw",
             default=None,
             type=float,
@@ -114,7 +118,7 @@ def main():
     args = parse_cmdline(sys.argv[1:])
 
     st = StructureReader.read(args.structure)
-    restraints = structure_to_restraints(st, args.asl, args.fc, args.bw)
+    restraints = structure_to_restraints(st, args.asl, args.fc, args.bw, args.sf)
 
     stgs = cmj.msj2sea(args.msj)
     add_restraints_to_stgs(stgs, restraints)
