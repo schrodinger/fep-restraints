@@ -79,17 +79,65 @@ for FRAME in example/cl_traj/*centroid*.cms; do
 done
 
 
+EX_NAME='clusters_on_pca_n03_s42_k04'
 
-# --- OLD ---
-# Write selected frames from a trajectory
-#echo "Extracting frames."
-#mkdir -p example/frames
-#$S/run extract_frames_as_cms.py -c ${EXAMPLE}.cms -t ${EXAMPLE}_trj -n 5 55 555 -o example/frames
+mkdir -p example/rmsf-in-orig
 
-# Convert the frames to MAE files suitable for FEP+
-#echo "Converting frames."
-#for FRAME in example/frames/*.cms; do
-#	OUT_FRAME=$(echo $FRAME | sed 's/\.cms//g' )
-#	$S/run membrane_cms2fep.py -o ${OUT_FRAME}_pv.mae $FRAME
-#done
+# Calculate RMSF of each cluster
+for CLUSTER in 00 01 02 03; do
+
+	echo " -- Cluster $CLUSTER -- "
+
+	# Get the reference system 
+	REFTOP="example/cl_traj/${EX_NAME}_ca-dist_centroid${CLUSTER}.cms"
+	ORIGIN=$( $S/run get_centroid_origin.py -d example/results/${EX_NAME}_summary.csv -c $CLUSTER )
+	REFSYS=$( echo $ORIGIN | sed 's/ca-dist_//g' | sed 's/\.csv//g' )
+	# Align to the binding pocket
+	REFCHN=$(grep $REFSYS example/restraints_bindingpocket_chains.txt | sed "s/${REFSYS}: //g")
+	REFRES=$(grep $REFSYS example/restraints_bindingpocket_residues.txt | sed "s/${REFSYS}: //g")
+	REFSEL="(res.num $REFRES) AND (atom.ptype \" CA \") AND (chain.name $REFCHN)"
+
+	# Get the trajectory file(s) for this cluster in the origin of its centroid and the corresponding topologies and selections
+	ALLTRJ=""
+	ALLTOP=""	
+	for TRJ in example/cl_traj/${EX_NAME}_ca-dist_${REFSYS}_cluster${CLUSTER}.xtc; do
+		# Get the corresponding trajectory and system name
+		TOP=$( echo $TRJ | sed "s/_cluster${CLUSTER}.xtc/.cms/g" )
+		SYS=$( echo $TRJ | sed "s/_cluster${CLUSTER}.xtc//g" | sed "s/example\/cl_traj\/${EX_NAME}_ca-dist_//g" )
+		# Align to the binding pocket
+		CHN=$(grep $SYS example/restraints_bindingpocket_chains.txt | sed "s/${SYS}: //g")
+		RES=$(grep $SYS example/restraints_bindingpocket_residues.txt | sed "s/${SYS}: //g")
+		echo "(res.num $RES) AND (atom.ptype \" CA \") AND (chain.name $CHN)" >> selections_align.tmp
+		echo $(grep $SYS example/restraints_subset_selections.txt | sed "s/${SYS}: //g") >> selections_write.tmp
+		ALLTRJ="$ALLTRJ $TRJ"
+		ALLTOP="$ALLTOP $TOP"
+	done
+
+	# Run the RMSF calculation
+	OUTSEL=$(grep $REFSYS example/restraints_subset_selections.txt | sed "s/${REFSYS}: //g")
+	$S/run calculate_rmsf_from_trajectories.py \
+		-c $ALLTOP -t $ALLTRJ -s selections_align.tmp -w selections_write.tmp \
+		--ref_file $REFTOP --ref_sel_align "$REFSEL" --ref_sel_write "$OUTSEL" \
+		-o example/rmsf-in-orig/${EX_NAME}_cluster${CLUSTER} --align_avg 
+
+	rm selections_align.tmp
+	rm selections_write.tmp
+
+done
+
+# Write RMSF-based restraints from a reference file to MSJ. 
+
+DIR="example/b01f50_ABFEP_k3c0_restraints"
+SEL="protein AND backbone AND a.ptype CA"
+REF="example/rmsf-in-orig/clusters_on_pca_n03_s42_k04_cluster02_rmsf_avg.cms"
+
+rm -rf $DIR
+cp -r example/ABFEP_k3c0 $DIR
+
+for MSJ in $DIR/*.msj; do
+        OLD=$( echo $MSJ | sed 's/\.msj/\.msj.orig/g' )
+        mv $MSJ $OLD
+        $S/run ~/dev/abfep-restraints/write_restraints_from_mae_to_msj.py \
+                $REF $OLD $MSJ -a "$SEL" -f 50 
+done
 
