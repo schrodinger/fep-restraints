@@ -116,7 +116,7 @@ if __name__ == "__main__":
             frame_rmsd = np.sqrt(np.mean(new_squ_dist))
             if f%100 == 0: 
                 print("RMSD in frame %04i: %1.4f"%(f, frame_rmsd))
-            if args.threshold is not None and frame_rmsd < args.threshold: 
+            if args.threshold is None or frame_rmsd < args.threshold: 
                 squared_distances.append(new_squ_dist)
                 pos_sel_aligned.append(pos_new[gidlist_write])
     pos_sel_aligned = np.array(pos_sel_aligned)
