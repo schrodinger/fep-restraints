@@ -1,0 +1,5 @@
+System_Name,Topology,Trajectory,Start_Label
+2RH1,example/Sim01/2RH1_Carazolol_MDSim-out.cms,example/Sim01/2RH1_Carazolol_MDSim_trj,inactive
+5JQH,example/Sim01/5JQH_Carazolol_MDSim-out.cms,example/Sim01/5JQH_Carazolol_MDSim_trj,inactive
+3P0G,example/Sim01/3P0G_BI-167107_MDSim-out.cms,example/Sim01/3P0G_BI-167107_MDSim_trj,active
+7DHI,example/Sim01/7DHI_Salbutamol_MDSim-out.cms,example/Sim01/7DHI_Salbutamol_MDSim_trj,active
