@@ -13,7 +13,7 @@ def get_an_aid(cms_model, asl_string):
     else:
         return(aid_list[0])
 
-def calculate_ca_distances(tr, chain_id, residue_numbers, residue_names=None):
+def calculate_ca_distances(msys_model, cms_model, tr, chain_id, residue_numbers, residue_names=None):
     # time
     frame_time = []
     for item in tr:
@@ -65,9 +65,8 @@ if __name__ == "__main__":
         )
     # calculate the distances between the C-alpha atoms
     time, dist_names, distances = calculate_ca_distances(
-        trajectory, 
-        args.chain_id, 
-        args.residue_numbers, 
+        msys_model, cms_model, trajectory, 
+        args.chain_id, args.residue_numbers, 
         residue_names=args.residue_names
         )
     # write the distances to a CSV file

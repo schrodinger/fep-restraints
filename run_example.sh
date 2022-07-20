@@ -32,7 +32,7 @@ for SYS in $SYSTEMS; do
 	CHN=$(grep $SYS example/restraints_bindingpocket_chains.txt | sed "s/${SYS}: //g")
 	RES=$(grep $SYS example/restraints_bindingpocket_residues.txt | sed "s/${SYS}: //g")
 	DIS="example/results/ca-dist_${SYS}.csv"
-	$S/run read_ca-distances_from_trajectory.py \
+	$S/run read_ca_distances_from_trajectory.py \
 		-c ${TOP} -t ${TRJ} -l ${CHN} -r ${RES} -o ${DIS}
 done
 
