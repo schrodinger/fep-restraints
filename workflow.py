@@ -8,6 +8,7 @@ from schrodinger.application.desmond.packages import analysis, traj, topo
 from io_trajectory import load_trajectory, get_an_aid
 from io_features import write_features_to_csv, read_features_from_csv_files
 from read_ca_distances_from_trajectory import calculate_ca_distances
+from clustering_on_pca import kmeans_on_pca
 
 
 if __name__ == "__main__":
