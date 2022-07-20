@@ -22,6 +22,8 @@ if __name__ == "__main__":
     parser.add_argument('-s', dest='select_file', type=str, help='Name of the input file in csv format determining residue selections for binding pocket and restraints.') 
     parser.add_argument('-o', dest='output_dir',  type=str, help='Name of the output directory', default='clustering_results')       
     parser.add_argument('-n', dest='n_components',type=int, help='Number of top principal components to consider', default=3)     
+    parser.add_argument('-k', nargs='+', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4]) 
+    parser.add_argument('-r', dest='random_state', type=int, help='random state for k-means algorithm', default=42)    
     args = parser.parse_args()
 
     # Read the input files
@@ -36,7 +38,9 @@ if __name__ == "__main__":
         newdir = os.path.join(args.output_dir, subdir)
         os.makedirs(newdir, exist_ok=True)  
 
-    # * Calculate the C-alpha distances. *
+    # * ---------------------------------- * #
+    # *  Calculate the C-alpha distances.  * #
+    # * ---------------------------------- * #
     dist_files = []
     for i in simulations.index:
         # Get names and info for this simulation
@@ -57,14 +61,35 @@ if __name__ == "__main__":
         write_features_to_csv(out_file, distances, dist_names, time)
     simulations['CA-Dist_File'] = dist_files
 
-    # * Principal Component Analysis *
+    # * ------------------------------ * #
+    # *  Principal Component Analysis  * #
+    # * ------------------------------ * #
     names, data, origin, orig_id = read_features_from_csv_files(dist_files)
     pca = PCA(n_components=args.n_components)
     pca.fit(data.T)
     pc = pca.components_
     print(pca.explained_variance_ratio_) 
 
-    # * K-Means Clustering *
-
+    # * -------------------- * #
+    # *  K-Means Clustering  * #
+    # * -------------------- * #
+    # Perform k-means clustering in PC space for various k values.
+    sum_sqrd = []
+    for ik, k in enumerate(args.n_clusters):  
+        paramstr = 'n%02i_s%02i_k%02i'%(args.n_components, args.random_state, k)
+        outputf = os.path.join(args.output_dir,'2-clustering/pca-kmeans_'+paramstr)
+        inertia = kmeans_on_pca(
+            pc, k, args.random_state, origin, orig_id, output_base=outputf, 
+            input_files=None, write_pc=True
+            )
+        sum_sqrd.append(inertia)
+    # Write information about all k values in this study
+    paramstr = 'n%02i_s%02i'%(args.n_components, args.random_state)
+    file_name_ssd = os.path.join(args.output_dir,'2-clustering/pca-kmeans_'+paramstr+'_ssd.csv')
+    print('Writing the sums of the squared distances to', file_name_ssd)
+    ssd = pd.DataFrame()
+    ssd['Num_Clusters'] = args.n_clusters
+    ssd['Sum_Squ_Dist'] = sum_sqrd 
+    ssd.to_csv(file_name_ssd, index=False)
 
 
