@@ -8,7 +8,7 @@ from torch import _sobol_engine_initialize_state_
 from io_features import read_features_from_csv_files
 
 
-def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, write_pc=True):
+def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, write_pc=True, out_names=None):
 
     # Define the algorithm
     kmeans = KMeans(n_clusters = k, init = 'k-means++', random_state = rs)
@@ -27,8 +27,12 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     cc_orig_id = orig_id[centroids]
 
     # Write information about these clusters and their components to a csv file
-    for ii in np.unique(origin):
-        cl_file_name = output_base + '_sim%04i'%ii
+    cl_files = []
+    for i, ii in enumerate(np.unique(origin)):
+        if out_names is None:
+            cl_file_name = output_base + '_sim%04i.csv'%ii
+        else:
+            cl_file_name = output_base + '_' + out_names[i] + '.csv'
         print('Writing cluster information to', cl_file_name) 
         is_from_origin = origin==ii
         output = pd.DataFrame()
@@ -38,6 +42,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
             for i, pci in enumerate(pc):
                 output['PC%02i'%(i+1)] = pci[is_from_origin]
         output.to_csv(cl_file_name)
+        cl_files.append(cl_file_name)
 
     # Write summary information
     summary_name = output_base + '_summary.csv'
@@ -58,7 +63,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     print(output)
 
     # Return the sum of squared distances for this k.
-    return kmeans.inertia_ 
+    return cids, sizes, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
 
 
 
@@ -74,7 +79,8 @@ if __name__ == "__main__":
     parser.add_argument('-n', dest='n_components', type=int, help='number of top principal components to consider', default=3) 
     parser.add_argument('-k', nargs='+', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4])     
     parser.add_argument('-s', dest='random_state', type=int, help='random state for k-means algorithm', default=42)      
-    parser.add_argument('-w', dest='write_pc', action='store_true', help='write coordinates in PC space', default=False) 
+    parser.add_argument('-w', dest='write_pc', action='store_true', help='write coordinates in PC space', default=False)
+    parser.add_argument('--out_names', dest='out_names', nargs='+', type=str, default=None) 
     args = parser.parse_args()
 
     names, data, origin, orig_id = read_features_from_csv_files(args.input_files)
@@ -98,9 +104,9 @@ if __name__ == "__main__":
     sum_sqrd = []
     for ik, k in enumerate(args.n_clusters):  
         outputf = args.output_base+'_n%02i_s%02i_k%02i'%(args.n_components, args.random_state, k)
-        inertia = kmeans_on_pca(
+        cids, sizes, cc_orig_sim, cc_orig_id, inertia, cl_files, sum_file = kmeans_on_pca(
             pc, k, args.random_state, origin, orig_id, output_base=outputf, 
-            input_files=args.input_files, write_pc=args.write_pc
+            input_files=args.input_files, write_pc=args.write_pc, out_names=args.out_names
             )
         sum_sqrd.append(inertia)
 

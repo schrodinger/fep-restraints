@@ -39,11 +39,13 @@ done
 # Perform clustering in principal component space of the C-alpha distances
 echo "Calculating clusters via k-means"
 ALL_DIS=""
+ALL_OUT=""
 for SYS in $SYSTEMS; do
 	ALL_DIS="$ALL_DIS example/results/ca-dist_${SYS}.csv"
+	ALL_OUT="$ALL_OUT ca-dist_${SYS}"
 done
 CLUSTERS="example/results/clusters_on_pca"
-$S/run cluster_features_pca_k-means.py -i $ALL_DIS -o $CLUSTERS -w
+$S/run clustering_on_pca.py -i $ALL_DIS -o $CLUSTERS -w --out_names $ALL_OUT
 
 # Write clusters as trajectories
 echo "Writing clusters as trajectories"
