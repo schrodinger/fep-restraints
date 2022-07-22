@@ -2,14 +2,13 @@
 
 import os, os.path
 import pandas as pd
-from sklearn.decomposition import PCA
+
 from schrodinger.application.desmond.packages import traj, topo
-from io_trajectory import write_frames, copy_topology
-from io_features import write_features_to_csv, read_features_from_csv_files
-from read_ca_distances_from_trajectory import calculate_ca_distances
+from io_trajectory import write_frames, copy_topology, extract_frames_by_value
+from io_features import write_features_to_csv, read_features_from_csv_files, calculate_ca_distances
+from sklearn.decomposition import PCA
 from clustering_on_pca import kmeans_on_pca
 from calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
-from extract_clusters_as_trj import extract_cluster_as_xtc
 
 
 if __name__ == "__main__":
@@ -203,4 +202,4 @@ if __name__ == "__main__":
             if args.write_traj:
                 cluster_output = os.path.join(args.output_dir,'4-sorted/pca-kmeans_'+paramstr_k)   
                 copy_topology(cc_topol_file, cluster_output+'.cms')
-                extract_cluster_as_xtc(cluster_trj_files, cluster_output, csv_files, value)
+                extract_frames_by_value(cluster_trj_files, cluster_output, csv_files, value)

@@ -65,3 +65,18 @@ def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None
                     writer.append(st)
     return
 
+
+def extract_frames_by_value(trj_files, output_name, csv_files, value, property='Cluster_ID'):
+    frame_list = []
+    for csv, trj in zip(csv_files, trj_files):
+        num_df = pd.read_csv(csv)
+        clust_id = num_df[property]
+        trajectory = traj.read_traj(trj)
+        print( 'Length of CSV file:', len(clust_id), ' Length of trajectory:', len(trajectory))
+        assert len(clust_id) == len(trajectory)
+        for clid, frame in zip(clust_id, trajectory):
+            if clid == value:
+                frame_list.append(frame)
+    traj_name = output_name+'_%s%02i.xtc'%(property,value)
+    traj.write_traj(frame_list, traj_name)
+    

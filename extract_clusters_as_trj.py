@@ -4,25 +4,9 @@ from schrodinger.application.desmond.packages import analysis, traj, topo
 from schrodinger import structure
 import pandas as pd
 import numpy as np
-import os.path
 
-from io_trajectory import load_trajectory, write_frames, get_an_aid
+from io_trajectory import extract_frames_by_value
       
-
-def extract_cluster_as_xtc(trj_files, output_name, csv_files, value, property='Cluster_ID'):
-    frame_list = []
-    for csv, trj in zip(csv_files, trj_files):
-        num_df = pd.read_csv(csv)
-        clust_id = num_df[property]
-        trajectory = traj.read_traj(trj)
-        print( 'Length of CSV file:', len(clust_id), ' Length of trajectory:', len(trajectory))
-        assert len(clust_id) == len(trajectory)
-        for clid, frame in zip(clust_id, trajectory):
-            if clid == value:
-                frame_list.append(frame)
-    traj_name = output_name+'_cluster%02i'%value+'.xtc'
-    traj.write_traj(frame_list, traj_name)
-
 
 if __name__ == "__main__":
     """ 
@@ -64,5 +48,5 @@ if __name__ == "__main__":
 
     # Go through all cluster IDs and extract the corresponding frames
     for value in cl_ids:
-        extract_cluster_as_xtc(args.trj_files, args.output_name, args.frame_number_files, value, property=args.property)
+        extract_frames_by_value(args.trj_files, args.output_name, args.frame_number_files, value, property=args.property)
 
