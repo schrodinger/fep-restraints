@@ -28,7 +28,7 @@ def load_trajectory(cms_file, xtc_file, trj_dir):
 def copy_topology(reference, output_name):
     _, cms_model = topo.read_cms(reference)
     model = cms_model.copy()
-    with structure.StructureWriter(cluster_output_name+'.cms') as writer:
+    with structure.StructureWriter(output_name) as writer:
         writer.append(model.fsys_ct)
         for st in model.comp_ct:
             writer.append(st)
