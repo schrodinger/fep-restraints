@@ -164,9 +164,9 @@ if __name__ == "__main__":
     # Sort the features by how much their distributions differ
     jsd_sorted = sort_features(data_names, jsd)
     out_data = pd.DataFrame(jsd_sorted, columns=['Distance','JSD'])
-    out_csv = os.path.join(args.output_dir, 'ca-dist_sorted-by-jsd.csv')
+    out_csv = os.path.join(args.output_dir, 'ca-distances_sorted-by-jsd.csv')
     out_data.to_csv(out_csv)
     # Plot the 20 most different distributions
-    out_pdf = os.path.join(args.output_dir, 'ca-dist_largest-jsd.pdf')
+    out_pdf = os.path.join(args.output_dir, 'ca-distances_largest-jsd.pdf')
     plot_most_different_distributions(jsd_sorted, data_i, data_a, out_pdf)
     
