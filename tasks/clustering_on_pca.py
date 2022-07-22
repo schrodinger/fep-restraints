@@ -66,7 +66,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     return cids, sizes, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
 
 
-def plot_pc1and2_by_system(pc, simulations, out_file):
+def plot_pc1and2_by_system(pc, origin, simulations, out_file):
     systems = simulations['System_Name'].unique()
     fig, ax = plt.subplots(1,1, figsize=[3,3], dpi=300)
     means = []
@@ -92,7 +92,7 @@ def plot_pc1and2_by_system(pc, simulations, out_file):
     fig.savefig(out_file, dpi=300)
 
 
-def plot_pca_by_system(pc, simulations, out_file):  
+def plot_pca_by_system(pc, origin, simulations, out_file):  
     systems = simulations['System_Name'].unique()
     for i, pci in enumerate(pc):
         # Calculate the general bins and their centers
