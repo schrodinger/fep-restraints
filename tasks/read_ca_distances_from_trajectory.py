@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from utils.io_trajectory import load_trajectory
-from utils.io_features import write_features_to_csv, calculate_ca_distances
+from io_trajectory import load_trajectory
+from io_features import write_features_to_csv, calculate_ca_distances
 
 
 if __name__ == "__main__":

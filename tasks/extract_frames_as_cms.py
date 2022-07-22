@@ -2,7 +2,7 @@
 
 from schrodinger.application.desmond.packages import analysis, traj, topo
 from schrodinger import structure
-from utils.io_trajectory import load_trajectory, write_frames
+from io_trajectory import load_trajectory, write_frames
 
 if __name__ == "__main__":
     """ 

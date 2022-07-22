@@ -5,10 +5,7 @@ import scipy as sp
 import scipy.stats
 import scipy.spatial
 import scipy.spatial.distance
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-from torch import _sobol_engine_initialize_state_
-from utils.io_features import read_features_from_csv_files
+from io_features import read_features_from_csv_files
 
 
 def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bin_width=None, bin_num=10, verbose=True, override_name_check=False):
@@ -103,23 +100,18 @@ if __name__ == "__main__":
         
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', dest='input_files', nargs='+', type=str, help='input csv files')
-    parser.add_argument('-o', dest='output_base', type=str, help='base name of the output files', default='pca-clusters')
-    parser.add_argument('-n', dest='n_components', type=int, help='number of top principal components to consider', default=3) 
-    parser.add_argument('-k', nargs='+', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4])     
-    parser.add_argument('-s', dest='random_state', type=int, help='random state for k-means algorithm', default=42)      
-    parser.add_argument('-w', dest='write_pc', action='store_true', help='write coordinates in PC space', default=False)
-    parser.add_argument('--out_names', dest='out_names', nargs='+', type=str, default=None) 
+    parser.add_argument('-i', dest='info_file', type=str, help='info csv file')
+    parser.add_argument('-f', dest='feature_files', nargs='+', type=str, help='feature csv files')
+    parser.add_argument('-o', dest='output_dir', type=str, help='name of the output directory', default='comparison')   
     args = parser.parse_args()
 
-    names, data, origin, orig_id = read_features_from_csv_files(args.input_files)
+    names, data, origin, orig_id = read_features_from_csv_files(args.feature_files)
     print(origin)
 
     # Print some information
     print("Origin:")
     for o in np.sort(np.unique(origin)):
         n_frames = np.sum(origin==o)
-        top_file = args.input_files[o]
-        print(" - %s: %5i frames"%(top_file, n_frames))
+        print(" - %5i frames"%n_frames)
 
     

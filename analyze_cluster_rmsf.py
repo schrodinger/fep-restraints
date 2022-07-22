@@ -2,11 +2,10 @@
 
 import os, os.path
 import pandas as pd
-
-from schrodinger.application.desmond.packages import traj, topo
-from utils.io_trajectory import write_frames, copy_topology, extract_frames_by_value
-from utils.io_features import write_features_to_csv, read_features_from_csv_files, calculate_ca_distances
 from sklearn.decomposition import PCA
+from schrodinger.application.desmond.packages import traj, topo
+from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
+from tasks.io_features import write_features_to_csv, read_features_from_csv_files, calculate_ca_distances
 from tasks.clustering_on_pca import kmeans_on_pca
 from tasks.calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
 
