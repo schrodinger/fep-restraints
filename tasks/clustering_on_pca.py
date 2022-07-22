@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from torch import _sobol_engine_initialize_state_
-from io_features import read_features_from_csv_files
+from .io_features import read_features_from_csv_files
 
 
 def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, write_pc=True, out_names=None):

@@ -6,7 +6,7 @@ import scipy.stats
 import scipy.spatial
 import scipy.spatial.distance
 import matplotlib.pyplot as plt
-from io_features import read_features_from_csv_files, sort_features
+from .io_features import read_features_from_csv_files, sort_features
 
 
 def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bin_width=None, bin_num=10, verbose=True, override_name_check=False):

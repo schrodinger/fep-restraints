@@ -5,7 +5,8 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from schrodinger.application.desmond.packages import traj, topo
 from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
-from tasks.io_features import write_features_to_csv, read_features_from_csv_files, calculate_ca_distances
+from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, calculate_ca_distances
+from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
 from tasks.clustering_on_pca import kmeans_on_pca
 from tasks.calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
 
@@ -36,9 +37,9 @@ if __name__ == "__main__":
 
     # Create the output directories
     os.makedirs(args.output_dir, exist_ok=True)
-    steps = ['1-distances', '2-clustering', '3-rmsf']
+    steps = ['1-distances', '2-comparison', '3-clustering', '4-rmsf']
     if args.write_traj:
-        steps += ['4-sorted']
+        steps += ['5-sorted']
     for subdir in steps:
         newdir = os.path.join(args.output_dir, subdir)
         os.makedirs(newdir, exist_ok=True)  
@@ -69,6 +70,37 @@ if __name__ == "__main__":
         print('Wrote distances from %s to %s.'%(trj_file, out_file) )
     simulations['CA-Dist_File'] = dist_files
 
+    # * --------------------------------------------------- * #
+    # *  Compare the C-alpha distances of the simulations.  * #
+    # * --------------------------------------------------- * #
+
+    print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
+    # Read the input files
+    names, data, origin, orig_id = read_features_from_csv_files(dist_files)
+    # Split data in active and inactive (accoring to their origin simulation)
+    act_origin = list(simulations[simulations['Start_Label']=='active'].index)
+    ina_origin = list(simulations[simulations['Start_Label']=='inactive'].index)
+    print('Inactive Simulations:', ina_origin, '\nActive Simulations:  ', act_origin, '\n')
+    print('Shape of the total data:   ', data.shape)
+    data_i = data[[o in ina_origin for o in origin]]
+    data_a = data[[o in act_origin for o in origin]]
+    print('Shape of the inactive data:', data_i.shape)
+    print('Shape of the active data:  ', data_a.shape) 
+    # Run the relative-entropy analysis
+    data_names, jsd, kld_ab, kld_ba = relative_entropy_analysis(
+        names, names, data_i, data_a, 
+        bin_width=None, bin_num=10, verbose=True
+        )
+    # Sort the features by how much their distributions differ
+    jsd_sorted = sort_features(data_names, jsd)
+    out_data = pd.DataFrame(jsd_sorted, columns=['Distance','JSD'])
+    out_csv = os.path.join(args.output_dir, '2-comparison/ca-dist_sorted-by-jsd.csv')
+    out_data.to_csv(out_csv)
+    # Plot the 20 most different distributions
+    out_pdf = os.path.join(args.output_dir, '2-comparison/ca-dist_largest-jsd.pdf')
+    plot_most_different_distributions(jsd_sorted, data_i, data_a, out_pdf)
+
+
     # * ------------------------------ * #
     # *  Principal Component Analysis  * #
     # * ------------------------------ * #
@@ -98,7 +130,7 @@ if __name__ == "__main__":
         print('\n* - Running k-means clustering with k=%i - *\n'%k)
 
         paramstr_k = '%s_k%02i'%(paramstr, k)
-        outputf = os.path.join(args.output_dir,'2-clustering/pca-kmeans_'+paramstr_k)
+        outputf = os.path.join(args.output_dir,'3-clustering/pca-kmeans_'+paramstr_k)
         
         # Run the k-means clustering
         cids, sizes, cc_orig_sim, cc_orig_id, inertia, cl_files_k, sum_file_k = kmeans_on_pca(
@@ -116,7 +148,7 @@ if __name__ == "__main__":
             trj_file = simulations['Trajectory'][c_file]
             _, top = topo.read_cms(top_file)
             trj = traj.read_traj(trj_file)
-            out_dir = os.path.join(args.output_dir,'2-clustering')
+            out_dir = os.path.join(args.output_dir,'3-clustering')
             out_fn = 'pca-kmeans_'+paramstr_k+'_centroid%02i'%cl_id
             write_frames(top, trj, [c_frame], out_dir, frame_names=[out_fn])
             cf = os.path.join(out_dir, out_fn+'.cms')
@@ -125,7 +157,7 @@ if __name__ == "__main__":
         centroid_files.append(centroid_files_k)
 
     # Write information about all k values in this study
-    file_name_ssd = os.path.join(args.output_dir,'2-clustering/pca-kmeans_'+paramstr+'_ssd.csv')
+    file_name_ssd = os.path.join(args.output_dir,'3-clustering/pca-kmeans_'+paramstr+'_ssd.csv')
     print('Writing the sums of the squared distances to', file_name_ssd)
     ssd = pd.DataFrame()
     ssd['Num_Clusters'] = args.n_clusters
@@ -196,21 +228,21 @@ if __name__ == "__main__":
             output['pdbres'] = [a.pdbres for a in cms_model_ref_new.atom]
             output['resnum'] = [a.resnum for a in cms_model_ref_new.atom]
             output['pdbname'] = [a.pdbname for a in cms_model_ref_new.atom]
-            out_csv_file = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf.csv')
+            out_csv_file = os.path.join(args.output_dir,'4-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf.csv')
             output.to_csv(out_csv_file)
 
             # Write the RMSF on the reference structure (the centroid).
-            out_fn_ref = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_ref.cms')
+            out_fn_ref = os.path.join(args.output_dir,'4-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_ref.cms')
             _ = write_coordinates(out_fn_ref, cms_model_ref_new, xyz=None, sigma=rmsf_per_atom)
 
             # Write the RMSF on the average structure.
-            out_fn_avg = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_avg.cms')
+            out_fn_avg = os.path.join(args.output_dir,'4-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_avg.cms')
             _ = write_coordinates(out_fn_avg, cms_model_ref_new, pos_average, sigma=rmsf_per_atom)
 
             # Write this cluster as a trajectory (xtc format)
             print('\n* - Writing cluster %i from k-means with k=%i as a trajectory - *\n'%(value, k))  
             if args.write_traj:
-                cluster_output = os.path.join(args.output_dir,'4-sorted/pca-kmeans_'+paramstr_cl)  
+                cluster_output = os.path.join(args.output_dir,'5-sorted/pca-kmeans_'+paramstr_cl)  
                 print('Output: %s'%cluster_output) 
                 copy_topology(cc_topol_file, cluster_output+'.cms')
                 extract_frames_by_value(cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value)
