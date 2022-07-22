@@ -215,3 +215,4 @@ if __name__ == "__main__":
                 print('Output: %s'%cluster_output) 
                 copy_topology(cc_topol_file, cluster_output+'.cms')
                 extract_frames_by_value(cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value)
+            print(' ')
