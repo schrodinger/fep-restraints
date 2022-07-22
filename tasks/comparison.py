@@ -5,7 +5,8 @@ import scipy as sp
 import scipy.stats
 import scipy.spatial
 import scipy.spatial.distance
-from io_features import read_features_from_csv_files
+import matplotlib.pyplot as plt
+from io_features import read_features_from_csv_files, sort_features
 
 
 def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bin_width=None, bin_num=10, verbose=True, override_name_check=False):
@@ -93,6 +94,39 @@ def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bi
     return data_names, data_jsdist, data_kld_ab, data_kld_ba
 
 
+def plot_most_different_distributions(jsd_sorted, fdata_i, fdata_a, out_plot):
+
+    fig, ax = plt.subplots(5,4, figsize=[10,8], dpi=300)
+    ax = ax.flatten()
+
+    for axi, fname in zip(ax, jsd_sorted[:20,0]):
+        
+        all_avg = np.mean(np.concatenate([fdata_i, fdata_a]))
+        fdata_i = fdata_i - all_avg
+        fdata_a = fdata_a - all_avg
+        
+        hist_c, bins_c = np.histogram(np.concatenate([fdata_i,fdata_a]), bins=60)
+        hist_i, bins_i = np.histogram(fdata_i, bins=bins_c)
+        hist_a, bins_a = np.histogram(fdata_a, bins=bins_c)
+        bin_centers_c = .5 * (bins_c[1:] + bins_c[:-1])
+        
+        axi.plot(bin_centers_c, hist_i, lw=2)
+        axi.plot(bin_centers_c, hist_a, lw=2)
+        
+        axi.fill_between(bin_centers_c, hist_i, alpha=0.5)
+        axi.fill_between(bin_centers_c, hist_a, alpha=0.5)
+        axi.fill_between(bin_centers_c, np.min([hist_i,hist_a], axis=0), alpha=0.25, color='k')
+        
+        axi.set_yticks([])
+        axi.set_ylim(bottom=0)
+        
+        axi.set_xlabel(r'dist. CA%s - CA%s'%(fname.split('-')[0], fname.split('-')[1]))
+        
+        fig.tight_layout()  
+
+        fig.savefig(out_plot, dpi=300)
+
+
 if __name__ == "__main__":
     """ 
     Perform systematic comparison of C-alpha distances.
@@ -102,16 +136,37 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', dest='info_file', type=str, help='info csv file')
     parser.add_argument('-f', dest='feature_files', nargs='+', type=str, help='feature csv files')
+    parser.add_argument('-s', dest='select_file', type=str, help='Name of the input file in csv format determining residue selections for binding pocket and restraints.') 
     parser.add_argument('-o', dest='output_dir', type=str, help='name of the output directory', default='comparison')   
     args = parser.parse_args()
 
+    # Read the input files
+    print("\n* - Reading the input files. - *\n")
+    simulations = pd.read_csv(args.info_file)
+    selections = pd.read_csv(args.select_file)
     names, data, origin, orig_id = read_features_from_csv_files(args.feature_files)
-    print(origin)
 
-    # Print some information
-    print("Origin:")
-    for o in np.sort(np.unique(origin)):
-        n_frames = np.sum(origin==o)
-        print(" - %5i frames"%n_frames)
+    # Split data in active and inactive (accoring to their origin simulation)
+    act_origin = list(simulations[simulations['Start_Label']=='active'].index)
+    ina_origin = list(simulations[simulations['Start_Label']=='inactive'].index)
+    print('Inactive Simulations:', ina_origin, '\nActive Simulations:  ', act_origin, '\n')
+    print('Shape of the total data:   ', data.shape)
+    data_i = data[[o in ina_origin for o in origin]]
+    data_a = data[[o in act_origin for o in origin]]
+    print('Shape of the inactive data:', data_i.shape)
+    print('Shape of the active data:  ', data_a.shape) 
 
+    # Run the relative-entropy analysis
+    data_names, jsd, kld_ab, kld_ba = relative_entropy_analysis(
+        names, names, data_i, data_a, 
+        bin_width=None, bin_num=10, verbose=True
+        )
+    # Sort the features by how much their distributions differ
+    jsd_sorted = sort_features(data_names, jsd)
+    out_data = pd.DataFrame(jsd_sorted, columns=['Distance','JSD'])
+    out_csv = os.path.join(args.output_dir, 'ca-dist_sorted-by-jsd.csv')
+    out_data.to_csv(out_csv)
+    # Plot the 20 most different distributions
+    out_pdf = os.path.join(args.output_dir, 'ca-dist_largest-jsd.pdf')
+    plot_most_different_distributions(jsd_sorted, data_i, data_a, out_pdf)
     

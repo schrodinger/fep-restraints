@@ -89,6 +89,37 @@ def read_features_from_csv_files(csv_names):
     return new_feat, all_data, orig_sim, orig_idx
 
 
+def sort_features(names, sortby):
+    """
+    Sorts features by a list of values.
+    
+    Parameters
+    ----------
+    names : str array
+        Array of feature names.
+    sortby : float array
+        Array of the values to sort the names by.
+        
+    Returns
+    -------
+    sort : array of tuples [str,float]
+        Array of sorted tuples with feature and value.
+    
+    """
+    # Get the indices of the sorted order
+    sort_id = np.argsort(sortby)[::-1]  
+    # Bring the names and values in the right order
+    sorted_names  = []
+    sorted_values = []
+    for i in sort_id:
+        sorted_names.append(np.array(names)[i])
+        sorted_values.append(sortby[i])
+    sn, sv = np.array(sorted_names), np.array(sorted_values)
+    # Format for output
+    sort = np.array([sn,sv]).T
+    return sort
+    
+
 def get_an_aid(cms_model, asl_string):
     aid_list = cms_model.select_atom(asl_string)
     if (len(aid_list) != 1):
