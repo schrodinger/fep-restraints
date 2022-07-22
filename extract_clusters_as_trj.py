@@ -9,6 +9,21 @@ import os.path
 from io_trajectory import load_trajectory, write_frames, get_an_aid
       
 
+def extract_cluster_as_xtc(trj_files, output_name, csv_files, value, property='Cluster_ID'):
+    frame_list = []
+    for csv, trj in zip(csv_files, trj_files):
+        num_df = pd.read_csv(csv)
+        clust_id = num_df[property]
+        trajectory = traj.read_traj(trj)
+        print( 'Length of CSV file:', len(clust_id), ' Length of trajectory:', len(trajectory))
+        assert len(clust_id) == len(trajectory)
+        for clid, frame in zip(clust_id, trajectory):
+            if clid == value:
+                frame_list.append(frame)
+    traj_name = output_name+'_cluster%02i'%value+'.xtc'
+    traj.write_traj(frame_list, traj_name)
+
+
 if __name__ == "__main__":
     """ 
     Read selected frames from a trajectory.
@@ -47,18 +62,7 @@ if __name__ == "__main__":
         cl_ids = np.array(def_df['Cluster_ID']) 
     print('Cluster IDs:', cl_ids)
 
-    # Go through all cluster IDs
+    # Go through all cluster IDs and extract the corresponding frames
     for value in cl_ids:
-        # Find the frames in the cluster
-        frame_list = []
-        for csv, trj in zip(args.frame_number_files, args.trj_files):
-            num_df = pd.read_csv(csv)
-            clust_id = num_df[args.property]
-            trajectory = traj.read_traj(trj)
-            print( 'Length of CSV file:', len(clust_id), ' Length of trajectory:', len(trajectory))
-            assert len(clust_id) == len(trajectory)
-            for clid, frame in zip(clust_id, trajectory):
-                if clid == value:
-                    frame_list.append(frame)
-        traj_name = args.output_name+'_cluster%02i'%value+'.xtc'
-        traj.write_traj(frame_list, traj_name)
+        extract_cluster_as_xtc(args.trj_files, args.output_name, args.frame_number_files, value, property=args.property)
+

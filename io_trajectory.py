@@ -25,6 +25,15 @@ def load_trajectory(cms_file, xtc_file, trj_dir):
     return msys_model, cms_model, trj
 
 
+def copy_topology(reference, output_name):
+    _, cms_model = topo.read_cms(reference)
+    model = cms_model.copy()
+    with structure.StructureWriter(cluster_output_name+'.cms') as writer:
+        writer.append(model.fsys_ct)
+        for st in model.comp_ct:
+            writer.append(st)
+
+
 def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None):
     
     # Determine the names of the frames (without extension)
