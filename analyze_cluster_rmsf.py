@@ -4,11 +4,11 @@ import os, os.path
 import pandas as pd
 
 from schrodinger.application.desmond.packages import traj, topo
-from io_trajectory import write_frames, copy_topology, extract_frames_by_value
-from io_features import write_features_to_csv, read_features_from_csv_files, calculate_ca_distances
+from utils.io_trajectory import write_frames, copy_topology, extract_frames_by_value
+from utils.io_features import write_features_to_csv, read_features_from_csv_files, calculate_ca_distances
 from sklearn.decomposition import PCA
-from clustering_on_pca import kmeans_on_pca
-from calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
+from tasks.clustering_on_pca import kmeans_on_pca
+from tasks.calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
 
 
 if __name__ == "__main__":
@@ -29,6 +29,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Read the input files
+    print("\n* - Reading the input files. - *\n")
     simulations = pd.read_csv(args.input_file)
     selections = pd.read_csv(args.select_file)
     print(simulations)
@@ -46,6 +47,8 @@ if __name__ == "__main__":
     # * ---------------------------------- * #
     # *  Calculate the C-alpha distances.  * #
     # * ---------------------------------- * #
+  
+    print("\n* - Calculating the C-alpha distances. - *\n")
     dist_files = []
     for i in simulations.index:
         # Get names and info for this simulation
@@ -64,16 +67,21 @@ if __name__ == "__main__":
         out_file = os.path.join(args.output_dir,'1-distances/ca-distances_%04i.csv'%i)
         dist_files.append(out_file)
         write_features_to_csv(out_file, distances, dist_names, time)
+        print('Wrote distances from %s to %s.'%(trj_file, out_file) )
     simulations['CA-Dist_File'] = dist_files
 
     # * ------------------------------ * #
     # *  Principal Component Analysis  * #
     # * ------------------------------ * #
+
+    print("\n* - Determining the principal components. - *\n")
     names, data, origin, orig_id = read_features_from_csv_files(dist_files)
     pca = PCA(n_components=args.n_components)
     pca.fit(data.T)
     pc = pca.components_
-    print(pca.explained_variance_ratio_) 
+    print('Explained variance ratio:')
+    for i, evr in enumerate(pca.explained_variance_ratio_):
+        print(' PC%02i: %1.4f'%(i+1, evr))
 
     # * -------------------- * #
     # *  K-Means Clustering  * #
@@ -88,7 +96,7 @@ if __name__ == "__main__":
     centroid_files = []
     for ik, k in enumerate(args.n_clusters):
 
-        print('* -- Running k-means clustering with k=%i -- *'%k)
+        print('\n* - Running k-means clustering with k=%i - *\n'%k)
 
         paramstr_k = '%s_k%02i'%(paramstr, k)
         outputf = os.path.join(args.output_dir,'2-clustering/pca-kmeans_'+paramstr_k)
@@ -145,8 +153,9 @@ if __name__ == "__main__":
         # Go through all cluster IDs 
         for value in range(k):
 
-            print('Calculating RMSF for cluster %i from k-means with k=%i:'%(value, k))            
-            
+            print('\n* - Calculating RMSF for cluster %i from k-means with k=%i - *\n'%(value, k))            
+            paramstr_cl = '%s_cluster%02i'%(paramstr_k, value)
+
             # Centroid and its properties + selections
             centroid_file = centroid_files_k[value]
             cc_topol_file = top_files[centroid_origin_file_id[value]]
@@ -155,25 +164,26 @@ if __name__ == "__main__":
             ref_asl_align = 'chain name ' + cc_selections['BindingPocket_Chain'].item()
             ref_asl_align += ' AND res.num ' + cc_selections['BindingPocket_ResNum'].item()
             ref_asl_write = cc_selections['Restraints_Res_ASL'].item()
-            print('Reference:')
-            print(centroid_file, ref_asl_align, ref_asl_write)
+            print(' - Reference -')
+            print(' File: %s\n Align ASL: %s\n Write ASL: %s\n'%(centroid_file, ref_asl_align, ref_asl_write))
 
-            print('Trajectory files:')
-            cluster_top_files, cluster_trj_files = [], [] 
+            print(' - Trajectories -')
+            cluster_top_files, cluster_trj_files, cluster_csv_files = [], [], [] 
             cluster_asl_align, cluster_asl_write = [], []
-            for top, trj, sys in zip(top_files, trj_files, sys_names):
+            for top, trj, csv, sys in zip(top_files, trj_files, csv_files, sys_names):
                 # Use only the simulations of the same system as the centroid
                 if sys != cc_origin_sys:
                     continue
                 cluster_top_files.append(top)
                 cluster_trj_files.append(trj)
+                cluster_csv_files.append(csv)
                 cluster_selection = selections[selections['System_Name']==sys] 
                 asl_align = 'chain name ' + cc_selections['BindingPocket_Chain'].item()
                 asl_align += ' AND res.num ' + cc_selections['BindingPocket_ResNum'].item()
                 asl_write = cc_selections['Restraints_Res_ASL'].item()
                 cluster_asl_align.append(asl_align)
                 cluster_asl_write.append(asl_write)
-                print(top, trj, asl_align, asl_write)
+                print(' Top. File: %s\n Trj. File: %s\n Align ASL: %s\n Write ASL: %s\n'%(top, trj, asl_align, asl_write))
 
             # Calculate the RMSF of this cluster
             rmsf_per_atom, pos_average, cms_model_ref_new = calculate_rmsf(
@@ -187,19 +197,21 @@ if __name__ == "__main__":
             output['pdbres'] = [a.pdbres for a in cms_model_ref_new.atom]
             output['resnum'] = [a.resnum for a in cms_model_ref_new.atom]
             output['pdbname'] = [a.pdbname for a in cms_model_ref_new.atom]
-            out_csv_file = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_k+'_rmsf.csv')
+            out_csv_file = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf.csv')
             output.to_csv(out_csv_file)
 
             # Write the RMSF on the reference structure (the centroid).
-            out_fn_ref = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_k+'_rmsf_ref.cms')
+            out_fn_ref = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_ref.cms')
             _ = write_coordinates(out_fn_ref, cms_model_ref_new, xyz=None, sigma=rmsf_per_atom)
 
             # Write the RMSF on the average structure.
-            out_fn_avg = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_k+'_rmsf_avg.cms')
+            out_fn_avg = os.path.join(args.output_dir,'3-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_avg.cms')
             _ = write_coordinates(out_fn_avg, cms_model_ref_new, pos_average, sigma=rmsf_per_atom)
 
             # Write this cluster as a trajectory (xtc format)
+            print('\n* - Writing cluster %i from k-means with k=%i as a trajectory - *\n'%(value, k))  
             if args.write_traj:
-                cluster_output = os.path.join(args.output_dir,'4-sorted/pca-kmeans_'+paramstr_k)   
+                cluster_output = os.path.join(args.output_dir,'4-sorted/pca-kmeans_'+paramstr_cl)  
+                print('Output: %s'%cluster_output) 
                 copy_topology(cc_topol_file, cluster_output+'.cms')
-                extract_frames_by_value(cluster_trj_files, cluster_output, csv_files, value)
+                extract_frames_by_value(cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value)

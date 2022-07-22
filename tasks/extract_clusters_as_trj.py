@@ -5,7 +5,7 @@ from schrodinger import structure
 import pandas as pd
 import numpy as np
 
-from io_trajectory import extract_frames_by_value
+from utils.io_trajectory import extract_frames_by_value
       
 
 if __name__ == "__main__":

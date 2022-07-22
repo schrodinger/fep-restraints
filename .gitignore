@@ -1,3 +1,4 @@
 __pycache__
 *.ipynb
-example/
+example/Sim01
+clustering_results

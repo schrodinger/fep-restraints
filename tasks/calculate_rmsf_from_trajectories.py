@@ -4,9 +4,8 @@ from schrodinger.application.desmond.packages import analysis, traj, topo
 from schrodinger import structure
 import pandas as pd
 import numpy as np
-import os.path
 
-from io_trajectory import load_trajectory, write_frames, get_an_aid
+from utils.io_trajectory import load_trajectory, write_frames, get_an_aid
 
 
 def select_subset_model(cms_model, aid):

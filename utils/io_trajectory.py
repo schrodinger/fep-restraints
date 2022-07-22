@@ -77,6 +77,5 @@ def extract_frames_by_value(trj_files, output_name, csv_files, value, property='
         for clid, frame in zip(clust_id, trajectory):
             if clid == value:
                 frame_list.append(frame)
-    traj_name = output_name+'_%s%02i.xtc'%(property,value)
-    traj.write_traj(frame_list, traj_name)
+    traj.write_traj(frame_list, output_name)
     
