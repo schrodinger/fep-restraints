@@ -75,6 +75,7 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file):
         sys_origin = list(simulations[simulations['System_Name']==sys].index)
         pc1 = pc[0][[o in sys_origin for o in origin]]
         pc2 = pc[1][[o in sys_origin for o in origin]]
+        print('System and Origin:', sys, sys_origin)
         # Plot all data points of this system
         ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.1, color='C%i'%sys_id)
         means.append([np.mean(pc1), np.mean(pc2)])
@@ -96,7 +97,7 @@ def plot_pca_by_system(pc, origin, simulations, out_file):
     systems = simulations['System_Name'].unique()
     for i, pci in enumerate(pc):
         # Calculate the general bins and their centers
-        hist_c, bins_c = np.histogram(pci, bins=60)
+        hist_c, bins_c = np.histogram(pci, bins=50)
         bin_centers = .5 * (bins_c[1:] + bins_c[:-1])
         # Start the figure
         fig, ax = plt.subplots(1, 1, figsize=[4,3], dpi=300)
@@ -104,7 +105,7 @@ def plot_pca_by_system(pc, origin, simulations, out_file):
         for sys_id, sys in enumerate(systems):
             # Find PC values of all data points from each system
             sys_origin = list(simulations[simulations['System_Name']==sys].index)
-            sys_pci = pci[[o in sys_origin for o in origin]]          
+            sys_pci = pci[[o in sys_origin for o in origin]]                     
             # Calculate the histogram on the general bins and plot it
             hist_i, bins_i = np.histogram(sys_pci, bins=bins_c)
             ax.plot(bin_centers, hist_i, lw=1, alpha=1, label=sys)
@@ -115,7 +116,24 @@ def plot_pca_by_system(pc, origin, simulations, out_file):
         ax.set_xlabel('PC%i'%(i+1))    
         ax.legend(fontsize=8)
         fig.tight_layout()
-        fig.savefig(out_file+'_PC%02i'%i, dpi=300)
+        fig.savefig(out_file+'_PC%02i.pdf'%i, dpi=300)
+
+
+def elbow_plot(num_clusters, sum_squ_dist, out_file):
+    fig,ax = plt.subplots(1, 1, figsize=[3,2.25], dpi=300)
+    ax.plot(num_clusters, sum_squ_dist, 'o')
+    ncmin, ncmax = np.min(num_clusters), np.max(num_clusters)
+    ssmin, ssmax = np.min(sum_squ_dist), np.max(sum_squ_dist)
+    # Format and labels
+    ax.set_xticks(np.arange(ncmin,ncmax+1))
+    ax.set_xticklabels(np.arange(ncmin,ncmax+1), size=7)
+    ax.set_yticks([])
+    ax.set_xlim([ncmin-0.5,9.5])
+    ax.set_ylim([0,1.1*ssmax])
+    ax.set_xlabel('number of clusters')
+    ax.set_ylabel('sum of sq. dist.')
+    fig.tight_layout()
+    fig.savefig(out_file, dpi=300)
 
 
 if __name__ == "__main__":

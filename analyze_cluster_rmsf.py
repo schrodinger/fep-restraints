@@ -9,7 +9,7 @@ from schrodinger.application.desmond.packages import traj, topo
 from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, calculate_ca_distances
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
-from tasks.clustering_on_pca import kmeans_on_pca, plot_pc1and2_by_system, plot_pca_by_system
+from tasks.clustering_on_pca import kmeans_on_pca, plot_pc1and2_by_system, plot_pca_by_system, elbow_plot
 from tasks.calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
 
 
@@ -179,6 +179,11 @@ if __name__ == "__main__":
     ssd['Num_Clusters'] = args.n_clusters
     ssd['Sum_Squ_Dist'] = sum_sqrd 
     ssd.to_csv(file_name_ssd, index=False)
+
+    # Elbow plot for SSD over k
+    plot_name_ssd = os.path.join(args.output_dir,'4-clustering/pca-kmeans_'+paramstr+'_ssd.pdf')
+    elbow_plot(args.n_clusters, sum_sqrd, plot_name_ssd)
+
 
     # * ------ * #
     # *  RMSF  * #

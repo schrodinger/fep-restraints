@@ -2,3 +2,4 @@ __pycache__
 *.ipynb
 example/Sim01
 clustering_results
+.DS_Store
