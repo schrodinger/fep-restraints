@@ -6,8 +6,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from schrodinger.application.desmond.packages import traj, topo
+from sympy import is_increasing
 from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
-from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, calculate_ca_distances
+from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, get_feature_data, calculate_ca_distances
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
 from tasks.clustering_on_pca import kmeans_on_pca, plot_pc1and2_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
@@ -84,8 +85,10 @@ if __name__ == "__main__":
     ina_origin = list(simulations[simulations['Start_Label']=='inactive'].index)
     print('Inactive Simulations:', ina_origin, '\nActive Simulations:  ', act_origin, '\n')
     print('Shape of the total data:   ', data.shape)
-    data_i = data[[o in ina_origin for o in origin]]
-    data_a = data[[o in act_origin for o in origin]]
+    is_ina = [o in ina_origin for o in origin]
+    is_act = [o in act_origin for o in origin]
+    data_i = data[is_ina]
+    data_a = data[is_act]
     print('Shape of the inactive data:', data_i.shape)
     print('Shape of the active data:  ', data_a.shape) 
     # Run the relative-entropy analysis
@@ -100,7 +103,7 @@ if __name__ == "__main__":
     out_data.to_csv(out_csv)
     # Plot the 20 most different distributions
     out_pdf = os.path.join(args.output_dir, '2-comparison/ca-dist_largest-jsd.pdf')
-    plot_most_different_distributions(jsd_sorted, data_i, data_a, out_pdf)
+    plot_most_different_distributions(jsd_sorted, names, names, data_i, data_a, out_pdf)
 
 
     # * ------------------------------ * #
@@ -277,18 +280,14 @@ if __name__ == "__main__":
             print('\n* - Writing cluster %i from k-means with k=%i as a trajectory - *\n'%(value, k))  
             if args.write_traj:
                 cluster_output = os.path.join(args.output_dir,'6-sorted/pca-kmeans_'+paramstr_cl)  
-                print('Output: %s'%cluster_output) 
                 copy_topology(cc_topol_file, cluster_output+'.cms')
                 extract_frames_by_value(cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value)
             print(' ')
 
+        # Append the list of RMSF files
         rmsf_files.append(rmsf_files_k)
 
-    # Plot every cluster of each clustering run
-    for ik, k in enumerate(args.n_clusters):  
-        rmsf_files_k = rmsf_files[ik]
-        print(rmsf_files_k)
-        paramstr_k = '%s_k%02i'%(paramstr, k)
+        # Plot every cluster of this clustering run
         out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf.pdf'
         out_rmsf_plot = os.path.join(args.output_dir, out_name_k)
         plot_cluster_rmsf(k, rmsf_files_k, dist_names, out_rmsf_plot)

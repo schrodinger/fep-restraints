@@ -76,15 +76,14 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file):
         sys_origin = list(simulations[simulations['System_Name']==sys].index)
         pc1 = pc[0][[o in sys_origin for o in origin]]
         pc2 = pc[1][[o in sys_origin for o in origin]]
-        print('System and Origin:', sys, sys_origin)
         # Plot all data points of this system
-        ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.1, color='C%i'%sys_id)
+        ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color='C%i'%sys_id)
         means.append([np.mean(pc1), np.mean(pc2)])
     for sys_id, sys in enumerate(systems):    
         ax.plot(*means[sys_id], 'o', mew=1, mec='k', alpha=1, color='C%i'%sys_id, label=sys)
     # Format and labels
-    ax.set_xlim(np.min(pc1), np.max(pc1))
-    ax.set_ylim(np.min(pc2), np.max(pc2))
+    ax.set_xlim(np.min(pc[0]), np.max(pc[0]))
+    ax.set_ylim(np.min(pc[1]), np.max(pc[1]))
     ax.set_xlabel('PC1')
     ax.set_ylabel('PC2')
     ax.set_xticks([])
@@ -145,25 +144,24 @@ def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
         cluster_data.append(new_data['Cluster_ID'])
     cluster_data = pd.concat(cluster_data)
     k = len(np.unique(cluster_data))
-    print('Length of cluster data: ', len(cluster_data))
-    print('Length of PCA data:     ', len(pc[0]))
     # Plot PCA with clusters
-    fig,ax = plt.subplots(1, 1, figsize=[4,4], dpi=300)
-    ax.set_xlabel('PC1', fontsize=8)
-    ax.set_ylabel('PC2', fontsize=8)
+    fig,ax = plt.subplots(1, 1, figsize=[3,3], dpi=300)
     for cluster_id in range(k):
         # Find PC values of all data points from each system
         is_in_cluster = [c == cluster_id for c in cluster_data]
-        print('Length of is-in-cluster data:', len(is_in_cluster))
         pc1 = pc[0][is_in_cluster]
         pc2 = pc[1][is_in_cluster]
-        ax.plot(pc1, pc2,'.', alpha=1, mew=0, ms=0.2, color="C%i"%(cluster_id%10))
+        ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color="C%i"%(cluster_id%10))
+    # Plot the cluster centers
     for cluster_id in range(k):
         cc1, cc2 = centers[cluster_id][0], centers[cluster_id][1]
-        ax.plot(cc1, cc2, 'o', alpha=0.5, mec='k', ms=4, 
+        ax.plot(cc1, cc2, 'o', alpha=0.5, mec='k', mew=1,
             color="C%i"%(cluster_id%10), label='%i'%cluster_id)
-    ax.set_xlim(np.min(pc1), np.max(pc1))
-    ax.set_ylim(np.min(pc2), np.max(pc2))
+    # Format and labels
+    ax.set_xlim(np.min(pc[0]), np.max(pc[0]))
+    ax.set_ylim(np.min(pc[1]), np.max(pc[1]))
+    ax.set_xlabel('PC1')
+    ax.set_ylabel('PC2')
     ax.set_xticks([])
     ax.set_yticks([])
     ax.legend(fontsize=8) 
@@ -188,7 +186,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     names, data, origin, orig_id = read_features_from_csv_files(args.input_files)
-    print(origin)
 
     # Print some information
     print("Origin:")

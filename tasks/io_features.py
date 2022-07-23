@@ -118,7 +118,33 @@ def sort_features(names, sortby):
     # Format for output
     sort = np.array([sn,sv]).T
     return sort
+
+
+def get_feature_data(feat, data, feature_name):
+    """
+    Returns the timeseries of one particular feature.
     
+    Parameters
+    ----------
+        feat : list of str
+            List with all feature names.
+        data : float array
+            Feature values data from the simulation.
+        feature_name : str
+           Name of the selected feature.
+    
+    Returns
+    -------
+        timeseries : float array
+            Value of the feature for each frame.
+    
+    """
+    # Select the feature and get its index.
+    index = np.where( np.array( feat ) == feature_name )[0][0]
+    # Extract the timeseries.
+    timeseries = data[:,index]
+    return timeseries
+     
 
 def get_an_aid(cms_model, asl_string):
     aid_list = cms_model.select_atom(asl_string)

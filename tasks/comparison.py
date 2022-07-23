@@ -6,7 +6,7 @@ import scipy.stats
 import scipy.spatial
 import scipy.spatial.distance
 import matplotlib.pyplot as plt
-from .io_features import read_features_from_csv_files, sort_features
+from .io_features import read_features_from_csv_files, sort_features, get_feature_data
 
 
 def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bin_width=None, bin_num=10, verbose=True, override_name_check=False):
@@ -94,13 +94,15 @@ def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bi
     return data_names, data_jsdist, data_kld_ab, data_kld_ba
 
 
-def plot_most_different_distributions(jsd_sorted, fdata_i, fdata_a, out_plot):
+def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a, out_plot):
 
     fig, ax = plt.subplots(5,4, figsize=[10,8], dpi=300)
     ax = ax.flatten()
 
     for axi, fname in zip(ax, jsd_sorted[:20,0]):
         
+        fdata_i = get_feature_data(feat_i, data_i, fname)
+        fdata_a = get_feature_data(feat_a, data_a, fname)
         all_avg = np.mean(np.concatenate([fdata_i, fdata_a]))
         fdata_i = fdata_i - all_avg
         fdata_a = fdata_a - all_avg
@@ -112,18 +114,15 @@ def plot_most_different_distributions(jsd_sorted, fdata_i, fdata_a, out_plot):
         
         axi.plot(bin_centers_c, hist_i, lw=2)
         axi.plot(bin_centers_c, hist_a, lw=2)
-        
         axi.fill_between(bin_centers_c, hist_i, alpha=0.5)
         axi.fill_between(bin_centers_c, hist_a, alpha=0.5)
         axi.fill_between(bin_centers_c, np.min([hist_i,hist_a], axis=0), alpha=0.25, color='k')
         
         axi.set_yticks([])
         axi.set_ylim(bottom=0)
-        
-        axi.set_xlabel(r'dist. CA%s - CA%s'%(fname.split('-')[0], fname.split('-')[1]))
+        axi.set_xlabel(r'distance CA%s - CA%s'%(fname.split('-')[0], fname.split('-')[1]))
         
         fig.tight_layout()  
-
         fig.savefig(out_plot, dpi=300)
 
 
