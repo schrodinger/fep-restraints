@@ -10,7 +10,7 @@ from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_v
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, calculate_ca_distances
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
 from tasks.clustering_on_pca import kmeans_on_pca, plot_pc1and2_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
-from tasks.calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
+from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
 
 
 if __name__ == "__main__":
@@ -200,8 +200,10 @@ if __name__ == "__main__":
     # * ------ * # 
 
     # Go through all clustering runs
+    rmsf_files = []
     for ik, k in enumerate(args.n_clusters):  
 
+        rmsf_files_k = []
         paramstr_k = '%s_k%02i'%(paramstr, k)
         csv_files = cl_files[ik]
         top_files = simulations['Topology']
@@ -261,6 +263,7 @@ if __name__ == "__main__":
             output['pdbname'] = [a.pdbname for a in cms_model_ref_new.atom]
             out_csv_file = os.path.join(args.output_dir,'5-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf.csv')
             output.to_csv(out_csv_file, index=False)
+            rmsf_files_k.append(out_csv_file)
 
             # Write the RMSF on the reference structure (the centroid).
             out_fn_ref = os.path.join(args.output_dir,'5-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_ref.cms')
@@ -278,3 +281,15 @@ if __name__ == "__main__":
                 copy_topology(cc_topol_file, cluster_output+'.cms')
                 extract_frames_by_value(cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value)
             print(' ')
+
+        rmsf_files.append(rmsf_files_k)
+
+    # Plot every cluster of each clustering run
+    for ik, k in enumerate(args.n_clusters):  
+        rmsf_files_k = rmsf_files[ik]
+        print(rmsf_files_k)
+        paramstr_k = '%s_k%02i'%(paramstr, k)
+        out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf.pdf'
+        out_rmsf_plot = os.path.join(args.output_dir, out_name_k)
+        plot_cluster_rmsf(k, rmsf_files_k, dist_names, out_rmsf_plot)
+

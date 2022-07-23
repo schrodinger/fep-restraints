@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from scipy.stats import norm
 from torch import _sobol_engine_initialize_state_
 from .io_features import read_features_from_csv_files
 

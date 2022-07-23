@@ -4,7 +4,7 @@ from schrodinger.application.desmond.packages import analysis, traj, topo
 from schrodinger import structure
 import pandas as pd
 import numpy as np
-
+import matplotlib.pyplot as plt
 from .io_trajectory import load_trajectory, write_frames, get_an_aid
 
 
@@ -117,6 +117,33 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, ref_asl_align, ref_asl_wr
     print('The new model has %s atoms.'%len(cms_model_ref_new.atom)) 
 
     return rmsf_per_atom, pos_average, cms_model_ref_new
+
+
+def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
+    # Plot the RMSF of each cluster
+    fig, ax = plt.subplots(k, 1, figsize=[8,2.0*k], dpi=300, sharex=True, sharey=True)
+    for cluster_id in range(k):
+        # Get the data
+        csv = rmsf_files_k[cluster_id]
+        df = pd.read_csv(csv)
+        df_ca = df[df['pdbname']==' CA ']
+        pair = np.array([n.split('-') for n in features], dtype=int)
+        bpid = np.unique(pair.flatten())
+        isbp = [(r in bpid) for r in df_ca['resnum'] ]
+        # Draw a grid
+        ax[cluster_id].grid(axis='y', ls='--')
+        # Plot the RMSF of all residues
+        ax[cluster_id].bar(df_ca['resnum'], df_ca['RMSF'], label=r'C$\mathrm{\alpha}$ atoms', width=1.0, color="C%i"%(cluster_id%10), alpha=0.4)
+        # Plot the RMSF of the binding pocket residues
+        ax[cluster_id].bar(df_ca['resnum'][isbp], df_ca['RMSF'][isbp], label=r'binding pocket C$\mathrm{\alpha}$', width=1.0, color="C%i"%(cluster_id%10), alpha=1.0)
+        # Format and Labels
+        ax[cluster_id].legend(framealpha=1)
+        ax[cluster_id].set_xlim(np.min(df_ca['resnum'])-0.5, np.max(df_ca['resnum'])+0.5)
+        ax[cluster_id].set_ylim([0,4.5])
+        ax[cluster_id].set_ylabel('RMSF [$\mathrm{\AA}$]')
+    ax[-1].set_xlabel('residue number')
+    fig.tight_layout()
+    fig.savefig(out_plot, dpi=300)
 
 
 if __name__ == "__main__":
