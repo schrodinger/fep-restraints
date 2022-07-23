@@ -9,7 +9,7 @@ from schrodinger.application.desmond.packages import traj, topo
 from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, calculate_ca_distances
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
-from tasks.clustering_on_pca import kmeans_on_pca, plot_pc1and2_by_system, plot_pca_by_system, elbow_plot
+from tasks.clustering_on_pca import kmeans_on_pca, plot_pc1and2_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
 from tasks.calculate_rmsf_from_trajectories import calculate_rmsf, write_coordinates
 
 
@@ -141,6 +141,7 @@ if __name__ == "__main__":
     cl_files = []
     sum_file = []
     centroid_files = []
+    cluster_centers = []
     for ik, k in enumerate(args.n_clusters):
 
         print('\n* - Running k-means clustering with k=%i - *\n'%k)
@@ -149,9 +150,8 @@ if __name__ == "__main__":
         outputf = os.path.join(args.output_dir,'4-clustering/pca-kmeans_'+paramstr_k)
         
         # Run the k-means clustering
-        cids, sizes, cc_orig_sim, cc_orig_id, inertia, cl_files_k, sum_file_k = kmeans_on_pca(
-            pc, k, args.random_state, origin, orig_id, output_base=outputf, 
-            input_files=None, write_pc=True
+        cids, sizes, centers, cc_orig_sim, cc_orig_id, inertia, cl_files_k, sum_file_k = kmeans_on_pca(
+            pc, k, args.random_state, origin, orig_id, output_base=outputf, input_files=None, write_pc=True
             )
         sum_sqrd.append(inertia)
         cl_files.append(cl_files_k)
@@ -171,6 +171,7 @@ if __name__ == "__main__":
             centroid_files_k.append(cf)
             print('Wrote centroid #%i to file %s'%(cl_id, cf))
         centroid_files.append(centroid_files_k)
+        cluster_centers.append(centers)
 
     # Write information about all k values in this study
     file_name_ssd = os.path.join(args.output_dir,'4-clustering/pca-kmeans_'+paramstr+'_ssd.csv')
@@ -183,6 +184,15 @@ if __name__ == "__main__":
     # Elbow plot for SSD over k
     plot_name_ssd = os.path.join(args.output_dir,'4-clustering/pca-kmeans_'+paramstr+'_ssd.pdf')
     elbow_plot(args.n_clusters, sum_sqrd, plot_name_ssd)
+
+    # Plot clusters in PCA space
+    for ik, k in enumerate(args.n_clusters):
+        centers = cluster_centers[ik]
+        cl_files_k = cl_files[ik]
+        paramstr_k = '%s_k%02i'%(paramstr, k)
+        out_name_k = '4-clustering/pca-kmeans_'+paramstr_k+'_pc-clusters.pdf'
+        out_pca_cl = os.path.join(args.output_dir, out_name_k)
+        pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl)
 
 
     # * ------ * #

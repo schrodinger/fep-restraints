@@ -63,7 +63,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     print(output)
     
     # Return the sum of squared distances for this k.
-    return cids, sizes, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
+    return cids, sizes, centers, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
 
 
 def plot_pc1and2_by_system(pc, origin, simulations, out_file):
@@ -134,6 +134,40 @@ def elbow_plot(num_clusters, sum_squ_dist, out_file):
     ax.set_ylabel('sum of sq. dist.')
     fig.tight_layout()
     fig.savefig(out_file, dpi=300)
+
+
+def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
+    # Get the data 
+    cluster_data = []
+    for clf in cl_files_k:
+        new_data = pd.read_csv(clf)
+        cluster_data.append(new_data['Cluster_ID'])
+    cluster_data = pd.concat(cluster_data)
+    k = len(np.unique(cluster_data))
+    print('Length of cluster data: ', len(cluster_data))
+    print('Length of PCA data:     ', len(pc[0]))
+    # Plot PCA with clusters
+    fig,ax = plt.subplots(1, 1, figsize=[4,4], dpi=300)
+    ax.set_xlabel('PC1', fontsize=8)
+    ax.set_ylabel('PC2', fontsize=8)
+    for cluster_id in range(k):
+        # Find PC values of all data points from each system
+        is_in_cluster = [c == cluster_id for c in cluster_data]
+        print('Length of is-in-cluster data:', len(is_in_cluster))
+        pc1 = pc[0][is_in_cluster]
+        pc2 = pc[1][is_in_cluster]
+        ax.plot(pc1, pc2,'.', alpha=1, mew=0, ms=0.2, color="C%i"%(cluster_id%10))
+    for cluster_id in range(k):
+        cc1, cc2 = centers[cluster_id][0], centers[cluster_id][1]
+        ax.plot(cc1, cc2, 'o', alpha=0.5, mec='k', ms=4, 
+            color="C%i"%(cluster_id%10), label='%i'%cluster_id)
+    ax.set_xlim(np.min(pc1), np.max(pc1))
+    ax.set_ylim(np.min(pc2), np.max(pc2))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.legend(fontsize=8) 
+    fig.tight_layout()
+    fig.savefig(out_pca_cl, dpi=300)
 
 
 if __name__ == "__main__":
