@@ -154,7 +154,8 @@ def get_an_aid(cms_model, asl_string):
         return(aid_list[0])
 
 
-def calculate_ca_distances(msys_model, cms_model, tr, chain_id, residue_numbers, residue_names=None):
+def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None):
+    assert len(chain_ids) == len(residue_numbers)
     # time
     frame_time = []
     for item in tr:
@@ -164,16 +165,24 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_id, residue_numbers,
         residue_names = residue_numbers
     else:
         assert len(residue_names) == len(residue_numbers)
+        for c, chain_id in enumerate(chain_ids):
+            assert len(residue_names[c]) == len(residue_numbers[c])
+    # define residues
+    residues = []
+    for c, chain_id in enumerate(chain_ids):
+        for number, name in zip(residue_numbers[c], residue_names[c]):
+            new_res = {'chain':chain_id, 'number':number, 'name':name}
+            residues.append(new_res)
     # define analyzers
     analyzers = []
     distance_names = []
-    for i in range(len(residue_numbers)):
-        for j in range(i+1, len(residue_numbers)):
-            rnum_i, rname_i  = residue_numbers[i], residue_names[i]
-            rnum_j, rname_j  = residue_numbers[j], residue_names[j]
-            first_asl = '(res.num %i) AND (atom.ptype " CA ") AND (chain.name %s)'%(rnum_i, chain_id)
+    for i in range(len(residues)):
+        for j in range(i+1, len(residues)):
+            chain_i, rnum_i, rname_i  = residues[i]['chain'], residues[i]['number'], residues[i]['name']
+            chain_j, rnum_j, rname_j  = residues[j]['chain'], residues[j]['number'], residues[i]['name']
+            first_asl = '(res.num %i) AND (atom.ptype " CA ") AND (chain.name %s)'%(rnum_i, chain_i)
             first_aid = get_an_aid(cms_model, first_asl)
-            second_asl = '(res.num %i) AND (atom.ptype " CA ") AND (chain.name %s)'%(rnum_j, chain_id)
+            second_asl = '(res.num %i) AND (atom.ptype " CA ") AND (chain.name %s)'%(rnum_j, chain_j)
             second_aid = get_an_aid(cms_model, second_asl)
             analyzers.append(analysis.Distance(msys_model, cms_model, first_aid, second_aid))
             distance_names.append("%s-%s"%(rname_i, rname_j))

@@ -59,8 +59,10 @@ if __name__ == "__main__":
         trj_file = simulations['Trajectory'][i]
         sys_name = simulations['System_Name'][i]
         sys_prop = selections[selections['System_Name']==sys_name]
-        chain_id = sys_prop['BindingPocket_Chain'].item()
-        res_nums = [int(rn) for rn in sys_prop['BindingPocket_ResNum'].item().split(' ')] 
+        #chain_id = sys_prop['BindingPocket_Chain'].item()
+        chain_id = list(sys_prop['BindingPocket_Chain'])
+        print(chain_id)
+        res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
         # Load the simulation data
         msys_model, cms_model = topo.read_cms(top_file)
         trj = traj.read_traj(trj_file) 
@@ -223,14 +225,23 @@ if __name__ == "__main__":
             print('\n* - Calculating RMSF for cluster %i from k-means with k=%i - *\n'%(value, k))            
             paramstr_cl = '%s_cluster%02i'%(paramstr_k, value)
 
-            # Centroid and its properties + selections
+            # Centroid and its properties
             centroid_file = centroid_files_k[value]
             cc_topol_file = top_files[centroid_origin_file_id[value]]
             cc_origin_sys = sys_names[centroid_origin_file_id[value]]
+            # Construct selection strings
             cc_selections = selections[selections['System_Name']==cc_origin_sys]
-            ref_asl_align = 'chain name ' + cc_selections['BindingPocket_Chain'].item()
-            ref_asl_align += ' AND res.num ' + cc_selections['BindingPocket_ResNum'].item()
-            ref_asl_write = cc_selections['Restraints_Res_ASL'].item()
+            # ... for alignment 
+            ref_asl_align = ''
+            for _chain, _resnumstr in zip(cc_selections['BindingPocket_Chain'], 
+                                          cc_selections['BindingPocket_ResNum']):
+                ref_asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' ) OR '
+            ref_asl_align = ref_asl_align[:-4] # cut the final OR
+            # ... and for writing restraints
+            ref_asl_write = ''
+            for _resasl in cc_selections['Restraints_Res_ASL']:
+                ref_asl_write += '( '+_resasl+' ) OR '
+            ref_asl_write = ref_asl_write[:-4] # cut the final OR 
             print(' - Reference -')
             print(' File: %s\n Align ASL: %s\n Write ASL: %s\n'%(centroid_file, ref_asl_align, ref_asl_write))
 
@@ -244,10 +255,20 @@ if __name__ == "__main__":
                 cluster_top_files.append(top)
                 cluster_trj_files.append(trj)
                 cluster_csv_files.append(csv)
-                cluster_selection = selections[selections['System_Name']==sys] 
-                asl_align = 'chain name ' + cc_selections['BindingPocket_Chain'].item()
-                asl_align += ' AND res.num ' + cc_selections['BindingPocket_ResNum'].item()
-                asl_write = cc_selections['Restraints_Res_ASL'].item()
+                # Construct selection strings
+                cluster_selections = selections[selections['System_Name']==sys] 
+                # ... for alignment
+                asl_align = ''
+                for _chain, _resnumstr in zip(cluster_selections['BindingPocket_Chain'], 
+                                              cluster_selections['BindingPocket_ResNum']):
+                    asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' ) OR '
+                asl_align = asl_align[:-4] # cut the final OR
+                # ... and for writing restraints.
+                asl_write = ''
+                for _resasl in cluster_selections['Restraints_Res_ASL']:
+                    asl_write += '( '+_resasl+' ) OR '
+                asl_write = asl_write[:-4] # cut the final OR 
+                # Append the selection strings.
                 cluster_asl_align.append(asl_align)
                 cluster_asl_write.append(asl_write)
                 print(' Top. File: %s\n Trj. File: %s\n Align ASL: %s\n Write ASL: %s\n'%(top, trj, asl_align, asl_write))

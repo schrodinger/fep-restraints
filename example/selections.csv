@@ -1,5 +1,6 @@
 System_Name,BindingPocket_Chain,BindingPocket_ResNum,Restraints_Res_ASL
-2RH1,C,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name C AND ( ( res.num > 30 AND res.num < 226 ) OR ( res.num > 266 AND res.num < 341 ) )
+2RH1,C,109 113 114 117 118 193 199 203 204 207,chain.name C AND ( res.num > 30 AND res.num < 226 ) 
+2RH1,C,286 289 290 293 308 312 316,chain.name C AND ( res.num > 266 AND res.num < 341 )
 5JQH,A,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name A AND ( ( res.num > 30 AND res.num < 226 ) OR ( res.num > 266 AND res.num < 341 ) )
 3P0G,A,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name A AND ( ( res.num > 30 AND res.num < 226 ) OR ( res.num > 266 AND res.num < 341 ) )
 7DHI,R,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name R AND ( ( res.num > 30 AND res.num < 226 ) OR ( res.num > 266 AND res.num < 341 ) )
