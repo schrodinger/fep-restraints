@@ -40,7 +40,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
         output['Frame_ID'] = np.arange(np.sum(is_from_origin))
         output['Cluster_ID'] = clusters[is_from_origin]
         for j in range(k):
-            output['Distance_to_C%02i'%j] = cdist[is_from_origin,j]
+            output['Distance_to_Cluster_%02i'%j] = cdist[is_from_origin,j]
         if write_pc:
             for j, pcj in enumerate(pc):
                 output['PC%02i'%(j+1)] = pcj[is_from_origin]
