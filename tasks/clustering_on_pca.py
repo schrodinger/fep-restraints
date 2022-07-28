@@ -39,10 +39,12 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
         output = pd.DataFrame()
         output['Frame_ID'] = np.arange(np.sum(is_from_origin))
         output['Cluster_ID'] = clusters[is_from_origin]
+        for j in range(k):
+            output['Distance_to_C%02i'%j] = cdist[is_from_origin,j]
         if write_pc:
-            for i, pci in enumerate(pc):
-                output['PC%02i'%(i+1)] = pci[is_from_origin]
-        output.to_csv(cl_file_name)
+            for j, pcj in enumerate(pc):
+                output['PC%02i'%(j+1)] = pcj[is_from_origin]
+        output.to_csv(cl_file_name, index=False)
         cl_files.append(cl_file_name)
 
     # Write summary information
@@ -64,7 +66,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     print(output)
     
     # Return the sum of squared distances for this k.
-    return cids, sizes, centers, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
+    return cids, sizes, centers, cdist, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
 
 
 def plot_pc1and2_by_system(pc, origin, simulations, out_file):
@@ -205,7 +207,7 @@ if __name__ == "__main__":
     sum_sqrd = []
     for ik, k in enumerate(args.n_clusters):  
         outputf = args.output_base+'_n%02i_s%02i_k%02i'%(args.n_components, args.random_state, k)
-        cids, sizes, cc_orig_sim, cc_orig_id, inertia, cl_files, sum_file = kmeans_on_pca(
+        cids, sizes, centers, cdist, cc_orig_sim, cc_orig_id, inertia, cl_files, sum_file = kmeans_on_pca(
             pc, k, args.random_state, origin, orig_id, output_base=outputf, 
             input_files=args.input_files, write_pc=args.write_pc, out_names=args.out_names
             )

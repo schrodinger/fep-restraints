@@ -59,7 +59,6 @@ if __name__ == "__main__":
         trj_file = simulations['Trajectory'][i]
         sys_name = simulations['System_Name'][i]
         sys_prop = selections[selections['System_Name']==sys_name]
-        #chain_id = sys_prop['BindingPocket_Chain'].item()
         chain_id = list(sys_prop['BindingPocket_Chain'])
         print(chain_id)
         res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
@@ -155,7 +154,7 @@ if __name__ == "__main__":
         outputf = os.path.join(args.output_dir,'4-clustering/pca-kmeans_'+paramstr_k)
         
         # Run the k-means clustering
-        cids, sizes, centers, cc_orig_sim, cc_orig_id, inertia, cl_files_k, sum_file_k = kmeans_on_pca(
+        cids, sizes, centers, cdist, cc_orig_sim, cc_orig_id, inertia, cl_files_k, sum_file_k = kmeans_on_pca(
             pc, k, args.random_state, origin, orig_id, output_base=outputf, input_files=None, write_pc=True
             )
         sum_sqrd.append(inertia)
