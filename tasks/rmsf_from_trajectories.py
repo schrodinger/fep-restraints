@@ -4,9 +4,8 @@ from schrodinger.application.desmond.packages import analysis, traj, topo
 from schrodinger import structure
 import pandas as pd
 import numpy as np
-import os.path
-
-from io_trajectory import load_trajectory, write_frames, get_an_aid
+import matplotlib.pyplot as plt
+from .io_trajectory import load_trajectory, write_frames, get_an_aid
 
 
 def select_subset_model(cms_model, aid):
@@ -52,44 +51,21 @@ def write_coordinates(out_fname, model, xyz=None, sigma=None):
         writer.append(model.fsys_ct)
 
 
-if __name__ == "__main__":
-    """ 
-    Read selected frames from a trajectory.
-    """
-    
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', nargs='+', dest='cms_files', type=str, help='cms files')
-    parser.add_argument('-t', nargs='+', dest='trj_files', type=str, help='trajecotry files or directories')    
-    parser.add_argument('-s', dest='sel_file', type=str, help='alignment selections for each trajectory, each line is one selection', default='selections.txt')
-    parser.add_argument('-w', dest='write_sel_file', type=str, help='selection file for which atoms to use in each trajectory')
-    parser.add_argument('-o', dest='output_filename', type=str, help='name of the output files')  
-    parser.add_argument('--ref_file', dest='reference_fn', type=str, help='reference file to align and calculate RMSF to')
-    parser.add_argument('--ref_sel_align', dest='ref_asl_align', type=str, help='alignment selection for the reference file')
-    parser.add_argument('--ref_sel_write', dest='ref_asl_write', type=str, help='output selection for the reference file')
-    parser.add_argument('--align_avg', dest='align_avg', action='store_true', help='align the final average structure to the reference, using all atoms in the output selection.', default=False) 
-    parser.add_argument('--threshold', dest='threshold', type=float, help='threshold RMSD to exclude frames', default=None)
-    args = parser.parse_args()
+def calculate_rmsf(reference_fn, cms_files, trj_files, ref_asl_align, ref_asl_write, selections_align, selections_write, align_avg=True, threshold=None):
 
     # Read the reference structure
-    _, cms_model_ref = topo.read_cms(args.reference_fn) 
-    aidlist_ref = cms_model_ref.select_atom(args.ref_asl_align) 
+    _, cms_model_ref = topo.read_cms(reference_fn) 
+    aidlist_ref = cms_model_ref.select_atom(ref_asl_align) 
     gidlist_ref = topo.aids2gids(cms_model_ref, aidlist_ref, include_pseudoatoms=False)
     print("The reference selection has %i atoms."%(len(gidlist_ref)))
     pos_ref_all = cms_model_ref.getXYZ()
     pos_ref = pos_ref_all[gidlist_ref]
 
-    # Load selection files
-    with open(args.sel_file) as sf:
-        selections_align = [line.rstrip() for line in sf]
-    with open(args.write_sel_file) as sf:
-        selections_write = [line.rstrip() for line in sf]
-
     # Create list in which to store the new positions and distances
     pos_sel_aligned = []
     squared_distances = []
     # Loop through all trajectories, align, and calculate distances
-    for cms, trj, sel_align, sel_write in zip(args.cms_files, args.trj_files, selections_align, selections_write):
+    for cms, trj, sel_align, sel_write in zip(cms_files, trj_files, selections_align, selections_write):
         # Read the trajectory
         _, cms_model = topo.read_cms(cms)
         print('Number of atoms in the system:', cms_model.atom_total)
@@ -116,7 +92,7 @@ if __name__ == "__main__":
             frame_rmsd = np.sqrt(np.mean(new_squ_dist))
             if f%100 == 0: 
                 print("RMSD in frame %04i: %1.4f"%(f, frame_rmsd))
-            if args.threshold is not None and frame_rmsd < args.threshold: 
+            if threshold is None or frame_rmsd < threshold: 
                 squared_distances.append(new_squ_dist)
                 pos_sel_aligned.append(pos_new[gidlist_write])
     pos_sel_aligned = np.array(pos_sel_aligned)
@@ -126,20 +102,80 @@ if __name__ == "__main__":
     # Calculate the average position of each selected atom.
     pos_average = np.mean(pos_sel_aligned, axis=0)
     # ... and align it to the reference, using all atoms
-    if args.align_avg:
+    if align_avg:
         pos_average = analysis.align_pos(pos_average, pos_average, pos_ref_all[gidlist_write])
 
     # Calculate the RMSF for each atom.
     rmsf_per_atom = np.sqrt(np.mean(squared_distances, axis=0))
     rmsd_per_frame = np.sqrt(np.mean(squared_distances, axis=1))
-    print("Calculated RMSF for %i atoms and %i frames."%(len(rmsf_per_atom), len(rmsd_per_frame)))
-   
+    print("Calculated RMSF for %i atoms and %i frames."%(len(rmsf_per_atom), len(rmsd_per_frame)))    
+
     # Get the model of the subset to write to the structures.
-    aidlist_write_ref = cms_model_ref.select_atom(str(args.ref_asl_write))
+    aidlist_write_ref = cms_model_ref.select_atom(str(ref_asl_write))
     cms_model_ref_new = select_subset_model(cms_model_ref, aidlist_write_ref )
     print('The new model has %s atoms.'%cms_model_ref_new.atom_total)
     print('The new model has %s atoms.'%len(cms_model_ref_new.atom)) 
 
+    return rmsf_per_atom, pos_average, cms_model_ref_new
+
+
+def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
+    # Plot the RMSF of each cluster
+    fig, ax = plt.subplots(k, 1, figsize=[8,2.0*k], dpi=300, sharex=True, sharey=True)
+    for cluster_id in range(k):
+        # Get the data
+        csv = rmsf_files_k[cluster_id]
+        df = pd.read_csv(csv)
+        df_ca = df[df['pdbname']==' CA ']
+        pair = np.array([n.split('-') for n in features], dtype=int)
+        bpid = np.unique(pair.flatten())
+        isbp = [(r in bpid) for r in df_ca['resnum'] ]
+        # Draw a grid
+        ax[cluster_id].grid(axis='y', ls='--')
+        # Plot the RMSF of all residues
+        ax[cluster_id].bar(df_ca['resnum'], df_ca['RMSF'], label=r'C$\mathrm{\alpha}$ atoms', width=1.0, color="C%i"%(cluster_id%10), alpha=0.4)
+        # Plot the RMSF of the binding pocket residues
+        ax[cluster_id].bar(df_ca['resnum'][isbp], df_ca['RMSF'][isbp], label=r'binding pocket C$\mathrm{\alpha}$', width=1.0, color="C%i"%(cluster_id%10), alpha=1.0)
+        # Format and Labels
+        ax[cluster_id].legend(framealpha=1)
+        ax[cluster_id].set_xlim(np.min(df_ca['resnum'])-0.5, np.max(df_ca['resnum'])+0.5)
+        ax[cluster_id].set_ylim([0,4.5])
+        ax[cluster_id].set_ylabel('RMSF [$\mathrm{\AA}$]')
+    ax[-1].set_xlabel('residue number')
+    fig.tight_layout()
+    fig.savefig(out_plot, dpi=300)
+
+
+if __name__ == "__main__":
+    """ 
+    Read selected frames from a trajectory.
+    """
+    
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', nargs='+', dest='cms_files', type=str, help='cms files')
+    parser.add_argument('-t', nargs='+', dest='trj_files', type=str, help='trajecotry files or directories')    
+    parser.add_argument('-s', dest='sel_file', type=str, help='alignment selections for each trajectory, each line is one selection', default='selections.txt')
+    parser.add_argument('-w', dest='write_sel_file', type=str, help='selection file for which atoms to use in each trajectory')
+    parser.add_argument('-o', dest='output_filename', type=str, help='name of the output files')  
+    parser.add_argument('--ref_file', dest='reference_fn', type=str, help='reference file to align and calculate RMSF to')
+    parser.add_argument('--ref_sel_align', dest='ref_asl_align', type=str, help='alignment selection for the reference file')
+    parser.add_argument('--ref_sel_write', dest='ref_asl_write', type=str, help='output selection for the reference file')
+    parser.add_argument('--align_avg', dest='align_avg', action='store_true', help='align the final average structure to the reference, using all atoms in the output selection.', default=False) 
+    parser.add_argument('--threshold', dest='threshold', type=float, help='threshold RMSD to exclude frames', default=None)
+    args = parser.parse_args()
+
+    # Load selection files
+    with open(args.sel_file) as sf:
+        asl_align = [line.rstrip() for line in sf]
+    with open(args.write_sel_file) as sf:
+        asl_write = [line.rstrip() for line in sf]
+
+    rmsf_per_atom, pos_average, cms_model_ref_new = calculate_rmsf(
+        args.reference_fn, args.cms_files, args.trj_files, 
+        args.ref_asl_align, args.ref_asl_write, asl_align, asl_write, 
+        align_avg=args.align_avg, threshold=args.threshold)
+   
     # Write the RMSF to a CSV file.  
     output = pd.DataFrame()
     output['RMSF'] = rmsf_per_atom

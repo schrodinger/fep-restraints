@@ -2,9 +2,6 @@
 
 from schrodinger.application.desmond.packages import analysis, traj, topo
 from schrodinger import structure
-import pandas as pd
-import os.path
-
 from io_trajectory import load_trajectory, write_frames
 
 if __name__ == "__main__":
