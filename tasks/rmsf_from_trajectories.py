@@ -122,6 +122,8 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, ref_asl_align, ref_asl_wr
 def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
     # Plot the RMSF of each cluster
     fig, ax = plt.subplots(k, 1, figsize=[8,2.0*k], dpi=300, sharex=True, sharey=True)
+    if k==1: # Make ax a list, even when there is only one plot
+        ax = [ax]
     for cluster_id in range(k):
         # Get the data
         csv = rmsf_files_k[cluster_id]
