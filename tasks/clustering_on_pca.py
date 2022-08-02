@@ -96,7 +96,8 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file, showstart=False):
     ax.set_yticks([])
     ax.legend(fontsize=8)
     fig.tight_layout()
-    fig.savefig(out_file, dpi=300)
+    fig.savefig(out_file+'.pdf', dpi=300)
+    fig.savefig(out_file+'.png', dpi=300)
 
 
 def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):  
@@ -125,6 +126,7 @@ def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):
         ax.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(out_file+'_PC%02i.pdf'%i, dpi=300)
+        fig.savefig(out_file+'_PC%02i.png'%i, dpi=300)
 
 
 def elbow_plot(num_clusters, sum_squ_dist, out_file):
@@ -141,7 +143,8 @@ def elbow_plot(num_clusters, sum_squ_dist, out_file):
     ax.set_xlabel('number of clusters')
     ax.set_ylabel('sum of sq. dist.')
     fig.tight_layout()
-    fig.savefig(out_file, dpi=300)
+    fig.savefig(out_file+'.png', dpi=300)
+    fig.savefig(out_file+'.pdf', dpi=300)
 
 
 def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
@@ -174,7 +177,8 @@ def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
     ax.set_yticks([])
     ax.legend(fontsize=8) 
     fig.tight_layout()
-    fig.savefig(out_pca_cl, dpi=300)
+    fig.savefig(out_pca_cl+'.pdf', dpi=300)
+    fig.savefig(out_pca_cl+'.png', dpi=300)
 
 
 if __name__ == "__main__":

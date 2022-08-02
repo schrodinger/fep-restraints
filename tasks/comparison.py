@@ -128,7 +128,8 @@ def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a
         axi.set_xlabel(r'distance CA%s - CA%s'%(fname.split('-')[0], fname.split('-')[1]))
         
         fig.tight_layout()  
-        fig.savefig(out_plot, dpi=300)
+        fig.savefig(out_plot+'.png', dpi=300)
+        fig.savefig(out_plot+'.pdf', dpi=300)
 
 
 if __name__ == "__main__":
@@ -171,6 +172,6 @@ if __name__ == "__main__":
     out_csv = os.path.join(args.output_dir, 'ca-distances_sorted-by-jsd.csv')
     out_data.to_csv(out_csv)
     # Plot the 20 most different distributions
-    out_pdf = os.path.join(args.output_dir, 'ca-distances_largest-jsd.pdf')
-    plot_most_different_distributions(jsd_sorted, data_i, data_a, out_pdf)
+    out_file = os.path.join(args.output_dir, 'ca-distances_largest-jsd')
+    plot_most_different_distributions(jsd_sorted, data_i, data_a, out_file)
     

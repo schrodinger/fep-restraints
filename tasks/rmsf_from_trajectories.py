@@ -145,7 +145,8 @@ def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
         ax[cluster_id].set_ylabel('RMSF [$\mathrm{\AA}$]')
     ax[-1].set_xlabel('residue number')
     fig.tight_layout()
-    fig.savefig(out_plot, dpi=300)
+    fig.savefig(out_plot+'.png', dpi=300)
+    fig.savefig(out_plot+'.pdf', dpi=300)
 
 
 if __name__ == "__main__":

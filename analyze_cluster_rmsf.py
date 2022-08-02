@@ -140,7 +140,7 @@ if __name__ == "__main__":
         showstart=args.showstart
         )
     plot_pc1and2_by_system(
-        pc, origin, simulations, out_pdf+'_pc1and2.pdf', 
+        pc, origin, simulations, out_pdf+'_pc1and2', 
         showstart=args.showstart
         )
 
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     ssd.to_csv(file_name_ssd, index=False)
 
     # Elbow plot for SSD over k
-    plot_name_ssd = os.path.join(args.output_dir,'4-clustering/pca-kmeans_'+paramstr+'_ssd.pdf')
+    plot_name_ssd = os.path.join(args.output_dir,'4-clustering/pca-kmeans_'+paramstr+'_ssd')
     elbow_plot(args.n_clusters, sum_sqrd, plot_name_ssd)
 
     # Plot clusters in PCA space
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         centers = cluster_centers[ik]
         cl_files_k = cl_files[ik]
         paramstr_k = '%s_k%02i'%(paramstr, k)
-        out_name_k = '4-clustering/pca-kmeans_'+paramstr_k+'_pc-clusters.pdf'
+        out_name_k = '4-clustering/pca-kmeans_'+paramstr_k+'_pc-clusters'
         out_pca_cl = os.path.join(args.output_dir, out_name_k)
         pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl)
 
@@ -317,7 +317,7 @@ if __name__ == "__main__":
         rmsf_files.append(rmsf_files_k)
 
         # Plot every cluster of this clustering run
-        out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf.pdf'
+        out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf'
         out_rmsf_plot = os.path.join(args.output_dir, out_name_k)
         plot_cluster_rmsf(k, rmsf_files_k, dist_names, out_rmsf_plot)
 
