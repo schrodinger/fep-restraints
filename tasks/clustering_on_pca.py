@@ -69,10 +69,11 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     return cids, sizes, centers, cdist, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
 
 
-def plot_pc1and2_by_system(pc, origin, simulations, out_file):
+def plot_pc1and2_by_system(pc, origin, simulations, out_file, showstart=False):
     systems = simulations['System_Name'].unique()
     fig, ax = plt.subplots(1,1, figsize=[3,3], dpi=300)
     means = []
+    starts = []
     for sys_id, sys in enumerate(systems):
         # Find PC values of all data points from each system
         sys_origin = list(simulations[simulations['System_Name']==sys].index)
@@ -81,7 +82,10 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file):
         # Plot all data points of this system
         ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color='C%i'%sys_id)
         means.append([np.mean(pc1), np.mean(pc2)])
-    for sys_id, sys in enumerate(systems):    
+        starts.append([pc1[0], pc2[0]])
+    for sys_id, sys in enumerate(systems):
+        if showstart: 
+            ax.plot(*starts[sys_id], 's', mew=1, mec='k', alpha=1, color='C%i'%sys_id) 
         ax.plot(*means[sys_id], 'o', mew=1, mec='k', alpha=1, color='C%i'%sys_id, label=sys)
     # Format and labels
     ax.set_xlim(np.min(pc[0]), np.max(pc[0]))
@@ -95,7 +99,7 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file):
     fig.savefig(out_file, dpi=300)
 
 
-def plot_pca_by_system(pc, origin, simulations, out_file):  
+def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):  
     systems = simulations['System_Name'].unique()
     for i, pci in enumerate(pc):
         # Calculate the general bins and their centers
@@ -107,7 +111,9 @@ def plot_pca_by_system(pc, origin, simulations, out_file):
         for sys_id, sys in enumerate(systems):
             # Find PC values of all data points from each system
             sys_origin = list(simulations[simulations['System_Name']==sys].index)
-            sys_pci = pci[[o in sys_origin for o in origin]]                     
+            sys_pci = pci[[o in sys_origin for o in origin]]    
+            if showstart:
+                ax.axvline(sys_pci[0], lw=2, color='C%i'%sys_id)                
             # Calculate the histogram on the general bins and plot it
             hist_i, bins_i = np.histogram(sys_pci, bins=bins_c)
             ax.plot(bin_centers, hist_i, lw=1, alpha=1, label=sys)

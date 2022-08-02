@@ -94,7 +94,7 @@ def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bi
     return data_names, data_jsdist, data_kld_ab, data_kld_ba
 
 
-def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a, out_plot):
+def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a, out_plot, showstart=False):
 
     fig, ax = plt.subplots(5,4, figsize=[10,8], dpi=300)
     ax = ax.flatten()
@@ -107,6 +107,11 @@ def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a
         fdata_i = fdata_i - all_avg
         fdata_a = fdata_a - all_avg
         
+        # Starting values
+        if showstart:
+            axi.axvline(fdata_i[0], lw=2, color='C0')
+            axi.axvline(fdata_a[0], lw=2, color='C1')
+
         hist_c, bins_c = np.histogram(np.concatenate([fdata_i,fdata_a]), bins=60)
         hist_i, bins_i = np.histogram(fdata_i, bins=bins_c)
         hist_a, bins_a = np.histogram(fdata_a, bins=bins_c)

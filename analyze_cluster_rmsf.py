@@ -29,6 +29,7 @@ if __name__ == "__main__":
     parser.add_argument('-r', dest='random_state', type=int, help='random state for k-means algorithm', default=42)    
     parser.add_argument('-w', dest='write_traj', action='store_true', default=False)
     parser.add_argument('-t', dest='threshold', type=float, default=None)
+    parser.add_argument('--showstart', dest='showstart', action='store_true', default=False)
     args = parser.parse_args()
 
     # Read the input files
@@ -104,7 +105,9 @@ if __name__ == "__main__":
     out_data.to_csv(out_csv)
     # Plot the 20 most different distributions
     out_pdf = os.path.join(args.output_dir, '2-comparison/ca-dist_largest-jsd.pdf')
-    plot_most_different_distributions(jsd_sorted, names, names, data_i, data_a, out_pdf)
+    plot_most_different_distributions(
+        jsd_sorted, names, names, data_i, data_a, out_pdf, showstart=args.showstart
+        )
 
 
     # * ------------------------------ * #
@@ -132,8 +135,14 @@ if __name__ == "__main__":
 
     # Plot PCA results by origin system
     out_pdf = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr)
-    plot_pca_by_system(pc, origin, simulations, out_pdf)
-    plot_pc1and2_by_system(pc, origin, simulations, out_pdf+'_pc1and2.pdf')
+    plot_pca_by_system(
+        pc, origin, simulations, out_pdf, 
+        showstart=args.showstart
+        )
+    plot_pc1and2_by_system(
+        pc, origin, simulations, out_pdf+'_pc1and2.pdf', 
+        showstart=args.showstart
+        )
 
 
     # * -------------------- * #
