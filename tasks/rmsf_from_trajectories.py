@@ -51,7 +51,7 @@ def write_coordinates(out_fname, model, xyz=None, sigma=None):
         writer.append(model.fsys_ct)
 
 
-def calculate_rmsf(reference_fn, cms_files, trj_files, ref_asl_align, ref_asl_write, selections_align, selections_write, align_avg=True, threshold=None):
+def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, ref_asl_align, ref_asl_write, selections_align, selections_write, align_avg=True, threshold=None):
 
     # Read the reference structure
     _, cms_model_ref = topo.read_cms(reference_fn) 
@@ -65,7 +65,9 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, ref_asl_align, ref_asl_wr
     pos_sel_aligned = []
     squared_distances = []
     # Loop through all trajectories, align, and calculate distances
-    for cms, trj, sel_align, sel_write in zip(cms_files, trj_files, selections_align, selections_write):
+    for cms, trj, csv, sel_align, sel_write in zip(cms_files, trj_files, csv_files, selections_align, selections_write):
+        # Read the CSV file with cluster information
+        frame_cluster_id = np.array(pd.read_csv(csv)['Cluster_ID'], dtype=int)
         # Read the trajectory
         _, cms_model = topo.read_cms(cms)
         print('Number of atoms in the system:', cms_model.atom_total)
@@ -82,6 +84,10 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, ref_asl_align, ref_asl_wr
         ct = model.fsys_ct
         print('Reading:', cms, trj)
         for f, frame in enumerate(trajectory):
+            # Check whether this frame is in the selected cluster
+            if frame_cluster_id[f] != cluster_id:
+                continue
+            # Update the coordinates
             topo.update_ct(ct, model, frame)
             # Align frame to reference structure
             pos_all = ct.getXYZ()

@@ -291,7 +291,7 @@ if __name__ == "__main__":
 
             # Calculate the RMSF of this cluster
             rmsf_per_atom, pos_average, cms_model_ref_new = calculate_rmsf(
-                centroid_file, cluster_top_files, cluster_trj_files, 
+                centroid_file, cluster_top_files, cluster_trj_files, cluster_csv_files, value, 
                 ref_asl_align, ref_asl_write, cluster_asl_align, cluster_asl_write, 
                 align_avg=True, threshold=args.threshold)   
 
