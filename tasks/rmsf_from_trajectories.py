@@ -124,6 +124,8 @@ def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
     fig, ax = plt.subplots(k, 1, figsize=[8,2.0*k], dpi=300, sharex=True, sharey=True)
     if k==1: # Make ax a list, even when there is only one plot
         ax = [ax]
+    resnum_min = []
+    resnum_max = []
     for cluster_id in range(k):
         # Get the data
         csv = rmsf_files_k[cluster_id]
@@ -132,19 +134,25 @@ def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
         pair = np.array([n.split('-') for n in features], dtype=int)
         bpid = np.unique(pair.flatten())
         isbp = [(r in bpid) for r in df_ca['resnum'] ]
+        # Find the range of residue numbers in this simulation
+        resnum_min.append( np.min(df_ca['resnum']) )
+        resnum_max.append( np.max(df_ca['resnum']) )
         # Draw a grid
         ax[cluster_id].grid(axis='y', ls='--')
         # Plot the RMSF of all residues
         ax[cluster_id].bar(df_ca['resnum'], df_ca['RMSF'], label=r'C$\mathrm{\alpha}$ atoms', width=1.0, color="C%i"%(cluster_id%10), alpha=0.4)
         # Plot the RMSF of the binding pocket residues
         ax[cluster_id].bar(df_ca['resnum'][isbp], df_ca['RMSF'][isbp], label=r'binding pocket C$\mathrm{\alpha}$', width=1.0, color="C%i"%(cluster_id%10), alpha=1.0)
-        # Format and Labels
+        # Legend
         ax[cluster_id].legend(framealpha=1)
-        ax[cluster_id].set_xlim(np.min(df_ca['resnum'])-0.5, np.max(df_ca['resnum'])+0.5)
-        ax[cluster_id].set_ylim([0,4.5])
-        ax[cluster_id].set_ylabel('RMSF [$\mathrm{\AA}$]')
+    # Format and Labels
+    for axi in ax:
+        axi.set_xlim(np.min(resnum_min)-0.5, np.max(resnum_max)+0.5)
+        axi.set_ylim([0,4.5])
+        axi.set_ylabel('RMSF [$\mathrm{\AA}$]')
     ax[-1].set_xlabel('residue number')
     fig.tight_layout()
+    # Save the figure as PNG and PDF files
     fig.savefig(out_plot+'.png', dpi=300)
     fig.savefig(out_plot+'.pdf', dpi=300)
 
