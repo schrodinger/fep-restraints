@@ -121,8 +121,16 @@ if __name__ == "__main__":
     pca = PCA(n_components=args.n_components, random_state=args.random_state)
     pca.fit(data.T)
     pc = pca.components_
+    ev_ratio = pca.explained_variance_ratio_
+    
+    # Write the explained variance ratio to a CSV file and to stdout
+    ev_csv = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr+'_ev-ratio.csv')
+    ev_output = pd.DataFrame()
+    ev_output['PC'] = 1 + np.arange(len(ev_ratio), dtype=int)
+    ev_output['Explained_Variance_Ratio'] = ev_ratio
+    ev_output.to_csv(ev_csv, index=False)
     print('Explained variance ratio:')
-    for i, evr in enumerate(pca.explained_variance_ratio_):
+    for i, evr in enumerate(ev_ratio):
         print(' PC%02i: %1.4f'%(i+1, evr))
 
     # Write PCA results to CSV file
