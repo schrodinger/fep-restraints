@@ -125,8 +125,8 @@ def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):
         ax.set_xlabel('PC%i'%(i+1))    
         ax.legend(fontsize=8)
         fig.tight_layout()
-        fig.savefig(out_file+'_PC%02i.pdf'%i, dpi=300)
-        fig.savefig(out_file+'_PC%02i.png'%i, dpi=300)
+        fig.savefig(out_file+'_PC%02i.pdf'%(i+1), dpi=300)
+        fig.savefig(out_file+'_PC%02i.png'%(i+1), dpi=300)
 
 
 def elbow_plot(num_clusters, sum_squ_dist, out_file):
