@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     print("\n* - Determining the principal components. - *\n")
     names, data, origin, orig_id = read_features_from_csv_files(dist_files)
-    pca = PCA(n_components=args.n_components)
+    pca = PCA(n_components=args.n_components, random_state=args.random_state)
     pca.fit(data.T)
     pc = pca.components_
     print('Explained variance ratio:')
