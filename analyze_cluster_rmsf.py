@@ -118,9 +118,9 @@ if __name__ == "__main__":
 
     print("\n* - Determining the principal components. - *\n")
     names, data, origin, orig_id = read_features_from_csv_files(dist_files)
-    pca = PCA(n_components=args.n_components, random_state=args.random_state)
+    pca = PCA(random_state=args.random_state)
     pca.fit(data.T)
-    pc = pca.components_
+    pc = pca.components_[:args.n_components]
     ev_ratio = pca.explained_variance_ratio_
     
     # Write the explained variance ratio to a CSV file and to stdout
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     ev_output['Explained_Variance_Ratio'] = ev_ratio
     ev_output.to_csv(ev_csv, index=False)
     print('Explained variance ratio:')
-    for i, evr in enumerate(ev_ratio):
+    for i, evr in enumerate(ev_ratio[:args.n_components]):
         print(' PC%02i: %1.4f'%(i+1, evr))
 
     # Write PCA results to CSV file
