@@ -127,9 +127,9 @@ def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a
         axi.set_ylim(bottom=0)
         axi.set_xlabel(r'distance CA%s - CA%s'%(fname.split('-')[0], fname.split('-')[1]))
         
-        fig.tight_layout()  
-        fig.savefig(out_plot+'.png', dpi=300)
-        fig.savefig(out_plot+'.pdf', dpi=300)
+    fig.tight_layout()  
+    fig.savefig(out_plot+'.png', dpi=300)
+    fig.savefig(out_plot+'.pdf', dpi=300)
 
 
 if __name__ == "__main__":
