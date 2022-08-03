@@ -179,7 +179,7 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers
     for i in range(len(residues)):
         for j in range(i+1, len(residues)):
             chain_i, rnum_i, rname_i  = residues[i]['chain'], residues[i]['number'], residues[i]['name']
-            chain_j, rnum_j, rname_j  = residues[j]['chain'], residues[j]['number'], residues[i]['name']
+            chain_j, rnum_j, rname_j  = residues[j]['chain'], residues[j]['number'], residues[j]['name']
             first_asl = '(res.num %i) AND (atom.ptype " CA ") AND (chain.name %s)'%(rnum_i, chain_i)
             first_aid = get_an_aid(cms_model, first_asl)
             second_asl = '(res.num %i) AND (atom.ptype " CA ") AND (chain.name %s)'%(rnum_j, chain_j)
