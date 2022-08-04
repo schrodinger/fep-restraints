@@ -4,7 +4,7 @@ import sys
 
 from collections import defaultdict
 
-from schrodinger.structure import Structure, StructureReader, _StructureAtom
+from schrodinger.structure import Structure, StructureReader, StructureWriter, _StructureAtom
 from schrodinger.structutils import analyze, rmsd
 from schrodinger.utils import sea
 from schrodinger.application.desmond import cmj
@@ -36,10 +36,11 @@ def structure_to_restraints(st: Structure, asl: str, fc=50.0, bw=None, sf=1.0) -
     print(f"ASL '{asl}' matched {len(aids)} atoms.")
     for aid in aids:
         atom = st.atom[aid]
-        atom_restraint = {'atoms': construct_atom_asl(st, atom, asl),
-                          'ref': (atom.x, atom.y, atom.z),
-                          'force_constants': fc,
-                         }
+        atom_restraint = {
+            'atoms': construct_atom_asl(st, atom, asl),
+            'ref': (atom.x, atom.y, atom.z),
+            'force_constants': fc,
+            }
         if bw is None: # read sigma from the structure
             # The property 'dictionary' has no equivalent to the get method to make this easier
             if ('r_desmond_sigma' in atom.property) and (atom.property['r_desmond_sigma']):
@@ -131,6 +132,8 @@ def main():
         st_fixed = StructureReader.read(args.reference)
         at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
         rmsd.superimpose(st_fixed, at_fixed, st, at)
+        with StructureWriter(args.out+'_restraints.mae') as writer:
+            writer.append(st)
 
     # Create restraints from the structure
     restraints = structure_to_restraints(st, args.asl, args.fc, args.bw, args.sf)
