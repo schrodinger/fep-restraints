@@ -2,4 +2,5 @@ __pycache__
 *.ipynb
 example/Sim01
 clustering_results
+start_frames
 .DS_Store
