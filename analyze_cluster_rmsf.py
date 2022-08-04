@@ -104,9 +104,9 @@ if __name__ == "__main__":
     out_csv = os.path.join(args.output_dir, '2-comparison/ca-dist_sorted-by-jsd.csv')
     out_data.to_csv(out_csv)
     # Plot the 20 most different distributions
-    out_pdf = os.path.join(args.output_dir, '2-comparison/ca-dist_largest-jsd.pdf')
+    out_plot = os.path.join(args.output_dir, '2-comparison/ca-dist_largest-jsd')
     plot_most_different_distributions(
-        jsd_sorted, names, names, data_i, data_a, out_pdf, showstart=args.showstart
+        jsd_sorted, names, names, data_i, data_a, out_plot, showstart=args.showstart
         )
 
 
