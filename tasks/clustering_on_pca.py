@@ -93,8 +93,8 @@ def scatterplot_pca_by_system(pc, index1, index2, origin, simulations, out_file,
     # Format and labels
     ax.set_xlim(np.min(pc[index1]), np.max(pc[index1]))
     ax.set_ylim(np.min(pc[index2]), np.max(pc[index2]))
-    ax.set_xlabel('PC1')
-    ax.set_ylabel('PC2')
+    ax.set_xlabel('PC%i'%(index1+1))
+    ax.set_ylabel('PC%i'%(index2+1))
     ax.set_xticks([])
     ax.set_yticks([])
     ax.legend(fontsize=8)
