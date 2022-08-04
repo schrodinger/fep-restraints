@@ -6,11 +6,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from schrodinger.application.desmond.packages import traj, topo
-from sympy import is_increasing
+from sympy import is_increasing, maximum
 from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, get_feature_data, calculate_ca_distances
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
-from tasks.clustering_on_pca import kmeans_on_pca, plot_pc1and2_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
+from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
 
 
@@ -114,13 +114,13 @@ if __name__ == "__main__":
     # *  Principal Component Analysis  * #
     # * ------------------------------ * #
 
-    paramstr = 'n%02i_s%02i'%(args.n_components, args.random_state)
+    paramstr = 's%02i'%(args.random_state)
 
     print("\n* - Determining the principal components. - *\n")
     names, data, origin, orig_id = read_features_from_csv_files(dist_files)
     pca = PCA(random_state=args.random_state)
     pca.fit(data.T)
-    pc = pca.components_[:args.n_components]
+    pc = pca.components_
     ev_ratio = pca.explained_variance_ratio_
     
     # Write the explained variance ratio to a CSV file and to stdout
@@ -137,20 +137,34 @@ if __name__ == "__main__":
     out_csv = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr+'.csv')
     pca_output = pd.DataFrame()
     pca_output['Origin'] = origin
-    for i, pci in enumerate(pc):
+    max_pc = max([12, args.n_components])
+    for i, pci in enumerate(pc[:max_pc]):
         pca_output['PC%i'%(i+1)] = pci
     pca_output.to_csv(out_csv, index=False) 
 
     # Plot PCA results by origin system
     out_pdf = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr)
     plot_pca_by_system(
-        pc, origin, simulations, out_pdf, 
+        pc[:max_pc], origin, simulations, out_pdf, 
         showstart=args.showstart
         )
-    plot_pc1and2_by_system(
-        pc, origin, simulations, out_pdf+'_pc1and2', 
+    scatterplot_pca_by_system(
+        pc, 0, 1, origin, simulations, out_pdf+'_pc1and2', 
         showstart=args.showstart
         )
+    scatterplot_pca_by_system(
+        pc, 0, 2, origin, simulations, out_pdf+'_pc1and3', 
+        showstart=args.showstart
+        )
+    scatterplot_pca_by_system(
+        pc, 1, 2, origin, simulations, out_pdf+'_pc2and3', 
+        showstart=args.showstart
+        )
+
+    # For all further work, only keep the requested number of PCs
+    pc = pc[:args.n_components]
+    # Update the parameter string to reflect this
+    paramstr = 'n%02i_%s'%(args.n_components, paramstr)
 
 
     # * -------------------- * #

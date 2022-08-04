@@ -130,6 +130,7 @@ def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a
     fig.tight_layout()  
     fig.savefig(out_plot+'.png', dpi=300)
     fig.savefig(out_plot+'.pdf', dpi=300)
+    plt.close(fig)
 
 
 if __name__ == "__main__":

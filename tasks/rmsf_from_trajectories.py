@@ -161,6 +161,7 @@ def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
     # Save the figure as PNG and PDF files
     fig.savefig(out_plot+'.png', dpi=300)
     fig.savefig(out_plot+'.pdf', dpi=300)
+    plt.close(fig)
 
 
 if __name__ == "__main__":

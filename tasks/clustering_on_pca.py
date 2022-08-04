@@ -69,7 +69,10 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     return cids, sizes, centers, cdist, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
 
 
-def plot_pc1and2_by_system(pc, origin, simulations, out_file, showstart=False):
+def scatterplot_pca_by_system(pc, index1, index2, origin, simulations, out_file, showstart=False):
+    """
+    PC indices are zero-based!
+    """
     systems = simulations['System_Name'].unique()
     fig, ax = plt.subplots(1,1, figsize=[3,3], dpi=300)
     means = []
@@ -77,8 +80,8 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file, showstart=False):
     for sys_id, sys in enumerate(systems):
         # Find PC values of all data points from each system
         sys_origin = list(simulations[simulations['System_Name']==sys].index)
-        pc1 = pc[0][[o in sys_origin for o in origin]]
-        pc2 = pc[1][[o in sys_origin for o in origin]]
+        pc1 = pc[index1][[o in sys_origin for o in origin]]
+        pc2 = pc[index2][[o in sys_origin for o in origin]]
         # Plot all data points of this system
         ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color='C%i'%sys_id)
         means.append([np.mean(pc1), np.mean(pc2)])
@@ -88,8 +91,8 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file, showstart=False):
             ax.plot(*starts[sys_id], 's', mew=1, mec='k', alpha=1, color='C%i'%sys_id) 
         ax.plot(*means[sys_id], 'o', mew=1, mec='k', alpha=1, color='C%i'%sys_id, label=sys)
     # Format and labels
-    ax.set_xlim(np.min(pc[0]), np.max(pc[0]))
-    ax.set_ylim(np.min(pc[1]), np.max(pc[1]))
+    ax.set_xlim(np.min(pc[index1]), np.max(pc[index1]))
+    ax.set_ylim(np.min(pc[index2]), np.max(pc[index2]))
     ax.set_xlabel('PC1')
     ax.set_ylabel('PC2')
     ax.set_xticks([])
@@ -98,6 +101,7 @@ def plot_pc1and2_by_system(pc, origin, simulations, out_file, showstart=False):
     fig.tight_layout()
     fig.savefig(out_file+'.pdf', dpi=300)
     fig.savefig(out_file+'.png', dpi=300)
+    plt.close(fig)
 
 
 def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):  
@@ -107,7 +111,7 @@ def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):
         hist_c, bins_c = np.histogram(pci, bins=50)
         bin_centers = .5 * (bins_c[1:] + bins_c[:-1])
         # Start the figure
-        fig, ax = plt.subplots(1, 1, figsize=[4,3], dpi=300)
+        fig, ax = plt.subplots(1, 1, figsize=[3,2], dpi=300)
         # Loop over systems
         for sys_id, sys in enumerate(systems):
             # Find PC values of all data points from each system
@@ -122,11 +126,13 @@ def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):
         # Format and labels
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_xlabel('PC%i'%(i+1))    
+        ax.set_xlabel('PC%i'%(i+1))
+        ax.set_ylim(bottom=0)    
         ax.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(out_file+'_PC%02i.pdf'%(i+1), dpi=300)
         fig.savefig(out_file+'_PC%02i.png'%(i+1), dpi=300)
+        plt.close(fig)
 
 
 def elbow_plot(num_clusters, sum_squ_dist, out_file):
@@ -145,6 +151,7 @@ def elbow_plot(num_clusters, sum_squ_dist, out_file):
     fig.tight_layout()
     fig.savefig(out_file+'.png', dpi=300)
     fig.savefig(out_file+'.pdf', dpi=300)
+    plt.close(fig)
 
 
 def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
@@ -179,6 +186,7 @@ def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
     fig.tight_layout()
     fig.savefig(out_pca_cl+'.pdf', dpi=300)
     fig.savefig(out_pca_cl+'.png', dpi=300)
+    plt.close(fig)
 
 
 if __name__ == "__main__":
