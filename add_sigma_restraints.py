@@ -5,9 +5,10 @@ import sys
 from collections import defaultdict
 
 from schrodinger.structure import Structure, StructureReader, _StructureAtom
-from schrodinger.structutils import analyze
+from schrodinger.structutils import analyze, rmsd
 from schrodinger.utils import sea
 from schrodinger.application.desmond import cmj
+
 
 def construct_atom_asl(st: Structure, atom: _StructureAtom, asl: str) -> str:
     '''Returns an ASL that (should) uniquely identify the provided atom.
@@ -99,11 +100,15 @@ def parse_cmdline(argv):
     parser.add_argument("-s", "--sf",
             default=1.0,
             type=float,
-            help="Scaling factor for the sigma from the reference structure. The half-width of the flat bottom will be sf*sigma.")
+            help="Scaling factor for the sigma from the restraints structure. The half-width of the flat bottom will be sf*sigma.")
     parser.add_argument("-b", "--bw",
             default=None,
             type=float,
-            help="Half width of the flat bottom (A). Overrides use of sigma from the reference structure.")
+            help="Half width of the flat bottom (A). Overrides use of sigma from the restraints structure.")
+    parser.add_argument("-r", "--reference",
+            default=None,
+            type=str,
+            help="Reference structure to align the restraints structure to.")
     parser.add_argument("out",
             default=None,
             help="MSJ output name")
@@ -115,14 +120,22 @@ def parse_cmdline(argv):
     return args
 
 def main():
+
     args = parse_cmdline(sys.argv[1:])
 
+    # Load the structure with the restraints
     st = StructureReader.read(args.structure)
-    restraints = structure_to_restraints(st, args.asl, args.fc, args.bw, args.sf)
+    at = analyze.evaluate_asl(st, args.asl)
+    # Align the structure to the reference if given
+    if args.reference is not None:
+        st_fixed = StructureReader.read(args.reference)
+        at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
+        rmsd.superimpose(st_fixed, at_fixed, st, at)
 
+    # Create restraints from the structure
+    restraints = structure_to_restraints(st, args.asl, args.fc, args.bw, args.sf)
     stgs = cmj.msj2sea(args.msj)
     add_restraints_to_stgs(stgs, restraints)
-
     # Save the MSJ
     stgs.add_tag("setbyuser")
     cmj.write_sea2msj(stgs.stage, fname=args.out)
