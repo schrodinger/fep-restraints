@@ -145,20 +145,16 @@ if __name__ == "__main__":
     # Plot PCA results by origin system
     out_pdf = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr)
     plot_pca_by_system(
-        pc[:max_pc], origin, simulations, out_pdf, 
-        showstart=args.showstart
+        pc[:max_pc], origin, simulations, out_pdf, showstart=args.showstart
         )
     scatterplot_pca_by_system(
-        pc, 0, 1, origin, simulations, out_pdf+'_pc1and2', 
-        showstart=args.showstart
+        pc, 0, 1, origin, simulations, out_pdf+'_pc1and2', showstart=args.showstart
         )
     scatterplot_pca_by_system(
-        pc, 0, 2, origin, simulations, out_pdf+'_pc1and3', 
-        showstart=args.showstart
+        pc, 0, 2, origin, simulations, out_pdf+'_pc1and3', showstart=args.showstart
         )
     scatterplot_pca_by_system(
-        pc, 1, 2, origin, simulations, out_pdf+'_pc2and3', 
-        showstart=args.showstart
+        pc, 1, 2, origin, simulations, out_pdf+'_pc2and3', showstart=args.showstart
         )
 
     # For all further work, only keep the requested number of PCs
