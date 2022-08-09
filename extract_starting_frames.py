@@ -42,7 +42,8 @@ if __name__ == "__main__":
         for cms_file, trj_file in zip(sim_sys['Topology'], sim_sys['Trajectory']):
             sim_num += 1
             msys_model, cms_model = topo.read_cms(cms_file)
-            trj = traj.read_traj(trj_file) 
+            trj = traj.read_traj(trj_file)
+            print('Simulation %i has %i frames.'%(sim_num, len(trj))) 
             fname = "%s-sim%02i-frame%03i"%(sys, sim_num, args.frame_number)
             write_frames(
                 cms_model, trj, [args.frame_number],
