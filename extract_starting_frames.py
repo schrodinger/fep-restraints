@@ -43,7 +43,7 @@ if __name__ == "__main__":
             sim_num += 1
             msys_model, cms_model = topo.read_cms(cms_file)
             trj = traj.read_traj(trj_file)
-            print('Simulation %i has %i frames.'%(sim_num, len(trj))) 
+            print('Simulation %i of %s has %i frames.'%(sim_num, sys, len(trj))) 
             fname = "%s-sim%02i-frame%03i"%(sys, sim_num, args.frame_number)
             write_frames(
                 cms_model, trj, [args.frame_number],
