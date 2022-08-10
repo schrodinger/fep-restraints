@@ -110,6 +110,10 @@ def parse_cmdline(argv):
             default=None,
             type=str,
             help="Reference structure to align the restraints structure to.")
+    parser.add_argument("-w", "--write_restraints_structure",
+            default=False,
+            action='store_true',
+            help="Write the (aligned if reference provided) structure with the restraints to an MAE file.")
     parser.add_argument("out",
             default=None,
             help="MSJ output name")
@@ -132,7 +136,11 @@ def main():
         st_fixed = StructureReader.read(args.reference)
         at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
         rmsd.superimpose(st_fixed, at_fixed, st, at)
-        with StructureWriter(args.out+'_restraints.mae') as writer:
+    # Write the (aligned) restraints structure
+    if args.write_restraints_structure:
+        base, ext = os.path.splitext(args.out)
+        st_out = f"{base}_restraints.mae"
+        with StructureWriter(st_out) as writer:
             writer.append(st)
 
     # Create restraints from the structure
