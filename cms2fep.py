@@ -78,10 +78,7 @@ def _cms_to_fep_inputs(st_list, lig_asl=None):
     if solvent_ct:
         for atom in solvent_ct.atom:
             atom.property.pop(constants.FEP_ABSOLUTE_ENERGY, None)
-    if membrane_ct is None:
-        out_sys = [st for st in [solute_ct, solvent_ct, ligand_ct] if st]
-    else:
-        out_sys = [st for st in [solute_ct, membrane_ct, solvent_ct, ligand_ct] if st]
+    out_sys = [st for st in [solute_ct, membrane_ct, solvent_ct, ligand_ct] if st]
     return out_sys
 
 
