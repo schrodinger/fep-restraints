@@ -11,7 +11,7 @@ from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_v
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, get_feature_data, calculate_ca_distances
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
 from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
-from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
+from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
 
 
 if __name__ == "__main__":
@@ -314,6 +314,13 @@ if __name__ == "__main__":
             out_csv_file = os.path.join(args.output_dir,'5-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf.csv')
             output.to_csv(out_csv_file, index=False)
             rmsf_files_k.append(out_csv_file)
+
+            # Write the RMSF on the input topology structure.
+            _, cms_model_top = topo.read_cms(cluster_top_files[0])
+            aidlist_write_top = cms_model_top.select_atom(str(ref_asl_write))
+            cms_model_top_new = select_subset_model(cms_model_top, aidlist_write_top)
+            out_fn_top = os.path.join(args.output_dir,'5-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_top.cms')
+            _ = write_coordinates(out_fn_top, cms_model_top_new, xyz=None, sigma=rmsf_per_atom)
 
             # Write the RMSF on the reference structure (the centroid).
             out_fn_ref = os.path.join(args.output_dir,'5-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_ref.cms')
