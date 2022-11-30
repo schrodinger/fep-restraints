@@ -3,4 +3,5 @@ __pycache__
 example/Sim01
 clustering_results
 start_frames
+input_by_ligand
 .DS_Store
