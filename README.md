@@ -19,13 +19,27 @@ If you already know the reference structure and parameters of the restraints, sk
 
 ### Analysis of Plain MD Simulations
 
-We want to find clusters in the joint ensemble of multiple simulations and calculate the RMSF within each cluster.
+We want to compare active and inactive states, find clusters in the joint ensemble of multiple simulations, and calculate the RMSF within each cluster.
+Active and inactive ensembles are compared using their distributions along all C-alpha distances of binding-pocket residues. K-means clustering is then performed on the n most important principal components with variable number of clusters k.
+
+#### Preparation
 
 To start prepare the following input files:
-- A CSV file with the name, topology file, trajectory file, and label for each simulation to be included in the analysis. For an example, see [input.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/input.csv)
-- A CSV file with the corresponding selections of the chain and residue numbers for the binding pocket (used in the clustering analysis) and a selection of atoms to which restraints should be applied. For a template, see [selections.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/selections.csv) 
+- A CSV file with the name, topology file, trajectory file, and label for each simulation to be included in the analysis. For a template, see [input.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/input.csv). Column names and their order must match the template.
+- A CSV file with the corresponding selections of the chain and residue numbers for the binding pocket (used in the clustering analysis) and a selection of atoms to which restraints should be applied. For a template, see [selections.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/selections.csv). Again, column names and their order must match the template. 
 
 Make sure that the selection of the binding pocket leads to sets of corresponding atoms across all simulations! If the PDB structures are numbered correctly, the residue numbers should be the same (but this is not always the case). A good way to determine which residues to consider part of the binding pocket, select the ligand in a PDB structure (or in multiple structures of the same protein) and expand the selection by 4 or 5 Angstroms, list all residue numbers that are selected in any simulation, and remove numbers of residues that are not present in one or more simulations.  
+
+#### Analysis Run
+
+The main analysis is performed all in one command, for example run
+```
+$SCHRODINGER/run analyze_cluster_rmsf.py -i input.csv -s selections.csv -n 3 4 -k $(seq 1 8) -w --showstart
+```
+to perform k-means clustering on the 3 most important principal components and then again on the four most important principal components, each for k from 1 to 8 clusters.
+
+#### Output and Interpretation
+
 
 ### Starting Structures and Ligand Modeling
 
