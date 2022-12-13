@@ -19,6 +19,14 @@ If you already know the reference structure and parameters of the restraints, sk
 
 ### Analysis of Plain MD Simulations
 
+We want to find clusters in the joint ensemble of multiple simulations and calculate the RMSF within each cluster.
+
+To start prepare the following input files:
+- A CSV file with the name, topology file, trajectory file, and label for each simulation to be included in the analysis. For an example, see [input.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/input.csv)
+- A CSV file with the corresponding selections of the chain and residue numbers for the binding pocket (used in the clustering analysis) and a selection of atoms to which restraints should be applied. For a template, see [selections.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/selections.csv) 
+
+Make sure that the selection of the binding pocket leads to sets of corresponding atoms across all simulations! If the PDB structures are numbered correctly, the residue numbers should be the same (but this is not always the case). A good way to determine which residues to consider part of the binding pocket, select the ligand in a PDB structure (or in multiple structures of the same protein) and expand the selection by 4 or 5 Angstroms, list all residue numbers that are selected in any simulation, and remove numbers of residues that are not present in one or more simulations.  
+
 ### Starting Structures and Ligand Modeling
 
 ### Adding Restraints to AB-FEP
@@ -33,7 +41,7 @@ For questions or ideas, open an issue, ping Martin Voegele (Desmond Team, NYC), 
 ## Acknowledgements
 
 This repo includes a modified version of membrane_cms2fep.py. 
-The script add_sigma_restraints.py repurposes code to add restraints to msj files by Mikolai Fajer.
+The script add_sigma_restraints.py uses code to add restraints to msj files by Mikolai Fajer.
 The analysis workflow uses functions from PENSA (M. Voegele, MIT license).
 
 ## Project Status
