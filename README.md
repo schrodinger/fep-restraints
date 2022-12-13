@@ -34,12 +34,19 @@ Make sure that the selection of the binding pocket leads to sets of correspondin
 
 The main analysis is performed all in one command, for example run
 ```
-$SCHRODINGER/run analyze_cluster_rmsf.py -i input.csv -s selections.csv -n 3 4 -k $(seq 1 8) -w --showstart
+$SCHRODINGER/run ~/dev/abfep-restraints/analyze_cluster_rmsf.py -i input.csv -s selections.csv -o results -n 3 4 -k $(seq 1 8) --showstart
 ```
-to perform k-means clustering on the 3 most important principal components and then again on the four most important principal components, each for k from 1 to 8 clusters.
+to perform a full analysis with k-means clustering on the 3 most important principal components and then again on the 4 most important principal components, each for k from 1 to 8 clusters, and save everything in the folder __results__.
 
 #### Output and Interpretation
 
+The folder __results__ will contain the following subfolders:
+ - 1-distances: numerical data of all distances between CA atoms in the binding pocket.
+ - 2-comparison: plots that show the distributions along CA distances that deviate the most.
+ - 3-pca: plots of the principla component analysis. Square symbols represent the starting structure (if the flag `--showstart` was set) and circles represent the average of each state (active or inactive).
+ - 4-clustering: scatter plots for each clustering run and elbow plots for all clustering runs for each value of n. Circles represent cluster centers.
+ - 5-rmsf: RMSF plots for all clusters in each clustering run. Residues in the binding pocket are highlighted.
+ - 6-sorted (only if the flag `-w` was set)
 
 ### Starting Structures and Ligand Modeling
 
