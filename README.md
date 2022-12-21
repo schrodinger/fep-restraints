@@ -43,12 +43,25 @@ to perform a full analysis with k-means clustering on the 3 most important princ
 The folder __results__ will contain the following subfolders:
  - 1-distances: numerical data of all distances between CA atoms in the binding pocket.
  - 2-comparison: plots that show the distributions along CA distances that deviate the most.
- - 3-pca: plots of the principla component analysis. Square symbols represent the starting structure (if the flag `--showstart` was set) and circles represent the average of each state (active or inactive).
+ - 3-pca: plots of the principal component analysis. Square symbols represent the starting structure (if the flag `--showstart` was set) and circles represent the average of each state (active or inactive).
  - 4-clustering: scatter plots for each clustering run and elbow plots for all clustering runs for each value of n. Circles represent cluster centers.
- - 5-rmsf: RMSF plots for all clusters in each clustering run. Residues in the binding pocket are highlighted.
+ - 5-rmsf: RMSF plots for all clusters in each clustering run. Residues in the binding pocket are highlighted. The RMSF is also stored in corresponding structure files for each cluster. We use the following tags for different representative structures: avg = average structure, cluster center (recommended for restraints), ref = cluster centroid, frame closest to the center, top = topology file, starting file of the simulation.
  - 6-sorted (only if the flag `-w` was set)
 
+We can use the results to determine representative reference structures and widths of the restraints that avoid overlap between active and inactive ensembles.
+
+The comparison of distances and the PCA show us how much the simulations started from active and inactive structures overlap and how much they deviate from the starting structure. If the starting structure is not within one of the dominant clusters, we have to think about whether this was caused by inaccurate modeling (protonation states, ions,...) or by artifacts in the starting structure (deformations caused by crystal contacts, stabilizing nanobodies,...).
+
+The cluster plots show us which clustering parameters provide reasonable results. Unfortunately there is no strict criterion but a good clustering is usually at the "elbow" of the plot of the sum of the squared distances over the number of clusters and it should visibly "make sense" in the PCA plot. Choose a set of parameters n (number of PCA components used for the clustering) and k (number of clusters) and s (random seed) and remember them later.
+
+Pick the RMSF plot for the set of clustering parameters that you picked from the clustering and check the RMSF, especially in the binding pocket. 
+Compare it to the overlap in the plots from the distance comparison. 
+Choose a factor by which the RMSF has to be rescaled such that the resulting distribution along a significant number of distances will not overlap (again, there is no strict rule for this). 
+Ideally, the restraints will allow enough unrestrained motion to not perturb free energy calculation but not so much that the ensembles will overlap. 
+For each cluster, use the corresponding "_avg.cms" file to define the restraints (see below for how to do that).
+
 ### Starting Structures and Ligand Modeling
+
 
 ### Adding Restraints to AB-FEP
 
