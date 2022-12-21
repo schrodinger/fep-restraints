@@ -86,16 +86,43 @@ Then you can model the ligands into this structure or align the experimental str
 
 This section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints in the field "sigma" of the corresponding atom. 
 
+From the file with your modeled input poses, you can generate a job directory for a restrained AB-FEP job, for example:
+```
+$SCHRODINGER/run ~/dev/abfep-restraints/setup_restrained_abfep.py \
+	input-poses_pv.maegz \
+	-r pca-kmeans_n04_s42_k05_cluster00_rmsf_avg.cms \
+	-j input-poses_n04_s42_k05_cluster00 \
+	--scaling-factor 0.5 \
+	--md-force-const 0.1 \
+	--fep-force-const 1.0 \
+	--align-sel 'protein and chain A and at.ptype CA and ( res. 54 - 75 or res. 86 - 148 or res. 165 - 240 or res. 254 - 282 or res. 298 - 320 )' \
+	--ffbuilder \
+	--host bolt_cpu \
+	--subhost bolt_gpu \
+	--project dev_GPU \
+	--maxjob 0 \
+	--retries 5 \
+	--ffhost bolt_cpu \
+	--md-sim-time 2000 \
+	--fep-sim-time 10000
+```
+where the option `-j` determines the name of the directory and the job name. The option `-r` provides the restraint file and `--scaling-factor` the factor by which the width of the restraints from the cms file (e.g., from the RMSF as described above) is to be rescaled. The restraints file has to be aligned to the start structure and the flag `--align-sel` provides the ASL for the atoms at which to align them.
+ 
+Then `cd` into the job directory and submit the job by running the bash script. 
+You can also make manual adjustments there.
+
 
 ## Support and Contributing
 
 For questions or ideas, open an issue, ping Martin Voegele (Desmond Team, NYC), or write an e-mail (martin.voegele@schrodinger.com).
+
 
 ## Acknowledgements
 
 This repo includes a modified version of membrane_cms2fep.py. 
 The script add_sigma_restraints.py uses code to add restraints to msj files by Mikolai Fajer.
 The analysis workflow uses functions from PENSA (M. Voegele, MIT license).
+
 
 ## Project Status
 
