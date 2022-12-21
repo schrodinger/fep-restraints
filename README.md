@@ -2,6 +2,7 @@
 
 Tools to add restraints to AB-FEP runs. Includes a workflow to determine reference structures and restraint widths from plain MD simulations.
 
+
 ## Installation
 
 Currently there is no installation package. The scripts assume that this repo has been cloned into `~/dev/`
@@ -12,15 +13,18 @@ cd ~/dev
 git clone git@gitlab.schrodinger.com:martin.voegele/abfep-restraints.git
 ```
 
+
 ## Usage
 
 This repo contains code to analyze plain MD simulation and set up restraints based on their analysis. 
 If you already know the reference structure and parameters of the restraints, skip the next two sections and go straight to "Adding Restraints to AB-FEP"
 
+
 ### Analysis of Plain MD Simulations
 
 We want to compare active and inactive states, find clusters in the joint ensemble of multiple simulations, and calculate the RMSF within each cluster.
 Active and inactive ensembles are compared using their distributions along all C-alpha distances of binding-pocket residues. K-means clustering is then performed on the n most important principal components with variable number of clusters k.
+
 
 #### Preparation
 
@@ -30,6 +34,7 @@ To start prepare the following input files:
 
 Make sure that the selection of the binding pocket leads to sets of corresponding atoms across all simulations! If the PDB structures are numbered correctly, the residue numbers should be the same (but this is not always the case). A good way to determine which residues to consider part of the binding pocket, select the ligand in a PDB structure (or in multiple structures of the same protein) and expand the selection by 4 or 5 Angstroms, list all residue numbers that are selected in any simulation, and remove numbers of residues that are not present in one or more simulations.  
 
+
 #### Analysis Run
 
 The main analysis is performed all in one command, for example run
@@ -37,6 +42,7 @@ The main analysis is performed all in one command, for example run
 $SCHRODINGER/run ~/dev/abfep-restraints/analyze_cluster_rmsf.py -i input.csv -s selections.csv -o results -n 3 4 -k $(seq 1 8) --showstart
 ```
 to perform a full analysis with k-means clustering on the 3 most important principal components and then again on the 4 most important principal components, each for k from 1 to 8 clusters, and save everything in the folder __results__.
+
 
 #### Output and Interpretation
 
@@ -60,7 +66,20 @@ Choose a factor by which the RMSF has to be rescaled such that the resulting dis
 Ideally, the restraints will allow enough unrestrained motion to not perturb free energy calculation but not so much that the ensembles will overlap. 
 For each cluster, use the corresponding "_avg.cms" file to define the restraints (see below for how to do that).
 
+
 ### Starting Structures and Ligand Modeling
+
+Choose a simulation frame to start the ABFEP workflow in which the protein has sufficiently relaxed (especially for membrane proteins). As we use restraints, it does not matter to much which frame you use as long as it is not a crazy outlier. We provide a script to extract a specific frame from a set of simulations. For example, if you want to extract the tenth frame from all your template simulations, run
+```
+$SCHRODINGER/run ~/dev/abfep-restraints/extract_starting_frames.py -i example/input.csv -n 10
+```
+If you want to use a different frame for each trajectory, split up the input file and run the script separately for each trajectory.
+
+The extracted frames can then be converted to "_pv.mae" files as needed for FEP using
+```
+$SCHRODINGER/run ~/dev/abfep-restraints/cms2fep.py frame.cms -o fep_pv.mae -ligand "{Ligand ASL}"
+```
+Then you can model the ligands into this structure or align the experimental structure in which you have already modeled them and copy them over.
 
 
 ### Adding Restraints to AB-FEP
