@@ -44,8 +44,10 @@ def write_abfep_restraints_job_script(
         f.write('\n# Submit the job to the cluster.\n'
                 f'$SCHRODINGER/utilities/multisim \\\n  {job_name}_pv.maegz \\\n'
                 f'  -JOBNAME {job_name} \\\n  -m {job_name}.msj \\\n  -o {job_name}-out.mae \\\n'
-                f'  -HOST {host} -SUBHOST {subhost} -QARG \"-P {project}\" \\\n'
+                f'  -HOST {host} -SUBHOST {subhost} \\\n'
                 f'  -maxjob {maxjob} -RETRIES {retries}')
+        if project is not None:
+            f.write(f'\\\n  -QARG \"-P {project}\"')
         if opls is not None: 
             f.write(f'\\\n  -OPLSDIR {opls}')
         f.write('\n')
@@ -65,7 +67,7 @@ if __name__ == '__main__':
     parser.add_argument('--fep-force-const', type=float, default=1.0)
     parser.add_argument('--host', type=str, default='driver-4core-standard')
     parser.add_argument('--subhost', type=str, default='gpu-t4-4x-ondemand')
-    parser.add_argument('--project', type=str, default='dev_GPU')
+    parser.add_argument('--project', type=str, default=None)
     parser.add_argument('--maxjob', type=int, default=0)
     parser.add_argument('--retries', type=int, default=5)
     parser.add_argument('--oplsdir', type=str, default=None)
