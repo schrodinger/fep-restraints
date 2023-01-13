@@ -52,7 +52,7 @@ The folder __results__ will contain the following subfolders:
  - 3-pca: plots of the principal component analysis. Square symbols represent the starting structure (if the flag `--showstart` was set) and circles represent the average of each state (active or inactive).
  - 4-clustering: scatter plots for each clustering run and elbow plots for all clustering runs for each value of n. Circles represent cluster centers.
  - 5-rmsf: RMSF plots for all clusters in each clustering run. Residues in the binding pocket are highlighted. The RMSF is also stored in corresponding structure files for each cluster. We use the following tags for different representative structures: avg = average structure, cluster center (recommended for restraints), ref = cluster centroid, frame closest to the center, top = topology file, starting file of the simulation.
- - 6-sorted (only if the flag `-w` was set)
+ - 6-sorted (only if the flag `-w` was set): Trajectory frames sorted by cluster (each cluster is one trajectory). This uses only frames from the system of the centroid.
 
 We can use the results to determine representative reference structures and widths of the restraints that avoid overlap between active and inactive ensembles.
 
