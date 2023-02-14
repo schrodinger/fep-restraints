@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', dest='n_components',type=int, help='Number of top principal components to consider', default=3)     
     parser.add_argument('-k', nargs='+', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4]) 
     parser.add_argument('-r', dest='random_state', type=int, help='random state for k-means algorithm', default=42)    
-    parser.add_argument('-w', dest='write_traj', action='store_true', default=False)
+    parser.add_argument('-w', dest='write_traj', action='store_true', default=False, help='Sort all trajectory frames by cluster. Warning: Currently this only works if all trajectories have the same topology and otherwise causes the code to fail.')
     parser.add_argument('-t', dest='threshold', type=float, default=None)
     parser.add_argument('--showstart', dest='showstart', action='store_true', default=False)
     args = parser.parse_args()

@@ -43,6 +43,8 @@ $SCHRODINGER/run ~/dev/abfep-restraints/analyze_cluster_rmsf.py -i input.csv -s 
 ```
 to perform a full analysis with k-means clustering on the 3 most important principal components and then again on the 4 most important principal components, each for k from 1 to 8 clusters, and save everything in the folder __results__.
 
+Warning: With the flag `-w`, the code tries to sort trajectory frames by cluster. Currently this only works if all trajectories have the same topology and otherwise causes the ccode to fail.
+
 
 #### Output and Interpretation
 
@@ -52,7 +54,7 @@ The folder __results__ will contain the following subfolders:
  - 3-pca: plots of the principal component analysis. Square symbols represent the starting structure (if the flag `--showstart` was set) and circles represent the average of each state (active or inactive).
  - 4-clustering: scatter plots for each clustering run and elbow plots for all clustering runs for each value of n. Circles represent cluster centers.
  - 5-rmsf: RMSF plots for all clusters in each clustering run. Residues in the binding pocket are highlighted. The RMSF is also stored in corresponding structure files for each cluster. We use the following tags for different representative structures: avg = average structure, cluster center (recommended for restraints), ref = cluster centroid, frame closest to the center, top = topology file, starting file of the simulation.
- - 6-sorted (only if the flag `-w` was set): Trajectory frames sorted by cluster (each cluster is one trajectory). This uses only frames from the system of the centroid.
+ - 6-sorted (only if the flag `-w` was set): Trajectory frames sorted by cluster (each cluster is one trajectory). Warning: The option `-w` currently only works if all trajectories have the same topology.
 
 We can use the results to determine representative reference structures and widths of the restraints that avoid overlap between active and inactive ensembles.
 
