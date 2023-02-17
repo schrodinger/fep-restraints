@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 import schrodinger.structure as structure
 from schrodinger.application.desmond import constants
-from schrodinger.application.desmond.starter.generator.abfep import prepare_inputs, generate
+#from schrodinger.application.desmond.starter.generator.abfep import prepare_inputs, generate
+from schrodinger.application.desmond.starter.generator.fep_absolute_binding import prepare_inputs, generate
 
 KEEP_CT_TYPE = [
     constants.CT_TYPE.VAL.MEMBRANE, 
