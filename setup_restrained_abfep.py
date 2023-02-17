@@ -5,7 +5,8 @@ import schrodinger
 import schrodinger.structure as structure
 from schrodinger.application.desmond import constants
 from schrodinger.application.desmond.packages import cui
-from schrodinger.application.desmond.starter.generator.abfep import prepare_inputs, generate
+#from schrodinger.application.desmond.starter.generator.abfep import prepare_inputs, generate
+from schrodinger.application.desmond.starter.generator.fep_absolute_binding import prepare_inputs, generate
 from schrodinger.forcefield.custom_params import create_archive_from_oplsdir, merge_oplsdir, upgrade_oplsdir
 
 
