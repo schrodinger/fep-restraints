@@ -108,8 +108,11 @@ $SCHRODINGER/run ~/dev/abfep-restraints/setup_restrained_abfep.py \
 	--md-sim-time 2000 \
 	--fep-sim-time 10000
 ```
-where the option `-j` determines the name of the directory and the job name. The option `-r` provides the restraint file and `--scaling-factor` the factor by which the width of the restraints from the cms file (e.g., from the RMSF as described above) is to be rescaled. The restraints file has to be aligned to the start structure and the flag `--align-sel` provides the ASL for the atoms at which to align them.
- 
+where the option `-j` determines the name of the directory and the job name. 
+The option `-r` provides the restraint file and `--scaling-factor` the factor by which the width of the restraints from the cms file (e.g., from the RMSF as described above) is to be rescaled. 
+The restraints file has to be aligned to the start structure and the flag `--align-sel` provides the ASL for the atoms at which to align them.
+This selection must only include residues that are present in both the start file and the restraints file. It is the user's duty to make sure residue numbers, chain IDs etc. correspond to each other.
+
 Then `cd` into the job directory and submit the job by running the bash script. 
 You can also make manual adjustments there.
 
