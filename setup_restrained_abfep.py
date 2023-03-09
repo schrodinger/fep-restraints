@@ -18,39 +18,39 @@ def write_abfep_restraints_job_script(
     with open(job_name+'.sh', mode = 'wt', encoding = 'utf-8') as f:
         # Preparation step
         f.write('# Run the preparation step\n'
-                f'$SCHRODINGER/fep_absolute_binding \\\n  {job_name}.fmp \\\n'
-                f'  -JOBNAME {job_name} \\\n  -prepare -ppj 4 -maxjob {maxjob} -ensemble muVT \\\n'
+                f'$SCHRODINGER/fep_absolute_binding \\\n  "{job_name}.fmp" \\\n'
+                f'  -JOBNAME "{job_name}" \\\n  -prepare -ppj 4 -maxjob {maxjob} -ensemble muVT \\\n'
                 f'  -fep-sim-time {fep_sim_time} -md-sim-time {md_sim_time} -seed 2007 \\\n'
-                f'  -HOST {host} \\\n  -SUBHOST {subhost}')
+                f'  -HOST "{host}" \\\n  -SUBHOST "{subhost}"')
         if opls is not None: 
-            f.write(f' \\\n  -OPLSDIR {opls} ')
+            f.write(f' \\\n  -OPLSDIR "{opls}" ')
         if ffhost is not None:
-            f.write(f' \\\n  -ffbuilder \\\n  -ff-host {ffhost}')
+            f.write(f' \\\n  -ffbuilder \\\n  -ff-host "{ffhost}"')
         f.write('\n')
         # Restraints for FEP of complex
         f.write('\n# Add restraints to the FEP simulations of the complex\n'
-                'for MSJ in *_complex.msj; do\n  OLD=${MSJ}.old\n  mv $MSJ $OLD\n'
+                'for MSJ in *_complex.msj; do\n  OLD="${MSJ}.old"\n  mv "$MSJ" "$OLD"\n'
                 f'  $SCHRODINGER/run ~/dev/abfep-restraints/add_sigma_restraints.py \\\n'
-                f'    {rest_file} $OLD $MSJ -f {fep_force_const} -s {scaling} \\\n'
-                f'    -r {align_ref} \\\n    -a "{align_sel}"\n'
+                f'    "{rest_file}" "$OLD" "$MSJ" -f {fep_force_const} -s {scaling} \\\n'
+                f'    -r "{align_ref}" \\\n    -a "{align_sel}"\n'
                 'done\n')
         # Restraints for initial MD
         f.write('\n# Add restraints to the initial MD run.\n'
-                'for MSJ in *_md.msj; do\n  OLD=${MSJ}.old\n  mv $MSJ $OLD\n'
+                'for MSJ in *_md.msj; do\n  OLD="${MSJ}.old"\n  mv "$MSJ" "$OLD"\n'
                 f'  $SCHRODINGER/run ~/dev/abfep-restraints/add_sigma_restraints.py \\\n'
-                f'    {rest_file} $OLD $MSJ -f {md_force_const} -s {scaling} \\\n'
-                f'    -r {align_ref} \\\n    -a "{align_sel}"\n'
+                f'    "{rest_file}" "$OLD" "$MSJ" -f {md_force_const} -s {scaling} \\\n'
+                f'    -r "{align_ref}" \\\n    -a "{align_sel}"\n'
                 'done\n')
         # Submission
         f.write('\n# Submit the job to the cluster.\n'
-                f'$SCHRODINGER/utilities/multisim \\\n  {job_name}_pv.maegz \\\n'
-                f'  -JOBNAME {job_name} \\\n  -m {job_name}.msj \\\n  -o {job_name}-out.mae \\\n'
-                f'  -HOST {host} -SUBHOST {subhost} \\\n'
+                f'$SCHRODINGER/utilities/multisim \\\n  "{job_name}_pv.maegz" \\\n'
+                f'  -JOBNAME "{job_name}" \\\n  -m "{job_name}.msj" \\\n  -o "{job_name}-out.mae" \\\n'
+                f'  -HOST "{host}" -SUBHOST "{subhost}" \\\n'
                 f'  -maxjob {maxjob} -RETRIES {retries}')
         if project is not None:
             f.write(f'\\\n  -QARG \"-P {project}\"')
         if opls is not None: 
-            f.write(f'\\\n  -OPLSDIR {opls}')
+            f.write(f'\\\n  -OPLSDIR "{opls}"')
         f.write('\n')
 
 
