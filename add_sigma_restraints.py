@@ -14,7 +14,7 @@ def construct_atom_asl(st: Structure, atom: _StructureAtom, asl: str) -> str:
     '''Returns an ASL that (should) uniquely identify the provided atom.
     '''
     # First try a simplified ASL
-    simple_asl = f"res.ptype {atom.pdbres.strip()} AND res.num {atom.resnum} AND atom.ptype {atom.pdbname.strip()}"
+    simple_asl = f"chain.name {atom.chain.strip()} AND res.ptype {atom.pdbres.strip()} AND res.num {atom.resnum} AND atom.ptype {atom.pdbname.strip()}"
     aids = analyze.evaluate_asl(st, simple_asl)
     if len(aids) == 1:
         return simple_asl
