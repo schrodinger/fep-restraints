@@ -10,7 +10,7 @@ Currently there is no installation package. The scripts assume that this repo ha
 ```
 mkdir -p ~/dev
 cd ~/dev
-git clone git@gitlab.schrodinger.com:martin.voegele/abfep-restraints.git
+git clone https://github.com/schrodinger/fep-restraints.git
 ```
 
 
@@ -29,8 +29,8 @@ Active and inactive ensembles are compared using their distributions along all C
 #### Preparation
 
 To start prepare the following input files:
-- A CSV file with the name, topology file, trajectory file, and label for each simulation to be included in the analysis. For a template, see [input.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/input.csv). Column names and their order must match the template.
-- A CSV file with the corresponding selections of the chain and residue numbers for the binding pocket (used in the clustering analysis) and a selection of atoms to which restraints should be applied. For a template, see [selections.csv](https://gitlab.schrodinger.com/martin.voegele/abfep-restraints/-/blob/main/example/selections.csv). Again, column names and their order must match the template. 
+- A CSV file with the name, topology file, trajectory file, and label for each simulation to be included in the analysis. For a template, see [input.csv](https://github.com/schrodinger/fep-restraints/-/blob/main/example/input.csv). Column names and their order must match the template.
+- A CSV file with the corresponding selections of the chain and residue numbers for the binding pocket (used in the clustering analysis) and a selection of atoms to which restraints should be applied. For a template, see [selections.csv](https://github.com/schrodinger/fep-restraints/-/blob/main/example/selections.csv). Again, column names and their order must match the template. 
 
 Make sure that the selection of the binding pocket leads to sets of corresponding atoms across all simulations! If the PDB structures are numbered correctly, the residue numbers should be the same (but this is not always the case). A good way to determine which residues to consider part of the binding pocket, select the ligand in a PDB structure (or in multiple structures of the same protein) and expand the selection by 4 or 5 Angstroms, list all residue numbers that are selected in any simulation, and remove numbers of residues that are not present in one or more simulations.  
 
@@ -39,7 +39,7 @@ Make sure that the selection of the binding pocket leads to sets of correspondin
 
 The main analysis is performed all in one command, for example run
 ```
-$SCHRODINGER/run ~/dev/abfep-restraints/analyze_cluster_rmsf.py -i input.csv -s selections.csv -o results -n 3 4 -k $(seq 1 8) --showstart
+$SCHRODINGER/run ~/dev/fep-restraints/analyze_cluster_rmsf.py -i input.csv -s selections.csv -o results -n 3 4 -k $(seq 1 8) --showstart
 ```
 to perform a full analysis with k-means clustering on the 3 most important principal components and then again on the 4 most important principal components, each for k from 1 to 8 clusters, and save everything in the folder __results__.
 
@@ -73,13 +73,13 @@ For each cluster, use the corresponding "_avg.cms" file to define the restraints
 
 Choose a simulation frame to start the ABFEP workflow in which the protein has sufficiently relaxed (especially for membrane proteins). As we use restraints, it does not matter to much which frame you use as long as it is not a crazy outlier. We provide a script to extract a specific frame from a set of simulations. For example, if you want to extract the tenth frame from all your template simulations, run
 ```
-$SCHRODINGER/run ~/dev/abfep-restraints/extract_starting_frames.py -i example/input.csv -n 10
+$SCHRODINGER/run ~/dev/fep-restraints/extract_starting_frames.py -i example/input.csv -n 10
 ```
 If you want to use a different frame for each trajectory, split up the input file and run the script separately for each trajectory.
 
 The extracted frames can then be converted to "_pv.mae" files as needed for FEP using
 ```
-$SCHRODINGER/run ~/dev/abfep-restraints/cms2fep.py frame.cms -o fep_pv.mae -ligand "{Ligand ASL}"
+$SCHRODINGER/run ~/dev/fep-restraints/cms2fep.py frame.cms -o fep_pv.mae -ligand "{Ligand ASL}"
 ```
 Then you can model the ligands into this structure or align the experimental structure in which you have already modeled them and copy them over.
 
@@ -90,7 +90,7 @@ This section assumes that the reference structure for the restraints is stored i
 
 From the file with your modeled input poses, you can generate a job directory for a restrained AB-FEP job, for example:
 ```
-$SCHRODINGER/run ~/dev/abfep-restraints/setup_restrained_abfep.py \
+$SCHRODINGER/run ~/dev/fep-restraints/setup_restrained_abfep.py \
 	input-poses_pv.maegz \
 	-r pca-kmeans_n04_s42_k05_cluster00_rmsf_avg.cms \
 	-j input-poses_n04_s42_k05_cluster00 \
