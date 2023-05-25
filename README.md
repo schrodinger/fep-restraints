@@ -1,6 +1,6 @@
 # AB-FEP with Restraints
 
-Tools to add restraints to AB-FEP runs. Includes a workflow to determine reference structures and restraint widths from plain MD simulations.
+Tools to add restraints to FEP+ runs (currently only AB-FEP). Includes a workflow to determine reference structures and restraint widths from plain MD simulations.
 
 
 ## Installation
