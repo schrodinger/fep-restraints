@@ -14,6 +14,10 @@ def write_abfep_restraints_job_script(
     job_name, rest_file, align_ref, align_sel, fep_force_const, md_force_const, scaling, 
     fep_sim_time, md_sim_time, host, subhost, project, maxjob, retries, opls=None, ffhost=None
     ):
+
+    # Get the directory where the code is
+    code_file_path = os.path.realpath(__file__)
+    code_directory = os.path.dirname(code_file_path)
     
     with open(job_name+'.sh', mode = 'wt', encoding = 'utf-8') as f:
         # Preparation step
@@ -30,14 +34,14 @@ def write_abfep_restraints_job_script(
         # Restraints for FEP of complex
         f.write('\n# Add restraints to the FEP simulations of the complex\n'
                 'for MSJ in *_complex.msj; do\n  OLD="${MSJ}.old"\n  mv "$MSJ" "$OLD"\n'
-                f'  $SCHRODINGER/run ~/dev/abfep-restraints/add_sigma_restraints.py \\\n'
+                f'  $SCHRODINGER/run {code_directory}/add_sigma_restraints.py \\\n'
                 f'    "{rest_file}" "$OLD" "$MSJ" -f {fep_force_const} -s {scaling} \\\n'
                 f'    -r "{align_ref}" \\\n    -a "{align_sel}"\n'
                 'done\n')
         # Restraints for initial MD
         f.write('\n# Add restraints to the initial MD run.\n'
                 'for MSJ in *_md.msj; do\n  OLD="${MSJ}.old"\n  mv "$MSJ" "$OLD"\n'
-                f'  $SCHRODINGER/run ~/dev/abfep-restraints/add_sigma_restraints.py \\\n'
+                f'  $SCHRODINGER/run {code_directory}/add_sigma_restraints.py \\\n'
                 f'    "{rest_file}" "$OLD" "$MSJ" -f {md_force_const} -s {scaling} \\\n'
                 f'    -r "{align_ref}" \\\n    -a "{align_sel}"\n'
                 'done\n')
