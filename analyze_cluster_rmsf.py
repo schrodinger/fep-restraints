@@ -61,8 +61,11 @@ if __name__ == "__main__":
         sys_name = simulations['System_Name'][i]
         sys_prop = selections[selections['System_Name']==sys_name]
         chain_id = list(sys_prop['BindingPocket_Chain'])
-        print(chain_id)
         res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
+        # Print names and info for this simulation
+        print('System: '+sys_name)
+        print('Trajectory: '+top_file+', '+trj_file)
+        print('Chain: '+' '.join(chain_id)+', Residues: '+' '.join(res_nums))
         # Load the simulation data
         msys_model, cms_model = topo.read_cms(top_file)
         trj = traj.read_traj(trj_file) 
