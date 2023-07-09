@@ -63,8 +63,8 @@ if __name__ == "__main__":
         chain_id = list(sys_prop['BindingPocket_Chain'])
         res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
         # Print names and info for this simulation
-        print('Topologyy:', top_file)
-        print('Trajectory:', trj_file)
+        print('Top. File:', top_file)
+        print('Trj. File:', trj_file)
         print('System: '+sys_name)
         for _i, _chain in enumerate(chain_id):
             print('Chain:', chain_id)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         out_file = os.path.join(args.output_dir,'1-distances/ca-distances_%04i.csv'%i)
         dist_files.append(out_file)
         write_features_to_csv(out_file, distances, dist_names, time)
-        print('Wrote distances from %s to %s.'%(trj_file, out_file) )
+        print('Wrote distances from %s to %s.i\n'%(trj_file, out_file) )
     simulations['CA-Dist_File'] = dist_files
 
     # * --------------------------------------------------- * #
