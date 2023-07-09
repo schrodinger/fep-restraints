@@ -63,9 +63,12 @@ if __name__ == "__main__":
         chain_id = list(sys_prop['BindingPocket_Chain'])
         res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
         # Print names and info for this simulation
+        print('Topologyy:', top_file)
+        print('Trajectory:', trj_file)
         print('System: '+sys_name)
-        print('Trajectory: '+top_file+', '+trj_file)
-        print('Chain: '+' '.join(chain_id)+', Residues: '+' '.join(res_nums))
+        for _i, _chain in enumerate(chain_id):
+            print('Chain:', chain_id)
+            print('Residues:', res_nums[_i])
         # Load the simulation data
         msys_model, cms_model = topo.read_cms(top_file)
         trj = traj.read_traj(trj_file) 
