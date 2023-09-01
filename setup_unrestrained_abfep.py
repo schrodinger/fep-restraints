@@ -97,8 +97,9 @@ if __name__ == '__main__':
         args.fep_sim_time, args.md_sim_time, 
         args.host, args.subhost, 
         args.project, args.maxjob, args.retries, 
-        args.salt,
-        opls=opls, ffhost=args.ffhost
+        salt=args.salt,
+        opls=opls, 
+        ffhost=args.ffhost
     )        
     # Leave the job directory
     os.chdir('..')
