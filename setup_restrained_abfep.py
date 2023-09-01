@@ -11,8 +11,9 @@ from schrodinger.forcefield.custom_params import create_archive_from_oplsdir, me
 
 
 def write_abfep_restraints_job_script(
-    job_name, rest_file, align_ref, align_sel, fep_force_const, md_force_const, scaling, 
-    fep_sim_time, md_sim_time, host, subhost, project, maxjob, retries, opls=None, ffhost=None
+    job_name, rest_file, align_ref, atom_sel, fep_force_const, md_force_const, scaling, 
+    fep_sim_time, md_sim_time, host, subhost, project, maxjob, retries, 
+    opls=None, ffhost=None, bottom_width=None
     ):
 
     # Get the directory where the code is
@@ -36,15 +37,19 @@ def write_abfep_restraints_job_script(
                 'for MSJ in *_complex.msj; do\n  OLD="${MSJ}.old"\n  mv "$MSJ" "$OLD"\n'
                 f'  $SCHRODINGER/run {code_directory}/add_sigma_restraints.py \\\n'
                 f'    "{rest_file}" "$OLD" "$MSJ" -f {fep_force_const} -s {scaling} \\\n'
-                f'    -r "{align_ref}" \\\n    -a "{align_sel}"\n'
-                'done\n')
+                f'    -r "{align_ref}" \\\n    -a "{atom_sel}"')
+        if bottom_width is not None: 
+            f.write(f' \\\n    --bw {bottom_width} ')
+        f.write('\ndone\n')
         # Restraints for initial MD
         f.write('\n# Add restraints to the initial MD run.\n'
                 'for MSJ in *_md.msj; do\n  OLD="${MSJ}.old"\n  mv "$MSJ" "$OLD"\n'
                 f'  $SCHRODINGER/run {code_directory}/add_sigma_restraints.py \\\n'
                 f'    "{rest_file}" "$OLD" "$MSJ" -f {md_force_const} -s {scaling} \\\n'
-                f'    -r "{align_ref}" \\\n    -a "{align_sel}"\n'
-                'done\n')
+                f'    -r "{align_ref}" \\\n    -a "{atom_sel}"')
+        if bottom_width is not None: 
+            f.write(f' \\\n    --bw {bottom_width} ')
+        f.write('\ndone\n')
         # Submission
         f.write('\n# Submit the job to the cluster.\n'
                 f'$SCHRODINGER/utilities/multisim \\\n  "{job_name}_pv.maegz" \\\n'
@@ -66,8 +71,9 @@ if __name__ == '__main__':
     parser.add_argument('-j','--job-name', help="Name for the output directory")
     parser.add_argument('-r','--rest-file', type=str, default=None)
     parser.add_argument('--scaling-factor', type=float, default=1.0)
+    parser.add_argument('--bottom-width', type=float, default=None)
     parser.add_argument('--align-ref', type=str, default=None)
-    parser.add_argument('--align-sel', dest='align_sel', type=cui.validate_and_enclose_asl, default='all')
+    parser.add_argument('--asl', dest='atom_sel', type=cui.validate_and_enclose_asl, default='all')
     parser.add_argument('--md-force-const', type=float, default=0.1)
     parser.add_argument('--fep-force-const', type=float, default=1.0)
     parser.add_argument('--host', type=str, default='driver-4core-standard')
@@ -128,11 +134,11 @@ if __name__ == '__main__':
     _, _graph = prepare_inputs(Path(pvfile), args.lig_rest, Path(args.job_name))
     # Create the job submission script
     write_abfep_restraints_job_script(
-        args.job_name, rsfile, alfile, args.align_sel, 
+        args.job_name, rsfile, alfile, args.atom_sel, 
         args.fep_force_const, args.md_force_const, args.scaling_factor,
         args.fep_sim_time, args.md_sim_time, args.host, args.subhost, 
         args.project, args.maxjob, args.retries, 
-        opls=opls, ffhost=args.ffhost
+        opls=opls, ffhost=args.ffhost, bottom_width=args.bottom_width
     )        
     # Leave the job directory
     os.chdir('..')

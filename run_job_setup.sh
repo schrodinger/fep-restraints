@@ -10,7 +10,7 @@ $S/run setup_restrained_abfep.py \
 	--scaling-factor 0.5 \
 	--md-force-const 0.1 \
 	--fep-force-const 1.0 \
-	--align-sel 'protein and chain A and at.ptype CA and ( res. 54 - 75 or res. 86 - 148 or res. 165 - 240 or res. 254 - 282 or res. 298 - 320 )' \
+	--asl 'protein and chain A and at.ptype CA and ( res. 54 - 75 or res. 86 - 148 or res. 165 - 240 or res. 254 - 282 or res. 298 - 320 )' \
 	--ffbuilder \
 	--host bolt_cpu \
 	--subhost bolt_gpu \
