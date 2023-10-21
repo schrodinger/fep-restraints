@@ -180,9 +180,9 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers
         frame_time : float array
             Time for each frame.
         distance_names : list
-            Names of all the torsions.
+            Names of all the distances.
         distances : list
-            Data for the features. Format: [features, frames].
+            Data for the distances. Format: [features, frames].
     
     """
     assert len(chain_ids) == len(residue_numbers)
