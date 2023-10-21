@@ -146,9 +146,11 @@ def get_feature_data(feat, data, feature_name):
     return timeseries
      
 
-def get_an_aid(cms_model, asl_string):
+def get_an_aid(cms_model, asl_string, none_for_zero=False):
     aid_list = cms_model.select_atom(asl_string)
-    if (len(aid_list) != 1):
+    if (len(aid_list) == 0) and none_for_zero:
+        return None
+    elif (len(aid_list) != 1):
         raise Exception("The number of chosen atoms is %d."%(len(aid_list)))
     else:
         return(aid_list[0])
