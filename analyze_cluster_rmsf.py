@@ -6,13 +6,44 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from schrodinger.application.desmond.packages import traj, topo
-from sympy import is_increasing, maximum
 from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, \
     calculate_ca_distances, calculate_backbone_torsions, calculate_sidechain_torsions
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
 from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
+
+
+def compare_features(feature_files, output_name='features', out_column='FeatureName',
+                     output_dir='.', showstart=False):
+    # Read the input files
+    names, data, origin, orig_id = read_features_from_csv_files(feature_files)
+    # Split data in active and inactive (accoring to their origin simulation)
+    act_origin = list(simulations[simulations['Start_Label']=='active'].index)
+    ina_origin = list(simulations[simulations['Start_Label']=='inactive'].index)
+    print('Inactive Simulations:', ina_origin, '\nActive Simulations:  ', act_origin, '\n')
+    print('Shape of the total data:   ', data.shape)
+    is_ina = [o in ina_origin for o in origin]
+    is_act = [o in act_origin for o in origin]
+    data_i = data[is_ina]
+    data_a = data[is_act]
+    print('Shape of the inactive data:', data_i.shape)
+    print('Shape of the active data:  ', data_a.shape) 
+    # Run the relative-entropy analysis
+    data_names, jsd, kld_ab, kld_ba = relative_entropy_analysis(
+        names, names, data_i, data_a, 
+        bin_width=None, bin_num=10, verbose=True
+        )
+    # Sort the features by how much their distributions differ
+    jsd_sorted = sort_features(data_names, jsd)
+    out_data = pd.DataFrame(jsd_sorted, columns=[out_column,'JSD'])
+    out_csv = os.path.join(output_dir, f'2-comparison/%s_sorted-by-jsd.csv' % output_name)
+    out_data.to_csv(out_csv)
+    # Plot the 20 most different distributions
+    out_plot = os.path.join(output_dir, f'2-comparison/%s_largest-jsd' % output_name)
+    plot_most_different_distributions(
+        jsd_sorted, names, names, data_i, data_a, out_plot, showstart=showstart
+        )
 
 
 if __name__ == "__main__":
@@ -49,9 +80,9 @@ if __name__ == "__main__":
         newdir = os.path.join(args.output_dir, subdir)
         os.makedirs(newdir, exist_ok=True)  
 
-    # * -------------------------------------------------------------------- * #
-    # *  Calculate the C-alpha distances and backbone + sidechain torsions.  * #
-    # * -------------------------------------------------------------------- * #
+    # * ------------------------------------------------------------------ * #
+    # *  Calculate the C-alpha distances and backbone/sidechain torsions.  * #
+    # * ------------------------------------------------------------------ * #
   
     print("\n* - Calculating the features. - *\n")
     dist_files = []
@@ -81,65 +112,46 @@ if __name__ == "__main__":
         # Calculate the distances between the C-alpha atoms
         time, dist_names, distances = calculate_ca_distances(msys_model, cms_model, trj, chain_id, res_nums)
         # ... and write them to a CSV file
-        out_file = os.path.join(args.output_dir,'1-features/ca-distances_%04i.csv'%i)
+        out_file = os.path.join(args.output_dir,f'1-features/ca-distances_%04i.csv'%i)
         dist_files.append(out_file)
         write_features_to_csv(out_file, distances, dist_names, time)
-        print('Wrote distances from %s to %s.i\n'%(trj_file, out_file) )
+        print('Wrote distances from %s to %s.\n'%(trj_file, out_file) )
 
         # Calculate the backbone torsions
         time, bbtors_names, bb_torsions = calculate_backbone_torsions(msys_model, cms_model, trj, chain_id, res_nums)
         # ... and write them to a CSV file
-        out_file = os.path.join(args.output_dir,'1-features/bb-torsions_%04i.csv'%i)
+        out_file = os.path.join(args.output_dir,f'1-features/bb-torsions_%04i.csv'%i)
         bbtors_files.append(out_file)
         write_features_to_csv(out_file, bb_torsions, bbtors_names, time)
-        print('Wrote backbone torsions from %s to %s.i\n'%(trj_file, out_file) )
+        print('Wrote backbone torsions from %s to %s.\n'%(trj_file, out_file) )
 
         # Calculate the backbone torsions
         time, sctors_names, sc_torsions = calculate_backbone_torsions(msys_model, cms_model, trj, chain_id, res_nums)
         # ... and write them to a CSV file
-        out_file = os.path.join(args.output_dir,'1-features/sc-torsions_%04i.csv'%i)
+        out_file = os.path.join(args.output_dir,f'1-features/sc-torsions_%04i.csv'%i)
         sctors_files.append(out_file)
         write_features_to_csv(out_file, sc_torsions, sctors_names, time)
-        print('Wrote sidechain torsions from %s to %s.i\n'%(trj_file, out_file) )
+        print('Wrote sidechain torsions from %s to %s.\n'%(trj_file, out_file) )
 
     simulations['CA-Dist_File'] = dist_files
     simulations['BB-Tors_File'] = bbtors_files
     simulations['SC-Tors_File'] = sctors_files
 
-    # * --------------------------------------------------- * #
-    # *  Compare the C-alpha distances of the simulations.  * #
-    # * --------------------------------------------------- * #
+    # * ------------------------------------------ * #
+    # *  Compare the features of the simulations.  * #
+    # * ------------------------------------------ * #
 
     print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
-    # Read the input files
-    names, data, origin, orig_id = read_features_from_csv_files(dist_files)
-    # Split data in active and inactive (accoring to their origin simulation)
-    act_origin = list(simulations[simulations['Start_Label']=='active'].index)
-    ina_origin = list(simulations[simulations['Start_Label']=='inactive'].index)
-    print('Inactive Simulations:', ina_origin, '\nActive Simulations:  ', act_origin, '\n')
-    print('Shape of the total data:   ', data.shape)
-    is_ina = [o in ina_origin for o in origin]
-    is_act = [o in act_origin for o in origin]
-    data_i = data[is_ina]
-    data_a = data[is_act]
-    print('Shape of the inactive data:', data_i.shape)
-    print('Shape of the active data:  ', data_a.shape) 
-    # Run the relative-entropy analysis
-    data_names, jsd, kld_ab, kld_ba = relative_entropy_analysis(
-        names, names, data_i, data_a, 
-        bin_width=None, bin_num=10, verbose=True
-        )
-    # Sort the features by how much their distributions differ
-    jsd_sorted = sort_features(data_names, jsd)
-    out_data = pd.DataFrame(jsd_sorted, columns=['Distance','JSD'])
-    out_csv = os.path.join(args.output_dir, '2-comparison/ca-dist_sorted-by-jsd.csv')
-    out_data.to_csv(out_csv)
-    # Plot the 20 most different distributions
-    out_plot = os.path.join(args.output_dir, '2-comparison/ca-dist_largest-jsd')
-    plot_most_different_distributions(
-        jsd_sorted, names, names, data_i, data_a, out_plot, showstart=args.showstart
-        )
-
+    compare_features(dist_files, output_name='ca-dist', out_column='CA-Distance',
+                     output_dir=args.output_dir, showstart=args.showstart)
+    
+    print("\n* - Comparing the backbone torsions of the simulations. - *\n")
+    compare_features(bbtors_files, output_name='bb-tors', out_column='BB-Torsion',
+                     output_dir=args.output_dir, showstart=args.showstart)    
+    
+    print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
+    compare_features(sctors_files, output_name='sc-tors', out_column='SC-Torsion',
+                     output_dir=args.output_dir, showstart=args.showstart)
 
     # * ------------------------------ * #
     # *  Principal Component Analysis  * #
