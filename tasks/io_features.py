@@ -131,7 +131,7 @@ def get_feature_data(feat, data, feature_name):
         data : float array
             Feature values data from the simulation.
         feature_name : str
-           Name of the selected feature.
+            Name of the selected feature.
     
     Returns
     -------
@@ -157,6 +157,34 @@ def get_an_aid(cms_model, asl_string, none_for_zero=False):
 
 
 def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None):
+    """
+    Calculates distances between pairs of C-alpha atoms from a trajectory.
+    
+    Parameters
+    ----------
+        msys_model : msys
+            System model object from the simulation's topology.
+        cms_model : cms
+            CMS model object from the simulation's topology.
+        tr : trajectory
+            Trajectory object from the simulation.
+        chain_ids : list
+            List with the names of all the chains with selected atoms.
+        residue_numbers : list
+            List with lists of residue numbers for each chain.
+        residue_names : list, optional
+            List with list of residue names for each chain.
+
+    Returns
+    -------
+        frame_time : float array
+            Time for each frame.
+        distance_names : list
+            Names of all the torsions.
+        distances : list
+            Data for the features. Format: [features, frames].
+    
+    """
     assert len(chain_ids) == len(residue_numbers)
     # time
     frame_time = []
