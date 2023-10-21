@@ -219,3 +219,97 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers
     #compute result
     distances = analysis.analyze(tr, *analyzers)
     return frame_time, distance_names, distances
+
+
+# BACKBONE TORSION DEFINITIONS
+bb_torsion_ptypes = {}
+bb_torsion_relres = {}
+#  PHI (φ):   C(i-1)-N(i)-CA(i)-C(i)
+bb_torsion_ptypes['PHI'] = ["C", "N", "CA", "C"]
+bb_torsion_relres['PHI'] = [-1, 0, 0, 0]
+#  PSI (ψ):   N(i)-CA(i)-C(i)-N(i + 1)
+bb_torsion_ptypes['PSI'] = ["N", "CA", "C", "N"]
+bb_torsion_relres['PSI'] = [0, 0, 0, 1]
+#  OMEGA (ω): CA(i)-C(i)-N(i + 1)-CA(i + 1)
+bb_torsion_ptypes['OMEGA'] = ["CA", "C", "N", "CA"]
+bb_torsion_relres['OMEGA'] = [0, 0, 1, 1]
+
+
+def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None):
+    """
+    Calculates protein backbone torsions from a trajectory.
+    
+    Parameters
+    ----------
+        msys_model : msys
+            System model object from the simulation's topology.
+        cms_model : cms
+            CMS model object from the simulation's topology.
+        tr : trajectory
+            Trajectory object from the simulation.
+        chain_ids : list
+            List with the names of all the chains with selected atoms.
+        residue_numbers : list
+            List with lists of residue numbers for each chain.
+        residue_names : list, optional
+            List with list of residue names for each chain.
+
+    Returns
+    -------
+        frame_time : float array
+            Time for each frame.
+        torsion_names : list
+            Names of all the torsions.
+        torsions : list
+            Data for the torsions. Format: [features, frames].
+    
+    """
+    assert len(chain_ids) == len(residue_numbers)
+    # Read the time for each frame
+    frame_time = []
+    for item in tr:
+        frame_time.append(item.time)
+    # Define the residue names
+    if residue_names is None:
+        residue_names = residue_numbers
+    else:
+        assert len(residue_names) == len(residue_numbers)
+        for c, chain_id in enumerate(chain_ids):
+            assert len(residue_names[c]) == len(residue_numbers[c])
+    # Define the residues
+    residues = []
+    for c, chain_id in enumerate(chain_ids):
+        for number, name in zip(residue_numbers[c], residue_names[c]):
+            new_res = {'chain':chain_id, 'number':number, 'name':name}
+            residues.append(new_res)
+    # Define the analyzers
+    analyzers = []
+    torsion_names = []
+    # In each backbone torsion, all atoms have the same chain but some have a different residue number/name
+    for r in range(len(residues)):
+        chain, rnum, rname  = residues[r]['chain'], residues[r]['number'], residues[r]['name']
+        # There are multiple possible sidechain torsions, try them all!
+        # Loop over each of the possible types (chi1-5)
+        for torsion_type in bb_torsion_ptypes.keys():
+            # Within each type, get the ptypes (atom names) and relative residue numbers
+            atom_ptypes = bb_torsion_ptypes[torsion_type]
+            atom_relres = bb_torsion_relres[torsion_type]
+            ptype_i, ptype_j, ptype_k, ptype_l = atom_ptypes
+            relrn_i, relrn_j, relrn_k, relrn_l = atom_relres
+            # Construct the selection strings
+            asl_i = '(res.num %i) AND (atom.ptype "%s") AND (chain.name %s)'%(rnum + relrn_i, ptype_i, chain)
+            asl_j = '(res.num %i) AND (atom.ptype "%s") AND (chain.name %s)'%(rnum + relrn_j, ptype_j, chain)
+            asl_k = '(res.num %i) AND (atom.ptype "%s") AND (chain.name %s)'%(rnum + relrn_k, ptype_k, chain)
+            asl_l = '(res.num %i) AND (atom.ptype "%s") AND (chain.name %s)'%(rnum + relrn_l, ptype_l, chain)
+            # Get the corresponding atom IDs (None if atom not in system)
+            aid_i = get_an_aid(cms_model, asl_i, none_for_zero=True)
+            aid_j = get_an_aid(cms_model, asl_j, none_for_zero=True)
+            aid_k = get_an_aid(cms_model, asl_k, none_for_zero=True)
+            aid_l = get_an_aid(cms_model, asl_l, none_for_zero=True)
+            # Only add a torsion if all atoms are in the structure
+            if aid_i and aid_j and aid_k and aid_l:
+                analyzers.append(analysis.Torsion(msys_model, cms_model, aid_i, aid_j, aid_k, aid_l))
+                torsion_names.append("%s-%s"%(rname, torsion_type))
+    # Compute the result
+    torsions = analysis.analyze(tr, *analyzers)
+    return frame_time, torsion_names, torsions
