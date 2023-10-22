@@ -14,7 +14,7 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
 
 
-def calculate_features(simulations, feature_type='ca-distance'):
+def calculate_features(simulations, args, feature_type='ca-distance'):
 
     feature_files = []
 
@@ -55,15 +55,14 @@ def calculate_features(simulations, feature_type='ca-distance'):
         # ... and write them to a CSV file
         out_file = os.path.join(args.output_dir,f'1-features/%ss_%04i.csv' % (feature_type, i))
         feature_files.append(out_file)
-        write_features_to_csv(out_file, feat_values, feat_names, dist_time)
-        print('Wrote distances from %s to %s.\n'%(trj_file, out_file) )
+        write_features_to_csv(out_file, feat_values, feat_names, time)
+        print('Wrote %ss from %s to %s.\n'%(feature_type, trj_file, out_file) )
 
     return feature_files
 
 
-def compare_features(simulations, feature_files_key, feature_type='ca-distance',
-                     output_name='features', out_column='FeatureName', output_dir='.',
-                     showstart=False):
+def compare_features(simulations, args, feature_files_key, feature_type='ca-distance',
+                     output_name='features', out_column='FeatureName'):
     # Read the input files
     names, data, origin, orig_id = read_features_from_csv_files(simulations[feature_files_key])
     # Split data in active and inactive (according to their origin simulation)
@@ -85,13 +84,13 @@ def compare_features(simulations, feature_files_key, feature_type='ca-distance',
     # Sort the features by how much their distributions differ
     jsd_sorted = sort_features(data_names, jsd)
     out_data = pd.DataFrame(jsd_sorted, columns=[out_column,'JSD'])
-    out_csv = os.path.join(output_dir, f'2-comparison/%s_sorted-by-jsd.csv' % output_name)
+    out_csv = os.path.join(args.output_dir, f'2-comparison/%s_sorted-by-jsd.csv' % output_name)
     out_data.to_csv(out_csv)
     # Plot the 20 most different distributions
-    out_plot = os.path.join(output_dir, f'2-comparison/%s_largest-jsd' % output_name)
+    out_plot = os.path.join(args.output_dir, f'2-comparison/%s_largest-jsd' % output_name)
     plot_most_different_distributions(
         jsd_sorted, names, names, data_i, data_a, out_plot,
-        showstart=showstart, feature_type = feature_type
+        showstart=args.showstart, feature_type = feature_type
     )
     return jsd_sorted
 
@@ -136,9 +135,9 @@ if __name__ == "__main__":
   
     print("\n* - Calculating the features. - *\n")
 
-    simulations['CA-Dist_File'] = calculate_features(simulations, 'ca-distance')
-    simulations['BB-Tors_File'] = calculate_features(simulations, 'bb-torsion')
-    simulations['SC-Tors_File'] = calculate_features(simulations, 'sc-torsion')
+    simulations['CA-Dist_File'] = calculate_features(simulations, args, 'ca-distance')
+    simulations['BB-Tors_File'] = calculate_features(simulations, args, 'bb-torsion')
+    simulations['SC-Tors_File'] = calculate_features(simulations, args, 'sc-torsion')
  
     # * ------------------------------------------ * #
     # *  Compare the features of the simulations.  * #
@@ -146,20 +145,20 @@ if __name__ == "__main__":
 
     print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
     _ = compare_features(
-        simulations, 'CA-Dist_file', feature_type='ca-distance', showstart=args.showstart,
-        output_name='ca-dist', out_column='CA-Distance', output_dir=args.output_dir
+        simulations, args, 'CA-Dist_File', feature_type='ca-distance',
+        output_name='ca-dist', out_column='CA-Distance'
     )
     
     print("\n* - Comparing the backbone torsions of the simulations. - *\n")
     _ = compare_features(
-        simulations, 'BB-Tors_File', feature_type='bb-torsion', showstart=args.showstart,
-        output_name='bb-tors', out_column='BB-Torsion', output_dir=args.output_dir
+        simulations, args, 'BB-Tors_File', feature_type='bb-torsion',
+        output_name='bb-tors', out_column='BB-Torsion'
     )    
     
     print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
     _ = compare_features(
-        simulations, 'SC-Tors_File', feature_type='sc-torsion',  showstart=args.showstart,
-        output_name='sc-tors', out_column='SC-Torsion', output_dir=args.output_dir
+        simulations, args, 'SC-Tors_File', feature_type='sc-torsion',
+        output_name='sc-tors', out_column='SC-Torsion'
     )
 
     # * ------------------------------ * #
@@ -396,5 +395,5 @@ if __name__ == "__main__":
         # Plot every cluster of this clustering run
         out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf'
         out_rmsf_plot = os.path.join(args.output_dir, out_name_k)
-        plot_cluster_rmsf(k, rmsf_files_k, dist_names, out_rmsf_plot)
+        plot_cluster_rmsf(k, rmsf_files_k, names, out_rmsf_plot)
 
