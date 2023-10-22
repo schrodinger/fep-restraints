@@ -94,7 +94,7 @@ def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bi
     return data_names, data_jsdist, data_kld_ab, data_kld_ba
 
 
-def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a, out_plot, showstart=False):
+def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a, out_plot, showstart=False, ftype='ca-distance'):
 
     fig, ax = plt.subplots(5,4, figsize=[10,8], dpi=300)
     ax = ax.flatten()
@@ -125,7 +125,11 @@ def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a
         
         axi.set_yticks([])
         axi.set_ylim(bottom=0)
-        axi.set_xlabel(r'distance CA%s - CA%s'%(fname.split('-')[0], fname.split('-')[1]))
+        if ftype == 'ca-distance':
+            xlabel = r'distance CA%s - CA%s' % (fname.split('-')[0], fname.split('-')[1])
+        else:
+            xlabel = r'%s %s - %s' % (ftype, fname)
+        axi.set_xlabel(xlabel)
         
     fig.tight_layout()  
     fig.savefig(out_plot+'.png', dpi=300)

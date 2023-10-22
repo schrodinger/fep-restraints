@@ -14,6 +14,53 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
 
 
+def calculate_features(simulations, feature_type='ca-distance'):
+
+    feature_files = []
+
+    for i in simulations.index:
+
+        # Get names and info for this simulation
+        top_file = simulations['Topology'][i]
+        trj_file = simulations['Trajectory'][i]
+        sys_name = simulations['System_Name'][i]
+        sys_prop = selections[selections['System_Name']==sys_name]
+        chain_id = list(sys_prop['BindingPocket_Chain'])
+        res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
+        # Print names and info for this simulation
+        print('Top. File:', top_file)
+        print('Trj. File:', trj_file)
+        print('System: '+sys_name)
+        for _i, _chain in enumerate(chain_id):
+            print('Chain:', chain_id)
+            print('Residues:', res_nums[_i])
+
+        # Load the simulation data
+        msys_model, cms_model = topo.read_cms(top_file)
+        trj = traj.read_traj(trj_file) 
+        
+        # Calculate the distances between the C-alpha atoms
+        if feature_type == 'ca-distance':
+            time, feat_names, feat_values = calculate_ca_distances(
+                msys_model, cms_model, trj, chain_id, res_nums
+            )
+        elif feature_type == 'bb-torsion':
+            time, feat_names, feat_values = calculate_backbone_torsions(
+                msys_model, cms_model, trj, chain_id, res_nums
+            )
+        elif feature_type == 'sc-torsion':
+            time, feat_names, feat_values = calculate_sidechain_torsions(
+                msys_model, cms_model, trj, chain_id, res_nums
+            )       
+        # ... and write them to a CSV file
+        out_file = os.path.join(args.output_dir,f'1-features/%ss_%04i.csv' % (feature_type, i))
+        feature_files.append(out_file)
+        write_features_to_csv(out_file, feat_values, feat_names, dist_time)
+        print('Wrote distances from %s to %s.\n'%(trj_file, out_file) )
+
+    return feature_files
+
+
 def compare_features(simulations, feature_files_key, feature_type='ca-distance',
                      output_name='features', out_column='FeatureName', output_dir='.',
                      showstart=False):
@@ -89,60 +136,9 @@ if __name__ == "__main__":
   
     print("\n* - Calculating the features. - *\n")
 
-    simulations['CA-Dist_File'] = []
-    simulations['BB-Tors_File'] = []
-    simulations['SC-Tors_File'] = []
-
-    for i in simulations.index:
-
-        # Get names and info for this simulation
-        top_file = simulations['Topology'][i]
-        trj_file = simulations['Trajectory'][i]
-        sys_name = simulations['System_Name'][i]
-        sys_prop = selections[selections['System_Name']==sys_name]
-        chain_id = list(sys_prop['BindingPocket_Chain'])
-        res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
-        # Print names and info for this simulation
-        print('Top. File:', top_file)
-        print('Trj. File:', trj_file)
-        print('System: '+sys_name)
-        for _i, _chain in enumerate(chain_id):
-            print('Chain:', chain_id)
-            print('Residues:', res_nums[_i])
-
-        # Load the simulation data
-        msys_model, cms_model = topo.read_cms(top_file)
-        trj = traj.read_traj(trj_file) 
-        
-        # Calculate the distances between the C-alpha atoms
-        dist_time, dist_names, distances = calculate_ca_distances(
-            msys_model, cms_model, trj, chain_id, res_nums
-        )
-        # ... and write them to a CSV file
-        out_file_cadist = os.path.join(args.output_dir,f'1-features/ca-distances_%04i.csv'%i)
-        simulations['CA-Dist_File'].append(out_file_cadist)
-        write_features_to_csv(out_file_cadist, distances, dist_names, dist_time)
-        print('Wrote distances from %s to %s.\n'%(trj_file, out_file_cadist) )
-
-        # Calculate the backbone torsions
-        bbtors_time, bbtors_names, bb_torsions = calculate_backbone_torsions(
-            msys_model, cms_model, trj, chain_id, res_nums
-        )
-        # ... and write them to a CSV file
-        out_file_bbtors = os.path.join(args.output_dir,f'1-features/bb-torsions_%04i.csv'%i)
-        simulations['BB-Tors_File'].append(out_file_bbtors)
-        write_features_to_csv(out_file_bbtors, bb_torsions, bbtors_names, bbtors_time)
-        print('Wrote backbone torsions from %s to %s.\n'%(trj_file, out_file_bbtors) )
-
-        # Calculate the backbone torsions
-        sctors_time, sctors_names, sc_torsions = calculate_sidechain_torsions(
-            msys_model, cms_model, trj, chain_id, res_nums
-        )
-        # ... and write them to a CSV file
-        out_file_sctors = os.path.join(args.output_dir,f'1-features/sc-torsions_%04i.csv'%i)
-        simulations['SC-Tors_File'].append(out_file_sctors)
-        write_features_to_csv(out_file_sctors, sc_torsions, sctors_names, sctors_time)
-        print('Wrote sidechain torsions from %s to %s.\n'%(trj_file, out_file_sctors) )
+    simulations['CA-Dist_File'] = calculate_features(simulations, 'ca-distance')
+    simulations['BB-Tors_File'] = calculate_features(simulations, 'bb-torsion')
+    simulations['SC-Tors_File'] = calculate_features(simulations, 'sc-torsion')
  
     # * ------------------------------------------ * #
     # *  Compare the features of the simulations.  * #
@@ -150,7 +146,7 @@ if __name__ == "__main__":
 
     print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
     _ = compare_features(
-        simulations, 'CA-Dist_file', feature_type='ca-distance', showstart=args.showstart
+        simulations, 'CA-Dist_file', feature_type='ca-distance', showstart=args.showstart,
         output_name='ca-dist', out_column='CA-Distance', output_dir=args.output_dir
     )
     
