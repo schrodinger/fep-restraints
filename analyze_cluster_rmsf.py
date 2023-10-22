@@ -14,11 +14,12 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
 
 
-def compare_features(feature_files, output_name='features', out_column='FeatureName',
-                     output_dir='.', showstart=False, feature_type='ca-distance'):
+def compare_features(simulations, feature_files_key, feature_type='ca-distance',
+                     output_name='features', out_column='FeatureName', output_dir='.',
+                     showstart=False):
     # Read the input files
-    names, data, origin, orig_id = read_features_from_csv_files(feature_files)
-    # Split data in active and inactive (accoring to their origin simulation)
+    names, data, origin, orig_id = read_features_from_csv_files(simulations[feature_files_key])
+    # Split data in active and inactive (according to their origin simulation)
     act_origin = list(simulations[simulations['Start_Label']=='active'].index)
     ina_origin = list(simulations[simulations['Start_Label']=='inactive'].index)
     print('Inactive Simulations:', ina_origin, '\nActive Simulations:  ', act_origin, '\n')
@@ -45,6 +46,7 @@ def compare_features(feature_files, output_name='features', out_column='FeatureN
         jsd_sorted, names, names, data_i, data_a, out_plot,
         showstart=showstart, feature_type = feature_type
     )
+    return jsd_sorted
 
 
 if __name__ == "__main__":
@@ -86,9 +88,11 @@ if __name__ == "__main__":
     # * ------------------------------------------------------------------ * #
   
     print("\n* - Calculating the features. - *\n")
-    dist_files = []
-    bbtors_files = []
-    sctors_files = []
+
+    simulations['CA-Dist_File'] = []
+    simulations['BB-Tors_File'] = []
+    simulations['SC-Tors_File'] = []
+
     for i in simulations.index:
 
         # Get names and info for this simulation
@@ -111,59 +115,55 @@ if __name__ == "__main__":
         trj = traj.read_traj(trj_file) 
         
         # Calculate the distances between the C-alpha atoms
-        time, dist_names, distances = calculate_ca_distances(
+        dist_time, dist_names, distances = calculate_ca_distances(
             msys_model, cms_model, trj, chain_id, res_nums
         )
         # ... and write them to a CSV file
-        out_file = os.path.join(args.output_dir,f'1-features/ca-distances_%04i.csv'%i)
-        dist_files.append(out_file)
-        write_features_to_csv(out_file, distances, dist_names, time)
-        print('Wrote distances from %s to %s.\n'%(trj_file, out_file) )
+        out_file_cadist = os.path.join(args.output_dir,f'1-features/ca-distances_%04i.csv'%i)
+        simulations['CA-Dist_File'].append(out_file_cadist)
+        write_features_to_csv(out_file_cadist, distances, dist_names, dist_time)
+        print('Wrote distances from %s to %s.\n'%(trj_file, out_file_cadist) )
 
         # Calculate the backbone torsions
-        time, bbtors_names, bb_torsions = calculate_backbone_torsions(
+        bbtors_time, bbtors_names, bb_torsions = calculate_backbone_torsions(
             msys_model, cms_model, trj, chain_id, res_nums
         )
         # ... and write them to a CSV file
-        out_file = os.path.join(args.output_dir,f'1-features/bb-torsions_%04i.csv'%i)
-        bbtors_files.append(out_file)
-        write_features_to_csv(out_file, bb_torsions, bbtors_names, time)
-        print('Wrote backbone torsions from %s to %s.\n'%(trj_file, out_file) )
+        out_file_bbtors = os.path.join(args.output_dir,f'1-features/bb-torsions_%04i.csv'%i)
+        simulations['BB-Tors_File'].append(out_file_bbtors)
+        write_features_to_csv(out_file_bbtors, bb_torsions, bbtors_names, bbtors_time)
+        print('Wrote backbone torsions from %s to %s.\n'%(trj_file, out_file_bbtors) )
 
         # Calculate the backbone torsions
-        time, sctors_names, sc_torsions = calculate_backbone_torsions(
+        sctors_time, sctors_names, sc_torsions = calculate_sidechain_torsions(
             msys_model, cms_model, trj, chain_id, res_nums
         )
         # ... and write them to a CSV file
-        out_file = os.path.join(args.output_dir,f'1-features/sc-torsions_%04i.csv'%i)
-        sctors_files.append(out_file)
-        write_features_to_csv(out_file, sc_torsions, sctors_names, time)
-        print('Wrote sidechain torsions from %s to %s.\n'%(trj_file, out_file) )
-
-    simulations['CA-Dist_File'] = dist_files
-    simulations['BB-Tors_File'] = bbtors_files
-    simulations['SC-Tors_File'] = sctors_files
-
+        out_file_sctors = os.path.join(args.output_dir,f'1-features/sc-torsions_%04i.csv'%i)
+        simulations['SC-Tors_File'].append(out_file_sctors)
+        write_features_to_csv(out_file_sctors, sc_torsions, sctors_names, sctors_time)
+        print('Wrote sidechain torsions from %s to %s.\n'%(trj_file, out_file_sctors) )
+ 
     # * ------------------------------------------ * #
     # *  Compare the features of the simulations.  * #
     # * ------------------------------------------ * #
 
     print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
-    compare_features(
-        dist_files, output_name='ca-dist', out_column='CA-Distance', output_dir=args.output_dir,
-        showstart=args.showstart, feature_type='ca-distance'
+    _ = compare_features(
+        simulations, 'CA-Dist_file', feature_type='ca-distance', showstart=args.showstart
+        output_name='ca-dist', out_column='CA-Distance', output_dir=args.output_dir
     )
     
     print("\n* - Comparing the backbone torsions of the simulations. - *\n")
-    compare_features(
-        bbtors_files, output_name='bb-tors', out_column='BB-Torsion', output_dir=args.output_dir,
-        showstart=args.showstart, feature_type='bb-torsion'
+    _ = compare_features(
+        simulations, 'BB-Tors_File', feature_type='bb-torsion', showstart=args.showstart,
+        output_name='bb-tors', out_column='BB-Torsion', output_dir=args.output_dir
     )    
     
     print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
-    compare_features(
-        sctors_files, output_name='sc-tors', out_column='SC-Torsion', output_dir=args.output_dir,
-        showstart=args.showstart, feature_type='sc-torsion'
+    _ = compare_features(
+        simulations, 'SC-Tors_File', feature_type='sc-torsion',  showstart=args.showstart,
+        output_name='sc-tors', out_column='SC-Torsion', output_dir=args.output_dir
     )
 
     # * ------------------------------ * #
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     paramstr = 's%02i'%(args.random_state)
 
     print("\n* - Determining the principal components. - *\n")
-    names, data, origin, orig_id = read_features_from_csv_files(dist_files)
+    names, data, origin, orig_id = read_features_from_csv_files(simulations['CA-Dist_File'])
     pca = PCA(random_state=args.random_state)
     pca.fit(data.T)
     pc = pca.components_
