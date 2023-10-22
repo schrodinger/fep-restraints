@@ -15,7 +15,7 @@ from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot
 
 
 def compare_features(feature_files, output_name='features', out_column='FeatureName',
-                     output_dir='.', showstart=False):
+                     output_dir='.', showstart=False, feature_type='ca-distance'):
     # Read the input files
     names, data, origin, orig_id = read_features_from_csv_files(feature_files)
     # Split data in active and inactive (accoring to their origin simulation)
@@ -33,7 +33,7 @@ def compare_features(feature_files, output_name='features', out_column='FeatureN
     data_names, jsd, kld_ab, kld_ba = relative_entropy_analysis(
         names, names, data_i, data_a, 
         bin_width=None, bin_num=10, verbose=True
-        )
+    )
     # Sort the features by how much their distributions differ
     jsd_sorted = sort_features(data_names, jsd)
     out_data = pd.DataFrame(jsd_sorted, columns=[out_column,'JSD'])
@@ -42,8 +42,9 @@ def compare_features(feature_files, output_name='features', out_column='FeatureN
     # Plot the 20 most different distributions
     out_plot = os.path.join(output_dir, f'2-comparison/%s_largest-jsd' % output_name)
     plot_most_different_distributions(
-        jsd_sorted, names, names, data_i, data_a, out_plot, showstart=showstart
-        )
+        jsd_sorted, names, names, data_i, data_a, out_plot,
+        showstart=showstart, feature_type = feature_type
+    )
 
 
 if __name__ == "__main__":
@@ -110,7 +111,9 @@ if __name__ == "__main__":
         trj = traj.read_traj(trj_file) 
         
         # Calculate the distances between the C-alpha atoms
-        time, dist_names, distances = calculate_ca_distances(msys_model, cms_model, trj, chain_id, res_nums)
+        time, dist_names, distances = calculate_ca_distances(
+            msys_model, cms_model, trj, chain_id, res_nums
+        )
         # ... and write them to a CSV file
         out_file = os.path.join(args.output_dir,f'1-features/ca-distances_%04i.csv'%i)
         dist_files.append(out_file)
@@ -118,7 +121,9 @@ if __name__ == "__main__":
         print('Wrote distances from %s to %s.\n'%(trj_file, out_file) )
 
         # Calculate the backbone torsions
-        time, bbtors_names, bb_torsions = calculate_backbone_torsions(msys_model, cms_model, trj, chain_id, res_nums)
+        time, bbtors_names, bb_torsions = calculate_backbone_torsions(
+            msys_model, cms_model, trj, chain_id, res_nums
+        )
         # ... and write them to a CSV file
         out_file = os.path.join(args.output_dir,f'1-features/bb-torsions_%04i.csv'%i)
         bbtors_files.append(out_file)
@@ -126,7 +131,9 @@ if __name__ == "__main__":
         print('Wrote backbone torsions from %s to %s.\n'%(trj_file, out_file) )
 
         # Calculate the backbone torsions
-        time, sctors_names, sc_torsions = calculate_backbone_torsions(msys_model, cms_model, trj, chain_id, res_nums)
+        time, sctors_names, sc_torsions = calculate_backbone_torsions(
+            msys_model, cms_model, trj, chain_id, res_nums
+        )
         # ... and write them to a CSV file
         out_file = os.path.join(args.output_dir,f'1-features/sc-torsions_%04i.csv'%i)
         sctors_files.append(out_file)
@@ -142,16 +149,22 @@ if __name__ == "__main__":
     # * ------------------------------------------ * #
 
     print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
-    compare_features(dist_files, output_name='ca-dist', out_column='CA-Distance',
-                     output_dir=args.output_dir, showstart=args.showstart)
+    compare_features(
+        dist_files, output_name='ca-dist', out_column='CA-Distance', output_dir=args.output_dir,
+        showstart=args.showstart, feature_type='ca-distance'
+    )
     
     print("\n* - Comparing the backbone torsions of the simulations. - *\n")
-    compare_features(bbtors_files, output_name='bb-tors', out_column='BB-Torsion',
-                     output_dir=args.output_dir, showstart=args.showstart)    
+    compare_features(
+        bbtors_files, output_name='bb-tors', out_column='BB-Torsion', output_dir=args.output_dir,
+        showstart=args.showstart, feature_type='bb-torsion'
+    )    
     
     print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
-    compare_features(sctors_files, output_name='sc-tors', out_column='SC-Torsion',
-                     output_dir=args.output_dir, showstart=args.showstart)
+    compare_features(
+        sctors_files, output_name='sc-tors', out_column='SC-Torsion', output_dir=args.output_dir,
+        showstart=args.showstart, feature_type='sc-torsion'
+    )
 
     # * ------------------------------ * #
     # *  Principal Component Analysis  * #
@@ -189,16 +202,16 @@ if __name__ == "__main__":
     out_pdf = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr)
     plot_pca_by_system(
         pc[:max_pc], origin, simulations, out_pdf, showstart=args.showstart
-        )
+    )
     scatterplot_pca_by_system(
         pc, 0, 1, origin, simulations, out_pdf+'_pc1and2', showstart=args.showstart
-        )
+    )
     scatterplot_pca_by_system(
         pc, 0, 2, origin, simulations, out_pdf+'_pc1and3', showstart=args.showstart
-        )
+    )
     scatterplot_pca_by_system(
         pc, 1, 2, origin, simulations, out_pdf+'_pc2and3', showstart=args.showstart
-        )
+    )
 
     # For all further work, only keep the requested number of PCs
     pc = pc[:args.n_components]
