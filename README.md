@@ -97,7 +97,7 @@ $SCHRODINGER/run ~/dev/fep-restraints/setup_restrained_abfep.py \
 	--scaling-factor 0.5 \
 	--md-force-const 0.1 \
 	--fep-force-const 1.0 \
-	--align-sel 'protein and chain A and at.ptype CA and ( res. 54 - 75 or res. 86 - 148 or res. 165 - 240 or res. 254 - 282 or res. 298 - 320 )' \
+	--asl 'protein and chain A and at.ptype CA and ( res. 54 - 75 or res. 86 - 148 or res. 165 - 240 or res. 254 - 282 or res. 298 - 320 )' \
 	--ffbuilder \
 	--host bolt_cpu \
 	--subhost bolt_gpu \
@@ -109,9 +109,8 @@ $SCHRODINGER/run ~/dev/fep-restraints/setup_restrained_abfep.py \
 	--fep-sim-time 10000
 ```
 where the option `-j` determines the name of the directory and the job name. 
-The option `-r` provides the restraint file and `--scaling-factor` the factor by which the width of the restraints from the cms file (e.g., from the RMSF as described above) is to be rescaled. 
-The restraints file has to be aligned to the start structure and the flag `--align-sel` provides the ASL for the atoms at which to align them.
-This selection must only include residues that are present in both the start file and the restraints file. It is the user's duty to make sure residue numbers, chain IDs etc. correspond to each other.
+The option `-r` provides the restraint file and `--asl` the atom selection language (ASL) string to define which atoms are restrained (default all). This selection must only include residues that are present in both the start file and the restraints file. It is the user's duty to make sure residue numbers, chain IDs etc. correspond to each other (ideally they stem from the same simulation topology).
+The width of the flat-bottom harmonic restraints can be set via `--bw` to a single value for all atoms (where 0 will correspond to harmonic restraints). Do not use `--bw` if the width of the restraints is to be defined from the cms file (e.g., from the RMSF as described above)! In this case, you can use `--scaling-factor` to provide the factor by which the width of the restraints from the cms file is to be rescaled (where 1 will correspond to using unscaled restraint widths). The restraints file is aligned to the start structure using the atoms that are to be restrained.
 
 Then `cd` into the job directory and submit the job by running the bash script. 
 You can also make manual adjustments there.
