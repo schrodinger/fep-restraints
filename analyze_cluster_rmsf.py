@@ -111,6 +111,7 @@ if __name__ == "__main__":
     parser.add_argument('-w', dest='write_traj', action='store_true', default=False, help='Sort all trajectory frames by cluster. Warning: Currently this only works if all trajectories have the same topology and otherwise causes the code to fail.')
     parser.add_argument('-t', dest='threshold', type=float, default=None)
     parser.add_argument('--showstart', dest='showstart', action='store_true', default=False)
+    parser.add_argument('--skip-comparison', dest='skip_comparison', action='store_true', default=False)
     args = parser.parse_args()
 
     # Read the input files
@@ -143,23 +144,25 @@ if __name__ == "__main__":
     # *  Compare the features of the simulations.  * #
     # * ------------------------------------------ * #
 
-    print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
-    _ = compare_features(
-        simulations, args, 'CA-Dist_File', feature_type='ca-distance',
-        output_name='ca-dist', out_column='CA-Distance'
-    )
-    
-    print("\n* - Comparing the backbone torsions of the simulations. - *\n")
-    _ = compare_features(
-        simulations, args, 'BB-Tors_File', feature_type='bb-torsion',
-        output_name='bb-tors', out_column='BB-Torsion'
-    )    
-    
-    print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
-    _ = compare_features(
-        simulations, args, 'SC-Tors_File', feature_type='sc-torsion',
-        output_name='sc-tors', out_column='SC-Torsion'
-    )
+    if not args.skip_comparison:
+
+        print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
+        _ = compare_features(
+            simulations, args, 'CA-Dist_File', feature_type='ca-distance',
+            output_name='ca-dist', out_column='CA-Distance'
+        )
+        
+        print("\n* - Comparing the backbone torsions of the simulations. - *\n")
+        _ = compare_features(
+            simulations, args, 'BB-Tors_File', feature_type='bb-torsion',
+            output_name='bb-tors', out_column='BB-Torsion'
+        )    
+        
+        print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
+        _ = compare_features(
+            simulations, args, 'SC-Tors_File', feature_type='sc-torsion',
+            output_name='sc-tors', out_column='SC-Torsion'
+        )
 
     # * ------------------------------ * #
     # *  Principal Component Analysis  * #
