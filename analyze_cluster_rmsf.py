@@ -62,23 +62,25 @@ def calculate_features(simulations, args, feature_type='ca-distance'):
 
 
 def compare_features(simulations, args, feature_files_key, feature_type='ca-distance',
-                     output_name='features', out_column='FeatureName'):
+                     output_name='features', out_column='FeatureName',
+                     sim_label_a='active', sim_label_b='inactive'):
     # Read the input files
     names, data, origin, orig_id = read_features_from_csv_files(simulations[feature_files_key])
     # Split data in active and inactive (according to their origin simulation)
-    act_origin = list(simulations[simulations['Start_Label']=='active'].index)
-    ina_origin = list(simulations[simulations['Start_Label']=='inactive'].index)
-    print('Inactive Simulations:', ina_origin, '\nActive Simulations:  ', act_origin, '\n')
+    origin_a = list(simulations[simulations['Start_Label']==sim_label_a].index)
+    origin_b = list(simulations[simulations['Start_Label']==sim_label_b].index)
+    print('Simulations %s: ' % sim_label_a, origin_a)
+    print('Simulations %s: ' % sim_label_b, origin_b)
     print('Shape of the total data:   ', data.shape)
-    is_ina = [o in ina_origin for o in origin]
-    is_act = [o in act_origin for o in origin]
-    data_i = data[is_ina]
-    data_a = data[is_act]
-    print('Shape of the inactive data:', data_i.shape)
-    print('Shape of the active data:  ', data_a.shape) 
+    is_a = [o in origin_a for o in origin]
+    is_b = [o in origin_b for o in origin]
+    data_a = data[is_a]
+    data_b = data[is_b]
+    print('Shape of the %s data:' % sim_label_a, data_a.shape)
+    print('Shape of the %s data:' % sim_label_b, data_b.shape) 
     # Run the relative-entropy analysis
     data_names, jsd, kld_ab, kld_ba = relative_entropy_analysis(
-        names, names, data_i, data_a, 
+        names, names, data_a, data_b, 
         bin_width=None, bin_num=10, verbose=True
     )
     # Sort the features by how much their distributions differ
@@ -89,7 +91,7 @@ def compare_features(simulations, args, feature_files_key, feature_type='ca-dist
     # Plot the 20 most different distributions
     out_plot = os.path.join(args.output_dir, f'2-comparison/%s_largest-jsd' % output_name)
     plot_most_different_distributions(
-        jsd_sorted, names, names, data_i, data_a, out_plot,
+        jsd_sorted, names, names, data_a, data_b, out_plot,
         showstart=args.showstart, feature_type = feature_type
     )
     return jsd_sorted
@@ -112,6 +114,8 @@ if __name__ == "__main__":
     parser.add_argument('-t', dest='threshold', type=float, default=None)
     parser.add_argument('--showstart', dest='showstart', action='store_true', default=False)
     parser.add_argument('--skip-comparison', dest='skip_comparison', action='store_true', default=False)
+    parser.add_argument('--sim-label-a', dest='sim_label_a', type=str, default='active')
+    parser.add_argument('--sim-label-b', dest='sim_label_b', type=str, default='inactive')
     args = parser.parse_args()
 
     # Read the input files
@@ -149,19 +153,22 @@ if __name__ == "__main__":
         print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
         _ = compare_features(
             simulations, args, 'CA-Dist_File', feature_type='ca-distance',
-            output_name='ca-dist', out_column='CA-Distance'
+            output_name='ca-dist', out_column='CA-Distance',
+            sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
         )
         
         print("\n* - Comparing the backbone torsions of the simulations. - *\n")
         _ = compare_features(
             simulations, args, 'BB-Tors_File', feature_type='bb-torsion',
-            output_name='bb-tors', out_column='BB-Torsion'
+            output_name='bb-tors', out_column='BB-Torsion',
+            sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
         )    
         
         print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
         _ = compare_features(
             simulations, args, 'SC-Tors_File', feature_type='sc-torsion',
-            output_name='sc-tors', out_column='SC-Torsion'
+            output_name='sc-tors', out_column='SC-Torsion',
+            sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
         )
 
     # * ------------------------------ * #
