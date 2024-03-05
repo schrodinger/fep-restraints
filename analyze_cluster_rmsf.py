@@ -120,8 +120,8 @@ if __name__ == "__main__":
 
     # Read the input files
     print("\n* - Reading the input files. - *\n")
-    simulations = pd.read_csv(args.input_file)
-    selections = pd.read_csv(args.select_file)
+    simulations = pd.read_csv(args.input_file, comment='#')
+    selections = pd.read_csv(args.select_file, comment='#')
     print(simulations)
     print(selections)
 
