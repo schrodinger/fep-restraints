@@ -32,7 +32,7 @@ def calculate_features(simulations, args, feature_type='ca-distance'):
         print('Trj. File:', trj_file)
         print('System: '+sys_name)
         for _i, _chain in enumerate(chain_id):
-            print('Chain:', chain_id)
+            print('Chain:', _chain)
             print('Residues:', res_nums[_i])
 
         # Load the simulation data
