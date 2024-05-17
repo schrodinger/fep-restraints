@@ -14,7 +14,7 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
 
 
-def calculate_features(simulations, args, feature_type='ca-distance'):
+def calculate_features(simulations, args, feature_type='ca-distance', chain_id_in_name=False):
 
     feature_files = []
 
@@ -42,15 +42,18 @@ def calculate_features(simulations, args, feature_type='ca-distance'):
         # Calculate the distances between the C-alpha atoms
         if feature_type == 'ca-distance':
             time, feat_names, feat_values = calculate_ca_distances(
-                msys_model, cms_model, trj, chain_id, res_nums
+                msys_model, cms_model, trj, chain_id, res_nums,
+                chain_id_in_name=chain_id_in_name
             )
         elif feature_type == 'bb-torsion':
             time, feat_names, feat_values = calculate_backbone_torsions(
-                msys_model, cms_model, trj, chain_id, res_nums
+                msys_model, cms_model, trj, chain_id, res_nums,
+                chain_id_in_name=chain_id_in_name
             )
         elif feature_type == 'sc-torsion':
             time, feat_names, feat_values = calculate_sidechain_torsions(
-                msys_model, cms_model, trj, chain_id, res_nums
+                msys_model, cms_model, trj, chain_id, res_nums,
+                chain_id_in_name=chain_id_in_name
             )       
         # ... and write them to a CSV file
         out_file = os.path.join(args.output_dir,f'1-features/%ss_%04i.csv' % (feature_type, i))
@@ -116,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument('--skip-comparison', dest='skip_comparison', action='store_true', default=False)
     parser.add_argument('--sim-label-a', dest='sim_label_a', type=str, default='active')
     parser.add_argument('--sim-label-b', dest='sim_label_b', type=str, default='inactive')
+    parser.add_argument('--chain-id-in-name', dest='chain_id_in_name', action='store_true', default=False, help='Store the chain ID in the feature name. Note: For this to work, the chain naming has to be consistent across all input simulations!')
     args = parser.parse_args()
 
     # Read the input files
@@ -140,9 +144,18 @@ if __name__ == "__main__":
   
     print("\n* - Calculating the features. - *\n")
 
-    simulations['CA-Dist_File'] = calculate_features(simulations, args, 'ca-distance')
-    simulations['BB-Tors_File'] = calculate_features(simulations, args, 'bb-torsion')
-    simulations['SC-Tors_File'] = calculate_features(simulations, args, 'sc-torsion')
+    simulations['CA-Dist_File'] = calculate_features(
+        simulations, args, 'ca-distance',
+        chain_id_in_name=args.chain_id_in_name
+    )
+    simulations['BB-Tors_File'] = calculate_features(
+        simulations, args, 'bb-torsion',
+        chain_id_in_name=args.chain_id_in_name
+    )
+    simulations['SC-Tors_File'] = calculate_features(
+        simulations, args, 'sc-torsion',
+        chain_id_in_name=args.chain_id_in_name
+    )
  
     # * ------------------------------------------ * #
     # *  Compare the features of the simulations.  * #
@@ -369,6 +382,8 @@ if __name__ == "__main__":
             # Write the RMSF to a CSV file.  
             output = pd.DataFrame()
             output['RMSF'] = rmsf_per_atom
+            if args.chain_id_in_name:
+                output['chain'] = [a.chain for a in cms_model_ref_new.atom]
             output['pdbres'] = [a.pdbres for a in cms_model_ref_new.atom]
             output['resnum'] = [a.resnum for a in cms_model_ref_new.atom]
             output['pdbname'] = [a.pdbname for a in cms_model_ref_new.atom]
@@ -403,7 +418,9 @@ if __name__ == "__main__":
         rmsf_files.append(rmsf_files_k)
 
         # Plot every cluster of this clustering run
-        out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf'
-        out_rmsf_plot = os.path.join(args.output_dir, out_name_k)
-        plot_cluster_rmsf(k, rmsf_files_k, names, out_rmsf_plot)
+        # Only works if chain ID is neglected
+        if not args.chain_id_in_name:
+            out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf'
+            out_rmsf_plot = os.path.join(args.output_dir, out_name_k)
+            plot_cluster_rmsf(k, rmsf_files_k, names, out_rmsf_plot)
 

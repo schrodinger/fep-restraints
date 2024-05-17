@@ -156,7 +156,7 @@ def get_an_aid(cms_model, asl_string, none_for_zero=False):
         return(aid_list[0])
 
 
-def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None):
+def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False):
     """
     Calculates distances between pairs of C-alpha atoms from a trajectory.
     
@@ -215,7 +215,10 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers
             second_asl = '(res.num %i) AND (atom.ptype " CA ") AND (chain.name %s)'%(rnum_j, chain_j)
             second_aid = get_an_aid(cms_model, second_asl)
             analyzers.append(analysis.Distance(msys_model, cms_model, first_aid, second_aid))
-            distance_names.append("%s-%s"%(rname_i, rname_j))
+            if chain_id_in_name:
+                distance_names.append("%s:%s-%s:%s"%(chain_i, rname_i, chain_j, rname_j))
+            else:
+                distance_names.append("%s-%s"%(rname_i, rname_j))
     #compute result
     distances = analysis.analyze(tr, *analyzers)
     return frame_time, distance_names, distances
@@ -235,7 +238,7 @@ bb_torsion_ptypes['OMEGA'] = ["CA", "C", "N", "CA"]
 bb_torsion_relres['OMEGA'] = [0, 0, 1, 1]
 
 
-def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None):
+def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False):
     """
     Calculates protein backbone torsions from a trajectory.
     
@@ -309,7 +312,10 @@ def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_nu
             # Only add a torsion if all atoms are in the structure
             if aid_i and aid_j and aid_k and aid_l:
                 analyzers.append(analysis.Torsion(msys_model, cms_model, aid_i, aid_j, aid_k, aid_l))
-                torsion_names.append("%s-%s"%(rname, torsion_type))
+                if chain_id_in_name:
+                    torsion_names.append("%s:%s-%s"%(chain_id, rname, torsion_type))
+                else:
+                    torsion_names.append("%s-%s"%(rname, torsion_type))
     # Compute the result
     torsions = analysis.analyze(tr, *analyzers)
     return frame_time, torsion_names, torsions
@@ -348,7 +354,7 @@ sc_torsion_ptypes['CHI5'] = [
 ]
 
 
-def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None):
+def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False):
     """
     Calculates protein sidechain torsions from a trajectory.
     
@@ -420,7 +426,10 @@ def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_n
                 # Only add a torsion if all atoms are in the structure
                 if aid_i and aid_j and aid_k and aid_l:
                     analyzers.append(analysis.Torsion(msys_model, cms_model, aid_i, aid_j, aid_k, aid_l))
-                    torsion_names.append("%s-%s"%(rname, torsion_type))
+                    if chain_id_in_name:
+                        torsion_names.append("%s:%s-%s"%(chain_id, rname, torsion_type))
+                    else: 
+                        torsion_names.append("%s-%s"%(rname, torsion_type))
     # Compute the result
     torsions = analysis.analyze(tr, *analyzers)
     return frame_time, torsion_names, torsions
