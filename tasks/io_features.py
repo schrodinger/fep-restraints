@@ -313,7 +313,7 @@ def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_nu
             if aid_i and aid_j and aid_k and aid_l:
                 analyzers.append(analysis.Torsion(msys_model, cms_model, aid_i, aid_j, aid_k, aid_l))
                 if chain_id_in_name:
-                    torsion_names.append("%s:%s-%s"%(chain_id, rname, torsion_type))
+                    torsion_names.append("%s:%s-%s"%(chain, rname, torsion_type))
                 else:
                     torsion_names.append("%s-%s"%(rname, torsion_type))
     # Compute the result
@@ -427,7 +427,7 @@ def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_n
                 if aid_i and aid_j and aid_k and aid_l:
                     analyzers.append(analysis.Torsion(msys_model, cms_model, aid_i, aid_j, aid_k, aid_l))
                     if chain_id_in_name:
-                        torsion_names.append("%s:%s-%s"%(chain_id, rname, torsion_type))
+                        torsion_names.append("%s:%s-%s"%(chain, rname, torsion_type))
                     else: 
                         torsion_names.append("%s-%s"%(rname, torsion_type))
     # Compute the result
