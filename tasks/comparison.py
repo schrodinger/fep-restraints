@@ -126,7 +126,7 @@ def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a
         axi.set_yticks([])
         axi.set_ylim(bottom=0)
         if feature_type == 'ca-distance':
-            xlabel = r'distance CA%s - CA%s' % (fname.split('-')[0], fname.split('-')[1])
+            xlabel = r'distance CA %s - CA %s' % (fname.split('-')[0], fname.split('-')[1])
         else:
             xlabel = r'%s %s' % (feature_type, fname)
         axi.set_xlabel(xlabel)
