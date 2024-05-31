@@ -52,6 +52,8 @@ def write_abfep_restraints_job_script(
         if bottom_width is not None: 
             f.write(f' \\\n    --bw {bottom_width} ')
         f.write('\ndone\n')
+	# Frequency for MD trajectory
+        f.write('\nsed -i \'s/interval = 3.6/interval = 36.0/g\' *_md.msj\n')
         # Submission
         f.write('\n# Submit the job to the cluster.\n'
                 f'$SCHRODINGER/utilities/multisim \\\n  "{job_name}_pv.maegz" \\\n'
@@ -127,7 +129,7 @@ if __name__ == '__main__':
         shutil.copy(Path(args.oplsdir), job_path)
         upgrade_oplsdir(args.job_name)
         release = schrodinger.get_release_name().replace('-','_')
-        opls = f'custom_{release}'
+        opls = f'custom_{release}.opls'
     else:
         opls = None
 

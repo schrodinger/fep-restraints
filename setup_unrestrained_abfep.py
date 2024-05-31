@@ -83,7 +83,7 @@ if __name__ == '__main__':
         shutil.copy(Path(args.oplsdir), job_path)
         upgrade_oplsdir(args.job_name)
         release = schrodinger.get_release_name().replace('-','_')
-        opls = f'custom_{release}'
+        opls = f'custom_{release}.opls'
     else:
         opls = None
 
