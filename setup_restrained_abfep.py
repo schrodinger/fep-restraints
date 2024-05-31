@@ -59,9 +59,9 @@ def write_abfep_restraints_job_script(
                 f'  -HOST "{host}" -SUBHOST "{subhost}" \\\n'
                 f'  -maxjob {maxjob} -RETRIES {retries}')
         if project is not None:
-            f.write(f'\\\n  -QARG \"-P {project}\"')
+            f.write(f' \\\n  -QARG \"-P {project}\"')
         if opls is not None: 
-            f.write(f'\\\n  -OPLSDIR "{opls}"')
+            f.write(f' \\\n  -OPLSDIR "{opls}"')
         f.write('\n')
 
 

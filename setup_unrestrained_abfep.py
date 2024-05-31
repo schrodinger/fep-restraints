@@ -33,9 +33,9 @@ def write_abfep_job_script(
         if ffhost is not None:
             f.write(f' \\\n  -ffbuilder \\\n  -ff-host "{ffhost}"')
         if project is not None:
-            f.write(f'\\\n  -QARG \"-P {project}\"')
+            f.write(f' \\\n  -QARG \"-P {project}\"')
         if opls is not None: 
-            f.write(f'\\\n  -OPLSDIR "{opls}"')
+            f.write(f' \\\n  -OPLSDIR "{opls}"')
         f.write('\n')
 
 
