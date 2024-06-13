@@ -147,6 +147,21 @@ def get_feature_data(feat, data, feature_name):
      
 
 def get_an_aid(cms_model, asl_string, none_for_zero=False):
+    """
+    Get an atom identifier (aid) based on the given CMS model and ASL string.
+
+    Parameters:
+        cms_model (CMSModel): The CMS model object.
+        asl_string (str): The ASL string used to select the atom.
+        none_for_zero (bool, optional): If True, return None if no atom is found. 
+            If False, raise an exception. Default is False.
+
+    Returns:
+        int or None: The atom identifier (aid) if found, or None if none_for_zero is True and no atom is found.
+
+    Raises:
+        Exception: If the number of chosen atoms is not equal to 1.
+    """
     aid_list = cms_model.select_atom(asl_string)
     if (len(aid_list) == 0) and none_for_zero:
         return None
