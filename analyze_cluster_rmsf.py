@@ -14,7 +14,7 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
 
 
-def calculate_features(simulations, args, feature_type='ca-distance', chain_id_in_name=False):
+def calculate_features(simulations, selections, args, feature_type='ca-distance', chain_id_in_name=False):
 
     feature_files = []
 
@@ -145,15 +145,15 @@ if __name__ == "__main__":
     print("\n* - Calculating the features. - *\n")
 
     simulations['CA-Dist_File'] = calculate_features(
-        simulations, args, 'ca-distance',
+        simulations, selections, args, 'ca-distance',
         chain_id_in_name=args.chain_id_in_name
     )
     simulations['BB-Tors_File'] = calculate_features(
-        simulations, args, 'bb-torsion',
+        simulations, selections, args, 'bb-torsion',
         chain_id_in_name=args.chain_id_in_name
     )
     simulations['SC-Tors_File'] = calculate_features(
-        simulations, args, 'sc-torsion',
+        simulations, selections, args, 'sc-torsion',
         chain_id_in_name=args.chain_id_in_name
     )
  
