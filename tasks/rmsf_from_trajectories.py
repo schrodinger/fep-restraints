@@ -125,7 +125,7 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
     return rmsf_per_atom, pos_average, cms_model_ref_new
 
 
-def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
+def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot, highlight_feature_residues=True):
     # Plot the RMSF of each cluster
     fig, ax = plt.subplots(k, 1, figsize=[8,2.0*k], dpi=300, sharex=True, sharey=True)
     if k==1: # Make ax a list, even when there is only one plot
@@ -137,18 +137,28 @@ def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot):
         csv = rmsf_files_k[cluster_id]
         df = pd.read_csv(csv)
         df_ca = df[df['pdbname']==' CA ']
-        pair = np.array([n.split('-') for n in features], dtype=int)
-        bpid = np.unique(pair.flatten())
-        isbp = [(r in bpid) for r in df_ca['resnum'] ]
         # Find the range of residue numbers in this simulation
         resnum_min.append( np.min(df_ca['resnum']) )
         resnum_max.append( np.max(df_ca['resnum']) )
         # Draw a grid
         ax[cluster_id].grid(axis='y', ls='--')
         # Plot the RMSF of all residues
-        ax[cluster_id].bar(df_ca['resnum'], df_ca['RMSF'], label=r'C$\mathrm{\alpha}$ atoms', width=1.0, color="C%i"%(cluster_id%10), alpha=0.4)
-        # Plot the RMSF of the binding pocket residues
-        ax[cluster_id].bar(df_ca['resnum'][isbp], df_ca['RMSF'][isbp], label=r'binding pocket C$\mathrm{\alpha}$', width=1.0, color="C%i"%(cluster_id%10), alpha=1.0)
+        ax[cluster_id].bar(
+            df_ca['resnum'], df_ca['RMSF'], 
+            label=r'C$\mathrm{\alpha}$ atoms', 
+            width=1.0, color="C%i"%(cluster_id%10), alpha=0.4
+        )
+        if highlight_feature_residues:
+            # Find the binding pocket (feature) residues
+            pair = np.array([n.split('-') for n in features], dtype=int)
+            bpid = np.unique(pair.flatten())
+            isbp = [(r in bpid) for r in df_ca['resnum'] ]
+            # Plot the RMSF of the binding pocket residues
+            ax[cluster_id].bar(
+                df_ca['resnum'][isbp], df_ca['RMSF'][isbp], 
+                label=r'binding pocket C$\mathrm{\alpha}$', 
+                width=1.0, color="C%i"%(cluster_id%10), alpha=1.0
+            )
         # Legend
         ax[cluster_id].legend(framealpha=1)
     # Format and Labels
