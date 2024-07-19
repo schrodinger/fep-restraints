@@ -102,18 +102,21 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
                 squared_distances.append(new_squ_dist)
                 pos_sel_aligned.append(pos_new[gidlist_write])
     pos_sel_aligned = np.array(pos_sel_aligned)
-    squared_distances = np.array(squared_distances)
-    print(squared_distances.shape)
+    squared_distances_from_reference = np.array(squared_distances)
+    print('Squared distances from reference:', squared_distances_from_reference.shape)
 
     # Calculate the average position of each selected atom.
     pos_average = np.mean(pos_sel_aligned, axis=0)
+    # Calculate the RMSD of each frame to the average.
+    squared_distances_from_average = np.sum((pos_sel_aligned-pos_average)**2, axis=2)
+    print('Sqared distances from average:', squared_distances_from_average.shape)
     # ... and align it to the reference, using all atoms
     if align_avg:
         pos_average = analysis.align_pos(pos_average, pos_average, pos_ref_all[gidlist_write])
 
     # Calculate the RMSF for each atom.
-    rmsf_per_atom = np.sqrt(np.mean(squared_distances, axis=0))
-    rmsd_per_frame = np.sqrt(np.mean(squared_distances, axis=1))
+    rmsf_per_atom = np.sqrt(np.mean(squared_distances_from_average, axis=0))
+    rmsd_per_frame = np.sqrt(np.mean(squared_distances_from_reference, axis=1))
     print("Calculated RMSF for %i atoms and %i frames."%(len(rmsf_per_atom), len(rmsd_per_frame)))    
 
     # Get the model of the subset to write to the structures.
