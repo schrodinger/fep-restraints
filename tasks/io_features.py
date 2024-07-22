@@ -171,7 +171,7 @@ def get_an_aid(cms_model, asl_string, none_for_zero=False):
         return(aid_list[0])
 
 
-def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False):
+def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
     """
     Calculates distances between pairs of C-alpha atoms from a trajectory.
     
@@ -189,6 +189,14 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers
             List with lists of residue numbers for each chain.
         residue_names : list, optional
             List with list of residue names for each chain.
+        chain_id_in_name : bool, optional
+            If True, include chain IDs in the distance names. Default is False.
+        start_frame : int, optional
+            The starting frame index. Default is 0.
+        end_frame : int, optional
+            The ending frame index. Default is None, which means the last frame.
+        step : int, optional
+            The step size between frames. Default is 1.
 
     Returns
     -------
@@ -203,7 +211,7 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers
     assert len(chain_ids) == len(residue_numbers)
     # time
     frame_time = []
-    for item in tr:
+    for item in tr[start_frame:end_frame:step]:
         frame_time.append(item.time)
     # define residue names
     if residue_names is None:
@@ -235,7 +243,7 @@ def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers
             else:
                 distance_names.append("%s-%s"%(rname_i, rname_j))
     #compute result
-    distances = analysis.analyze(tr, *analyzers)
+    distances = analysis.analyze(tr[start_frame:end_frame:step], *analyzers)
     return frame_time, distance_names, distances
 
 
@@ -253,7 +261,7 @@ bb_torsion_ptypes['OMEGA'] = ["CA", "C", "N", "CA"]
 bb_torsion_relres['OMEGA'] = [0, 0, 1, 1]
 
 
-def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False):
+def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
     """
     Calculates protein backbone torsions from a trajectory.
     
@@ -271,6 +279,14 @@ def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_nu
             List with lists of residue numbers for each chain.
         residue_names : list, optional
             List with list of residue names for each chain.
+        chain_id_in_name : bool, optional
+            If True, include chain IDs in the distance names. Default is False.
+        start_frame : int, optional
+            The starting frame index. Default is 0.
+        end_frame : int, optional
+            The ending frame index. Default is None, which means the last frame.
+        step : int, optional
+            The step size between frames. Default is 1.
 
     Returns
     -------
@@ -285,7 +301,7 @@ def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_nu
     assert len(chain_ids) == len(residue_numbers)
     # Read the time for each frame
     frame_time = []
-    for item in tr:
+    for item in tr[start_frame:end_frame:step]:
         frame_time.append(item.time)
     # Define the residue names
     if residue_names is None:
@@ -332,7 +348,7 @@ def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_nu
                 else:
                     torsion_names.append("%s-%s"%(rname, torsion_type))
     # Compute the result
-    torsions = analysis.analyze(tr, *analyzers)
+    torsions = analysis.analyze(tr[start_frame:end_frame:step], *analyzers)
     return frame_time, torsion_names, torsions
 
 
@@ -369,7 +385,7 @@ sc_torsion_ptypes['CHI5'] = [
 ]
 
 
-def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False):
+def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
     """
     Calculates protein sidechain torsions from a trajectory.
     
@@ -387,7 +403,15 @@ def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_n
             List with lists of residue numbers for each chain.
         residue_names : list, optional
             List with list of residue names for each chain.
-
+        chain_id_in    for item in tr:l
+            If True, include chain IDs in the distance names. Default is False.
+        start_frame : int, optional
+            The starting frame index. Default is 0.
+        end_frame : int, optional
+            The ending frame index. Default is None, which means the last frame.
+        step : int, optional
+            The step size between frames. Default is 1.
+            
     Returns
     -------
         frame_time : float array
@@ -401,7 +425,7 @@ def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_n
     assert len(chain_ids) == len(residue_numbers)
     # Read the time for each frame
     frame_time = []
-    for item in tr:
+    for item in tr[start_frame:end_frame:step]:
         frame_time.append(item.time)
     # Define the residue names
     if residue_names is None:
@@ -446,5 +470,5 @@ def calculate_sidechain_torsions(msys_model, cms_model, tr, chain_ids, residue_n
                     else: 
                         torsion_names.append("%s-%s"%(rname, torsion_type))
     # Compute the result
-    torsions = analysis.analyze(tr, *analyzers)
+    torsions = analysis.analyze(tr[start_frame:end_frame:step], *analyzers)
     return frame_time, torsion_names, torsions

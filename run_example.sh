@@ -9,5 +9,5 @@ else
 	scp -r boltio:$BOLTDIR/B2AR/MDSim/*_MDSim/Sim01 example/
 fi
 
-$S/run analyze_cluster_rmsf.py -i example/input.csv -s example/selections.csv -k 3 4 -w --showstart
+$S/run analyze_cluster_rmsf.py -i example/input.csv -s example/selections.csv -k 3 4 -w --showstart --step 5
 

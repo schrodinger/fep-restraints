@@ -51,7 +51,8 @@ def write_coordinates(out_fname, model, xyz=None, sigma=None):
         writer.append(model.fsys_ct)
 
 
-def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, ref_asl_align, ref_asl_write, selections_align, selections_write, align_avg=True, threshold=None):
+def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, ref_asl_align, ref_asl_write, selections_align, selections_write, 
+                   align_avg=True, threshold=None, start_frame=0, end_frame=None, step=1):
 
     # Read the reference structure
     _, cms_model_ref = topo.read_cms(reference_fn) 
@@ -71,7 +72,7 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
         # Read the trajectory
         _, cms_model = topo.read_cms(cms)
         print('Number of atoms in the system:', cms_model.atom_total)
-        trajectory = traj.read_traj(trj)
+        trajectory = traj.read_traj(trj)[start_frame:end_frame:step]
         print('Alignment selection:', str(sel_align))
         aidlist_align = cms_model.select_atom(str(sel_align))
         gidlist_align = topo.aids2gids(cms_model, aidlist_align, include_pseudoatoms=False)

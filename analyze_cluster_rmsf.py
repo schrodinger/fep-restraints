@@ -14,12 +14,37 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
 
 
-def calculate_features(simulations, selections, args, feature_type='ca-distance', chain_id_in_name=False):
+def calculate_features(simulations, selections, args, feature_type='ca-distance', chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
+    """
+    Calculate features for each simulation in the given dataset.
 
+    Parameters:
+    ----------
+    simulations : object
+        The object containing information about the simulations.
+    selections : object
+        The object containing information about the selections.
+    args : Namespace
+        Command-line arguments.
+    feature_type : str, optional
+        The type of feature to calculate. Default is 'ca-distance'.
+    chain_id_in_name : bool, optional
+        Whether to include chain ID in the feature names. Default is False.
+    start_frame : int, optional
+        The starting frame for feature calculation. Default is 0.
+    end_frame : int, optional
+        The ending frame for feature calculation. Default is None.
+    step : int, optional
+        The step size for feature calculation. Default is 1.
+
+    Returns:
+    -------
+    feature_files : list
+        A list of file paths where the calculated features are saved.
+    """
     feature_files = []
 
     for i in simulations.index:
-
         # Get names and info for this simulation
         top_file = simulations['Topology'][i]
         trj_file = simulations['Trajectory'][i]
@@ -27,6 +52,7 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
         sys_prop = selections[selections['System_Name']==sys_name]
         chain_id = list(sys_prop['BindingPocket_Chain'])
         res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
+
         # Print names and info for this simulation
         print('Top. File:', top_file)
         print('Trj. File:', trj_file)
@@ -43,17 +69,20 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
         if feature_type == 'ca-distance':
             time, feat_names, feat_values = calculate_ca_distances(
                 msys_model, cms_model, trj, chain_id, res_nums,
-                chain_id_in_name=chain_id_in_name
+                chain_id_in_name=chain_id_in_name,
+                start_frame=start_frame, end_frame=end_frame, step=step
             )
         elif feature_type == 'bb-torsion':
             time, feat_names, feat_values = calculate_backbone_torsions(
                 msys_model, cms_model, trj, chain_id, res_nums,
-                chain_id_in_name=chain_id_in_name
+                chain_id_in_name=chain_id_in_name,
+                start_frame=start_frame, end_frame=end_frame, step=step
             )
         elif feature_type == 'sc-torsion':
             time, feat_names, feat_values = calculate_sidechain_torsions(
                 msys_model, cms_model, trj, chain_id, res_nums,
-                chain_id_in_name=chain_id_in_name
+                chain_id_in_name=chain_id_in_name,
+                start_frame=start_frame, end_frame=end_frame, step=step
             )       
         # ... and write them to a CSV file
         out_file = os.path.join(args.output_dir,f'1-features/%ss_%04i.csv' % (feature_type, i))
@@ -120,7 +149,12 @@ if __name__ == "__main__":
     parser.add_argument('--sim-label-a', dest='sim_label_a', type=str, default='active')
     parser.add_argument('--sim-label-b', dest='sim_label_b', type=str, default='inactive')
     parser.add_argument('--chain-id-in-name', dest='chain_id_in_name', action='store_true', default=False, help='Store the chain ID in the feature name. Note: For this to work, the chain naming has to be consistent across all input simulations!')
+    parser.add_argument('--start-frame', dest='start_frame', type=int, default=0, help='Start frame for trajectory analysis')
+    parser.add_argument('--end-frame', dest='end_frame', type=int, default=None, help='End frame for trajectory analysis')
+    parser.add_argument('--step', dest='step', type=int, default=1, help='Step size for trajectory analysis')
     args = parser.parse_args()
+
+    assert args.step > 0, 'Step size must be a positive integer.'
 
     # Read the input files
     print("\n* - Reading the input files. - *\n")
@@ -146,15 +180,18 @@ if __name__ == "__main__":
 
     simulations['CA-Dist_File'] = calculate_features(
         simulations, selections, args, 'ca-distance',
-        chain_id_in_name=args.chain_id_in_name
+        chain_id_in_name=args.chain_id_in_name,
+        start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
     )
     simulations['BB-Tors_File'] = calculate_features(
         simulations, selections, args, 'bb-torsion',
-        chain_id_in_name=args.chain_id_in_name
+        chain_id_in_name=args.chain_id_in_name,
+        start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
     )
     simulations['SC-Tors_File'] = calculate_features(
         simulations, selections, args, 'sc-torsion',
-        chain_id_in_name=args.chain_id_in_name
+        chain_id_in_name=args.chain_id_in_name,
+        start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
     )
  
     # * ------------------------------------------ * #
@@ -262,9 +299,12 @@ if __name__ == "__main__":
         cl_files.append(cl_files_k)
         sum_file.append(sum_file_k)
 
+        # Account for the numbering difference caused by using custom start frame and step
+        cc_orig_id_trj = cc_orig_id*args.step + args.start_frame
+
         # Get the trajectory and save the frame with the centroid
         centroid_files_k = []
-        for cl_id, c_file, c_frame in zip( cids, cc_orig_sim, cc_orig_id ):
+        for cl_id, c_file, c_frame in zip( cids, cc_orig_sim, cc_orig_id_trj ):
             top_file = simulations['Topology'][c_file]
             trj_file = simulations['Trajectory'][c_file]
             _, top = topo.read_cms(top_file)
@@ -377,7 +417,9 @@ if __name__ == "__main__":
             rmsf_per_atom, pos_average, cms_model_ref_new = calculate_rmsf(
                 centroid_file, cluster_top_files, cluster_trj_files, cluster_csv_files, value, 
                 ref_asl_align, ref_asl_write, cluster_asl_align, cluster_asl_write, 
-                align_avg=True, threshold=args.threshold)   
+                align_avg=True, threshold=args.threshold, 
+                start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
+            )   
 
             # Write the RMSF to a CSV file.  
             output = pd.DataFrame()
@@ -411,7 +453,10 @@ if __name__ == "__main__":
             if args.write_traj:
                 cluster_output = os.path.join(args.output_dir,'6-sorted/pca-kmeans_'+paramstr_cl)  
                 copy_topology(cc_topol_file, cluster_output+'.cms')
-                extract_frames_by_value(cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value)
+                extract_frames_by_value(
+                    cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value, 
+                    start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
+                )
             print(' ')
 
         # Append the list of RMSF files

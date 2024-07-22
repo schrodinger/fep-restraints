@@ -138,7 +138,7 @@ def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None
     return
 
 
-def extract_frames_by_value(trj_files, output_name, csv_files, value, property='Cluster_ID'):
+def extract_frames_by_value(trj_files, output_name, csv_files, value, property='Cluster_ID', start_frame=0, end_frame=None, step=1):
     """
     Extracts frames from trajectory files based on a given value of a property.
 
@@ -154,6 +154,12 @@ def extract_frames_by_value(trj_files, output_name, csv_files, value, property='
             Value of the property to filter frames by.
         property : str, optional
             Name of the property to filter frames by. Defaults to 'Cluster_ID'.
+        start_frame : int, optional
+            Index of the first frame from the trajectories. Defaults to 0.
+        end_frame : int, optional
+            Index of the last frame from the trajectories. Defaults to None, which extracts all frames.
+        step : int, optional
+            Step size for trajectories. Defaults to 1.
 
     Returns:
     --------
@@ -164,7 +170,7 @@ def extract_frames_by_value(trj_files, output_name, csv_files, value, property='
     for csv, trj in zip(csv_files, trj_files):
         num_df = pd.read_csv(csv)
         clust_id = num_df[property]
-        trajectory = traj.read_traj(trj)
+        trajectory = traj.read_traj(trj)[start_frame:end_frame:step]
         print('Length of CSV file:', len(clust_id), ' Length of trajectory:', len(trajectory))
         assert len(clust_id) == len(trajectory)
         for clid, frame in zip(clust_id, trajectory):
