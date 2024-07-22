@@ -109,7 +109,7 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
     pos_average = np.mean(pos_sel_aligned, axis=0)
     # Calculate the RMSD of each frame to the average.
     squared_distances_from_average = np.sum((pos_sel_aligned-pos_average)**2, axis=2)
-    print('Sqared distances from average:', squared_distances_from_average.shape)
+    print('Squared distances from average:', squared_distances_from_average.shape)
     # ... and align it to the reference, using all atoms
     if align_avg:
         pos_average = analysis.align_pos(pos_average, pos_average, pos_ref_all[gidlist_write])
