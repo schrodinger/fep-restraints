@@ -92,6 +92,13 @@ def select_subset_model(cms_model, aid):
     return model
 
 
+def extract_subset_model(cms_model, aid):
+    model = cms_model.copy()
+    model.comp_ct = [model.fsys_ct.extract(aid, copy_props=True)]
+    model.synchronize_fsys_ct()
+    return model
+
+
 def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None):
     """
     Write selected frames from a trajectory to separate structure files.
@@ -198,7 +205,7 @@ def extract_frames_by_value(top_files, trj_files, output_name, csv_files, value,
         gidlist_write = topo.aids2gids(cms_model, aidlist_write, include_pseudoatoms=False)
         print("Selected %i atoms for output."%(len(gidlist_write)))
         # Construct a subsystem with the selected atoms
-        out_cms_model = select_subset_model(cms_model, aidlist_write)
+        out_cms_model = extract_subset_model(cms_model, aidlist_write)
         print('Number of atoms in the output:', out_cms_model.atom_total)
         # Extract frames with the given value
         assert len(clust_id) == len(trajectory)
