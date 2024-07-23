@@ -154,9 +154,16 @@ if __name__ == "__main__":
     parser.add_argument('--step', dest='step', type=int, default=1, help='Step size for trajectory analysis')
     parser.add_argument('--rmsf-across-all-trajectories', dest='rmsf_across_all_trajectories', action='store_true', default=False, 
                         help='Calculate RMSF across all trajectories, not just those of the same system as the centroid. When using this, make sure that the selections exactly correspond to the same atoms in all systems!')
+    parser.add_argument('--feature-types', nargs='+', dest='feature_types', type=str, default=['ca-distance','bb-torsion','sc-torsion'], help='Types of features to calculate')
+    parser.add_argument('--pca-feature-type', dest='pca_feature_type', type=str, default='ca-distance', help='Type of features to use for PCA')
     args = parser.parse_args()
 
     assert args.step > 0, 'Step size must be a positive integer.'
+
+
+    # * ----------------------------- * #
+    # *  Input and Output Management  * #
+    # * ----------------------------- * #
 
     # Read the input files
     print("\n* - Reading the input files. - *\n")
@@ -174,27 +181,35 @@ if __name__ == "__main__":
         newdir = os.path.join(args.output_dir, subdir)
         os.makedirs(newdir, exist_ok=True)  
 
+
     # * ------------------------------------------------------------------ * #
     # *  Calculate the C-alpha distances and backbone/sidechain torsions.  * #
     # * ------------------------------------------------------------------ * #
   
     print("\n* - Calculating the features. - *\n")
 
-    simulations['CA-Dist_File'] = calculate_features(
-        simulations, selections, args, 'ca-distance',
-        chain_id_in_name=args.chain_id_in_name,
-        start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
-    )
-    simulations['BB-Tors_File'] = calculate_features(
-        simulations, selections, args, 'bb-torsion',
-        chain_id_in_name=args.chain_id_in_name,
-        start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
-    )
-    simulations['SC-Tors_File'] = calculate_features(
-        simulations, selections, args, 'sc-torsion',
-        chain_id_in_name=args.chain_id_in_name,
-        start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
-    )
+    # Define the supported feature types and their corresponding file keys and labels
+    feature_file_key = {
+        'ca-distance': 'CA-Dist_File',
+        'bb-torsion': 'BB-Tors_File',
+        'sc-torsion': 'SC-Tors_File'
+    }
+    feature_label = {
+        'ca-distance': 'C-alpha distances',
+        'bb-torsion': 'backbone torsions',
+        'sc-torsion': 'sidechain torsions'
+    }
+
+    # Calculate the features of each type for each simulation
+    for feature_type in set(args.feature_types + [args.pca_feature_type]):
+        if feature_type not in feature_file_key:
+            raise ValueError(f'Unknown feature type: {feature_type}')
+        simulations[feature_file_key[feature_type]] = calculate_features(
+            simulations, selections, args, feature_type=feature_type,
+            chain_id_in_name=args.chain_id_in_name,
+            start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
+        )
+
  
     # * ------------------------------------------ * #
     # *  Compare the features of the simulations.  * #
@@ -202,26 +217,14 @@ if __name__ == "__main__":
 
     if not args.skip_comparison:
 
-        print("\n* - Comparing the C-alpha distances of the simulations. - *\n")
-        _ = compare_features(
-            simulations, args, 'CA-Dist_File', feature_type='ca-distance',
-            output_name='ca-dist', out_column='CA-Distance',
-            sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
-        )
-        
-        print("\n* - Comparing the backbone torsions of the simulations. - *\n")
-        _ = compare_features(
-            simulations, args, 'BB-Tors_File', feature_type='bb-torsion',
-            output_name='bb-tors', out_column='BB-Torsion',
-            sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
-        )    
-        
-        print("\n* - Comparing the sidechain torsions of the simulations. - *\n")
-        _ = compare_features(
-            simulations, args, 'SC-Tors_File', feature_type='sc-torsion',
-            output_name='sc-tors', out_column='SC-Torsion',
-            sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
-        )
+        for feature_type in args.feature_types:
+            print(f"\n* - Comparing the {feature_label[feature_type]} of the simulations. - *\n")
+            _ = compare_features(
+                simulations, args, feature_file_key[feature_type], feature_type=feature_type,
+                output_name=feature_type, out_column=feature_label[feature_type],
+                sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
+            )
+
 
     # * ------------------------------ * #
     # *  Principal Component Analysis  * #
@@ -230,14 +233,16 @@ if __name__ == "__main__":
     paramstr = 's%02i'%(args.random_state)
 
     print("\n* - Determining the principal components. - *\n")
-    names, data, origin, orig_id = read_features_from_csv_files(simulations['CA-Dist_File'])
+    names, data, origin, orig_id = read_features_from_csv_files(
+        simulations[feature_file_key[args.pca_feature_type]]
+    )
     pca = PCA(random_state=args.random_state)
     pca.fit(data.T)
     pc = pca.components_
     ev_ratio = pca.explained_variance_ratio_
     
     # Write the explained variance ratio to a CSV file and to stdout
-    ev_csv = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr+'_ev-ratio.csv')
+    ev_csv = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}_ev-ratio.csv")
     ev_output = pd.DataFrame()
     ev_output['PC'] = 1 + np.arange(len(ev_ratio), dtype=int)
     ev_output['Explained_Variance_Ratio'] = ev_ratio
@@ -247,7 +252,7 @@ if __name__ == "__main__":
         print(' PC%02i: %1.4f'%(i+1, evr))
 
     # Write PCA results to CSV file
-    out_csv = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr+'.csv')
+    out_csv = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}.csv")
     pca_output = pd.DataFrame()
     pca_output['Origin'] = origin
     max_pc = max([12, args.n_components])
@@ -256,7 +261,7 @@ if __name__ == "__main__":
     pca_output.to_csv(out_csv, index=False) 
 
     # Plot PCA results by origin system
-    out_pdf = os.path.join(args.output_dir,'3-pca/ca-distances_pca_'+paramstr)
+    out_pdf = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}")
     plot_pca_by_system(
         pc[:max_pc], origin, simulations, out_pdf, showstart=args.showstart
     )
