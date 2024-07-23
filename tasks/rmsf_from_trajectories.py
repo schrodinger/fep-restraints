@@ -5,15 +5,8 @@ from schrodinger import structure
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from .io_trajectory import load_trajectory, write_frames, get_an_aid
+from .io_trajectory import load_trajectory, write_frames, get_an_aid, select_subset_model
 
-
-def select_subset_model(cms_model, aid):
-    aid_all = range(1,cms_model.atom_total+1)
-    aid_del = set(aid_all) - set(aid)
-    model = cms_model.copy()
-    model.deleteAtoms(aid_del)
-    return model
 
 
 def write_frame(out_fname, old_model, frame, sigma=None):
@@ -80,6 +73,7 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
         print('Output Selection:', str(sel_write))
         aidlist_write = cms_model.select_atom(str(sel_write)) 
         gidlist_write = topo.aids2gids(cms_model, aidlist_write, include_pseudoatoms=False)
+        print("Selected %i atoms for output."%(len(gidlist_write)))
         # Loop through trajectory
         model = cms_model.copy()
         ct = model.fsys_ct

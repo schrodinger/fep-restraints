@@ -1,6 +1,6 @@
 System_Name,BindingPocket_Chain,BindingPocket_ResNum,Restraints_Res_ASL
-2RH1,C,109 113 114 117 118 193 199 203 204 207,chain.name C AND ( res.num > 30 AND res.num < 226 ) 
-2RH1,C,286 289 290 293 308 312 316,chain.name C AND ( res.num > 266 AND res.num < 341 )
-5JQH,A,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name A AND ( ( res.num > 30 AND res.num < 226 ) OR ( res.num > 266 AND res.num < 341 ) )
-3P0G,A,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name A AND ( ( res.num > 30 AND res.num < 226 ) OR ( res.num > 266 AND res.num < 341 ) )
-7DHI,R,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name R AND ( ( res.num > 30 AND res.num < 226 ) OR ( res.num > 266 AND res.num < 341 ) )
+2RH1,C,109 113 114 117 118 193 199 203 204 207,chain.name C AND NOT atom.ele H AND ( ( res.num > 31 AND res.num < 67 ) OR ( res.num > 78  AND res.num < 95 )  OR ( res.num > 100  AND res.num < 225 ) )
+2RH1,C,286 289 290 293 308 312 316,chain.name C AND NOT atom.ele H AND ( res.num > 267 AND res.num < 340 )
+5JQH,A,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name A AND NOT atom.ele H AND ( ( res.num > 31 AND res.num < 67 ) OR ( res.num > 78  AND res.num < 95 ) OR ( res.num > 100  AND res.num < 225 ) OR ( res.num > 267 AND res.num < 340 ) )
+3P0G,A,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name A AND NOT atom.ele H AND ( ( res.num > 31 AND res.num < 67 ) OR ( res.num > 78  AND res.num < 95 ) OR ( res.num > 100  AND res.num < 225 ) OR ( res.num > 267 AND res.num < 340 ) )
+7DHI,R,109 113 114 117 118 193 199 203 204 207 286 289 290 293 308 312 316,chain.name R AND NOT atom.ele H AND ( ( res.num > 31 AND res.num < 67 ) OR ( res.num > 78  AND res.num < 95 ) OR ( res.num > 100  AND res.num < 225 ) OR ( res.num > 267 AND res.num < 340 ) )

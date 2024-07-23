@@ -84,6 +84,14 @@ def copy_topology(reference, output_name):
             writer.append(st)
 
 
+def select_subset_model(cms_model, aid):
+    aid_all = range(1,cms_model.atom_total+1)
+    aid_del = set(aid_all) - set(aid)
+    model = cms_model.copy()
+    model.deleteAtoms(aid_del)
+    return model
+
+
 def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None):
     """
     Write selected frames from a trajectory to separate structure files.
@@ -138,7 +146,8 @@ def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None
     return
 
 
-def extract_frames_by_value(trj_files, output_name, csv_files, value, property='Cluster_ID', start_frame=0, end_frame=None, step=1):
+def extract_frames_by_value(top_files, trj_files, output_name, csv_files, value, property='Cluster_ID', 
+                            start_frame=0, end_frame=None, step=1, asl_strings=None):
     """
     Extracts frames from trajectory files based on a given value of a property.
 
@@ -166,15 +175,39 @@ def extract_frames_by_value(trj_files, output_name, csv_files, value, property='
     None
 
     """
+    out_cms_fname = output_name+'-out.cms'
+    out_trj_fname = output_name+'.xtc'
+    # Use all atoms if no asl strings are provided
+    if asl_strings is None:
+        asl_strings = ['all' for _ in range(len(trj_files))]
+    # Check if the number of files is the same for all inputs
+    assert len(trj_files) == len(csv_files) == len(top_files) == len(asl_strings)
+    # Iterate through the files
     frame_list = []
-    for csv, trj in zip(csv_files, trj_files):
+    for csv, top, trj, asl in zip(csv_files, top_files, trj_files, asl_strings):
         num_df = pd.read_csv(csv)
         clust_id = num_df[property]
+        # Load the trajectory and CMS model
+        msys_model, cms_model = topo.read_cms(top)
+        print('Number of atoms in the system:', cms_model.atom_total)
         trajectory = traj.read_traj(trj)[start_frame:end_frame:step]
         print('Length of CSV file:', len(clust_id), ' Length of trajectory:', len(trajectory))
+        # Select the atoms for output
+        print('Output Selection:', str(asl))
+        aidlist_write = cms_model.select_atom(str(asl)) 
+        gidlist_write = topo.aids2gids(cms_model, aidlist_write, include_pseudoatoms=False)
+        print("Selected %i atoms for output."%(len(gidlist_write)))
+        # Construct a subsystem with the selected atoms
+        out_cms_model = select_subset_model(cms_model, aidlist_write)
+        print('Number of atoms in the output:', out_cms_model.atom_total)
+        # Extract frames with the given value
         assert len(clust_id) == len(trajectory)
         for clid, frame in zip(clust_id, trajectory):
             if clid == value:
-                frame_list.append(frame)
-    traj.write_traj(frame_list, output_name)
+                reduced_frame = frame.reduce(gidlist_write)
+                frame_list.append(reduced_frame)
+    # Write the extracted frames to a new trajectory
+    out_cms_model.fix_filenames(out_cms_fname, out_trj_fname)
+    out_cms_model.fsys_ct.write(out_cms_fname)
+    traj.write_traj(frame_list, out_trj_fname)
     

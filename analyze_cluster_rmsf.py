@@ -6,12 +6,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from schrodinger.application.desmond.packages import traj, topo
-from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value
+from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value, select_subset_model
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, \
     calculate_ca_distances, calculate_backbone_torsions, calculate_sidechain_torsions
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
 from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
-from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf, select_subset_model
+from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
 
 
 def calculate_features(simulations, selections, args, feature_type='ca-distance', chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
@@ -152,6 +152,8 @@ if __name__ == "__main__":
     parser.add_argument('--start-frame', dest='start_frame', type=int, default=0, help='Start frame for trajectory analysis')
     parser.add_argument('--end-frame', dest='end_frame', type=int, default=None, help='End frame for trajectory analysis')
     parser.add_argument('--step', dest='step', type=int, default=1, help='Step size for trajectory analysis')
+    parser.add_argument('--rmsf-across-all-trajectories', dest='rmsf_across_all_trajectories', action='store_true', default=False, 
+                        help='Calculate RMSF across all trajectories, not just those of the same system as the centroid. When using this, make sure that the selections exactly correspond to the same atoms in all systems!')
     args = parser.parse_args()
 
     assert args.step > 0, 'Step size must be a positive integer.'
@@ -389,9 +391,10 @@ if __name__ == "__main__":
             cluster_top_files, cluster_trj_files, cluster_csv_files = [], [], [] 
             cluster_asl_align, cluster_asl_write = [], []
             for top, trj, csv, sys in zip(top_files, trj_files, csv_files, sys_names):
-                # Use only the simulations of the same system as the centroid
-                if sys != cc_origin_sys:
-                    continue
+                if not args.rmsf_across_all_trajectories:
+                    # Use only the simulations of the same system as the centroid
+                    if sys != cc_origin_sys:
+                        continue
                 cluster_top_files.append(top)
                 cluster_trj_files.append(trj)
                 cluster_csv_files.append(csv)
@@ -452,12 +455,13 @@ if __name__ == "__main__":
             print('\n* - Writing cluster %i from k-means with k=%i as a trajectory - *\n'%(value, k))  
             if args.write_traj:
                 cluster_output = os.path.join(args.output_dir,'6-sorted/pca-kmeans_'+paramstr_cl)  
-                copy_topology(cc_topol_file, cluster_output+'.cms')
+                #copy_topology(cc_topol_file, cluster_output+'.cms')
                 extract_frames_by_value(
-                    cluster_trj_files, cluster_output+'.xtc', cluster_csv_files, value, 
-                    start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
+                    cluster_top_files, cluster_trj_files, cluster_output, cluster_csv_files, value, 
+                    start_frame=args.start_frame, end_frame=args.end_frame, step=args.step, 
+                    asl_strings=cluster_asl_write
                 )
-            print(' ')
+            print('\n')
 
         # Append the list of RMSF files
         rmsf_files.append(rmsf_files_k)
