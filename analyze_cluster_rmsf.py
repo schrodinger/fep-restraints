@@ -382,7 +382,7 @@ if __name__ == "__main__":
             ref_asl_align = ''
             for _chain, _resnumstr in zip(cc_selections['BindingPocket_Chain'], 
                                           cc_selections['BindingPocket_ResNum']):
-                ref_asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' ) OR '
+                ref_asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' AND atom.ptype N,CA,C,O ) OR '
             ref_asl_align = ref_asl_align[:-4] # cut the final OR
             # ... and for writing restraints
             ref_asl_write = ''
@@ -409,7 +409,7 @@ if __name__ == "__main__":
                 asl_align = ''
                 for _chain, _resnumstr in zip(cluster_selections['BindingPocket_Chain'], 
                                               cluster_selections['BindingPocket_ResNum']):
-                    asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' ) OR '
+                    asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' AND atom.ptype N,CA,C,O ) OR '
                 asl_align = asl_align[:-4] # cut the final OR
                 # ... and for writing restraints.
                 asl_write = ''
@@ -421,7 +421,7 @@ if __name__ == "__main__":
                 cluster_asl_write.append(asl_write)
                 print(' Top. File: %s\n Trj. File: %s\n Align ASL: %s\n Write ASL: %s\n'%(top, trj, asl_align, asl_write))
 
-            # Calculate the RMSF of this cluster
+            # Calculate the RMSF of this cluster          
             rmsf_per_atom, pos_average, cms_model_ref_new = calculate_rmsf(
                 centroid_file, cluster_top_files, cluster_trj_files, cluster_csv_files, value, 
                 ref_asl_align, ref_asl_write, cluster_asl_align, cluster_asl_write, 
