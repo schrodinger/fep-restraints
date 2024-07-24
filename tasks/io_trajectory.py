@@ -97,6 +97,11 @@ def extract_subset_model(cms_model, aid):
         aidlist_del = list(set(aidlist_all) - set(aidlist_write_ct))
         # Delete the atoms from this ct
         ct.deleteAtoms(aidlist_del, renumber_map=True)
+        # Delete all virtual and pseudo atoms from this ct
+        pseudo_indices = [at.index for at in ct.ffio.pseudo]
+        virtual_indices = [at.index for at in ct.ffio.virtual]
+        ct.ffio.deletePseudos(pseudo_indices)
+        ct.ffio.deleteVirtuals(virtual_indices)
     cms_model_new.synchronize_fsys_ct()
     return cms_model_new
 
