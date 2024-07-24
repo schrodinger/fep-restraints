@@ -476,5 +476,4 @@ if __name__ == "__main__":
         if not args.chain_id_in_name:
             out_name_k = '5-rmsf/pca-kmeans_'+paramstr_k+'_rmsf'
             out_rmsf_plot = os.path.join(args.output_dir, out_name_k)
-            plot_cluster_rmsf(k, rmsf_files_k, names, out_rmsf_plot)
-
+            plot_cluster_rmsf(k, rmsf_files_k, names, out_rmsf_plot, feature_type=args.pca_feature_type)

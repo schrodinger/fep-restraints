@@ -123,7 +123,7 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
     return rmsf_per_atom, pos_average, cms_model_ref_new
 
 
-def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot, highlight_feature_residues=True):
+def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot, highlight_feature_residues=True, feature_type='ca-distance'):
     # Plot the RMSF of each cluster
     fig, ax = plt.subplots(k, 1, figsize=[8,2.0*k], dpi=300, sharex=True, sharey=True)
     if k==1: # Make ax a list, even when there is only one plot
@@ -148,8 +148,12 @@ def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot, highlight_feature_res
         )
         if highlight_feature_residues:
             # Find the binding pocket (feature) residues
-            pair = np.array([n.split('-') for n in features], dtype=int)
-            bpid = np.unique(pair.flatten())
+            if feature_type == 'ca-distance':
+                pair = np.array([n.split('-') for n in features], dtype=int)
+                bpid = np.unique(pair.flatten())
+            elif feature_type == 'bb-torsion' or feature_type == 'sc-torsion':
+                bpid = np.array([n.split('-')[0] for n in features], dtype=int)
+                bpid = np.unique(bpid)
             isbp = [(r in bpid) for r in df_ca['resnum'] ]
             # Plot the RMSF of the binding pocket residues
             ax[cluster_id].bar(
