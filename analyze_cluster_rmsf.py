@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from schrodinger.application.desmond.packages import traj, topo
-from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value, select_subset_model
+from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_value, extract_subset_model
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, \
     calculate_ca_distances, calculate_backbone_torsions, calculate_sidechain_torsions
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
@@ -444,7 +444,7 @@ if __name__ == "__main__":
             # Write the RMSF on the input topology structure.
             _, cms_model_top = topo.read_cms(cluster_top_files[0])
             aidlist_write_top = cms_model_top.select_atom(str(ref_asl_write))
-            cms_model_top_new = select_subset_model(cms_model_top, aidlist_write_top)
+            cms_model_top_new = extract_subset_model(cms_model_top, aidlist_write_top)
             out_fn_top = os.path.join(args.output_dir,'5-rmsf/pca-kmeans_'+paramstr_cl+'_rmsf_top.cms')
             _ = write_coordinates(out_fn_top, cms_model_top_new, xyz=None, sigma=rmsf_per_atom)
 
@@ -460,7 +460,6 @@ if __name__ == "__main__":
             print('\n* - Writing cluster %i from k-means with k=%i as a trajectory - *\n'%(value, k))  
             if args.write_traj:
                 cluster_output = os.path.join(args.output_dir,'6-sorted/pca-kmeans_'+paramstr_cl)  
-                #copy_topology(cc_topol_file, cluster_output+'.cms')
                 extract_frames_by_value(
                     cluster_top_files, cluster_trj_files, cluster_output, cluster_csv_files, value, 
                     start_frame=args.start_frame, end_frame=args.end_frame, step=args.step, 

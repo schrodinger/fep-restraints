@@ -84,19 +84,21 @@ def copy_topology(reference, output_name):
             writer.append(st)
 
 
-def select_subset_model(cms_model, aid):
-    aid_all = range(1,cms_model.atom_total+1)
-    aid_del = set(aid_all) - set(aid)
-    model = cms_model.copy()
-    model.deleteAtoms(aid_del)
-    return model
-
-
 def extract_subset_model(cms_model, aid):
-    model = cms_model.copy()
-    model.comp_ct = [model.fsys_ct.extract(aid, copy_props=True)]
-    model.synchronize_fsys_ct()
-    return model
+    num_atoms_all_cts = 0
+    cms_model_new = cms_model.copy()
+    for ct in cms_model_new.comp_ct:
+        # Construct the index list of atoms to keep for this ct
+        aidlist_write_ct = [_a-num_atoms_all_cts for _a in aid[num_atoms_all_cts:num_atoms_all_cts+ct.atom_total+1]]
+        # Update total number of atoms across components
+        num_atoms_all_cts += ct.atom_total
+        # Construct the index list of atoms to delete for this ct
+        aidlist_all = range(1, ct.atom_total+1)
+        aidlist_del = list(set(aidlist_all) - set(aidlist_write_ct))
+        # Delete the atoms from this ct
+        ct.deleteAtoms(aidlist_del, renumber_map=True)
+    cms_model_new.synchronize_fsys_ct()
+    return cms_model_new
 
 
 def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None):
@@ -191,6 +193,7 @@ def extract_frames_by_value(top_files, trj_files, output_name, csv_files, value,
     assert len(trj_files) == len(csv_files) == len(top_files) == len(asl_strings)
     # Iterate through the files
     frame_list = []
+    model_list = []
     for csv, top, trj, asl in zip(csv_files, top_files, trj_files, asl_strings):
         num_df = pd.read_csv(csv)
         clust_id = num_df[property]
@@ -215,6 +218,6 @@ def extract_frames_by_value(top_files, trj_files, output_name, csv_files, value,
                 frame_list.append(reduced_frame)
     # Write the extracted frames to a new trajectory
     out_cms_model.fix_filenames(out_cms_fname, out_trj_fname)
-    out_cms_model.fsys_ct.write(out_cms_fname)
+    out_cms_model.write(out_cms_fname)
     traj.write_traj(frame_list, out_trj_fname)
     

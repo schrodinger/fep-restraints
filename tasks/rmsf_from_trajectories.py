@@ -5,7 +5,7 @@ from schrodinger import structure
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from .io_trajectory import load_trajectory, write_frames, get_an_aid, select_subset_model
+from .io_trajectory import load_trajectory, write_frames, get_an_aid, extract_subset_model
 
 
 
@@ -116,7 +116,7 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
 
     # Get the model of the subset to write to the structures.
     aidlist_write_ref = cms_model_ref.select_atom(str(ref_asl_write))
-    cms_model_ref_new = select_subset_model(cms_model_ref, aidlist_write_ref )
+    cms_model_ref_new = extract_subset_model(cms_model_ref, aidlist_write_ref )
     print('The new model has %s atoms.'%cms_model_ref_new.atom_total)
     print('The new model has %s atoms.'%len(cms_model_ref_new.atom)) 
 
