@@ -9,15 +9,15 @@ from torch import _sobol_engine_initialize_state_
 from .io_features import read_features_from_csv_files
 
 
-def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, write_pc=True, out_names=None):
+def kmeans_on_pca(data_pca, k, rs, origin, orig_id, output_base, input_files=None, write_pc=True, out_names=None):
 
     # Define the algorithm
     kmeans = KMeans(n_clusters = k, init = 'k-means++', random_state = rs)
     # Fit and transform the data to cluster-distance space.
-    cdist = kmeans.fit_transform(pc.T)
+    cdist = kmeans.fit_transform(data_pca)
 
     # Determine clusters and their centers.
-    clusters = kmeans.fit_predict(pc.T)
+    clusters = kmeans.fit_predict(data_pca)
     centers = kmeans.cluster_centers_
     sizes = [np.sum(clusters==ic) for ic in range(k)]
     cids = np.arange(k)
@@ -42,7 +42,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
         for j in range(k):
             output['Distance_to_Cluster_%02i'%j] = cdist[is_from_origin,j]
         if write_pc:
-            for j, pcj in enumerate(pc):
+            for j, pcj in enumerate(data_pca.T):
                 output['PC%02i'%(j+1)] = pcj[is_from_origin]
         output.to_csv(cl_file_name, index=False)
         cl_files.append(cl_file_name)
@@ -69,7 +69,7 @@ def kmeans_on_pca(pc, k, rs, origin, orig_id, output_base, input_files=None, wri
     return cids, sizes, centers, cdist, cc_orig_sim, cc_orig_id, kmeans.inertia_, cl_files, summary_name 
 
 
-def scatterplot_pca_by_system(pc, index1, index2, origin, simulations, out_file, showstart=False):
+def scatterplot_pca_by_system(data_pca, index1, index2, origin, simulations, out_file, showstart=False):
     """
     PC indices are zero-based!
     """
@@ -80,8 +80,8 @@ def scatterplot_pca_by_system(pc, index1, index2, origin, simulations, out_file,
     for sys_id, sys in enumerate(systems):
         # Find PC values of all data points from each system
         sys_origin = list(simulations[simulations['System_Name']==sys].index)
-        pc1 = pc[index1][[o in sys_origin for o in origin]]
-        pc2 = pc[index2][[o in sys_origin for o in origin]]
+        pc1 = data_pca[[o in sys_origin for o in origin]][index1]
+        pc2 = data_pca[[o in sys_origin for o in origin]][index2]
         # Plot all data points of this system
         ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color='C%i'%sys_id)
         means.append([np.mean(pc1), np.mean(pc2)])
@@ -91,8 +91,8 @@ def scatterplot_pca_by_system(pc, index1, index2, origin, simulations, out_file,
             ax.plot(*starts[sys_id], 's', mew=1, mec='k', alpha=1, color='C%i'%sys_id) 
         ax.plot(*means[sys_id], 'o', mew=1, mec='k', alpha=1, color='C%i'%sys_id, label=sys)
     # Format and labels
-    ax.set_xlim(np.min(pc[index1]), np.max(pc[index1]))
-    ax.set_ylim(np.min(pc[index2]), np.max(pc[index2]))
+    ax.set_xlim(np.min(data_pca[:,index1]), np.max(data_pca[:,index1]))
+    ax.set_ylim(np.min(data_pca[:,index2]), np.max(data_pca[:,index2]))
     ax.set_xlabel('PC%i'%(index1+1))
     ax.set_ylabel('PC%i'%(index2+1))
     ax.set_xticks([])
@@ -104,9 +104,9 @@ def scatterplot_pca_by_system(pc, index1, index2, origin, simulations, out_file,
     plt.close(fig)
 
 
-def plot_pca_by_system(pc, origin, simulations, out_file, showstart=False):  
+def plot_pca_by_system(data_pca, origin, simulations, out_file, showstart=False):  
     systems = simulations['System_Name'].unique()
-    for i, pci in enumerate(pc):
+    for i, pci in enumerate(data_pca.T):
         # Calculate the general bins and their centers
         hist_c, bins_c = np.histogram(pci, bins=50)
         bin_centers = .5 * (bins_c[1:] + bins_c[:-1])
@@ -154,7 +154,7 @@ def elbow_plot(num_clusters, sum_squ_dist, out_file):
     plt.close(fig)
 
 
-def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
+def pc_cluster_plot(data_pca, cl_files_k, centers, out_pca_cl):
     # Get the data 
     cluster_data = []
     for clf in cl_files_k:
@@ -167,8 +167,8 @@ def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
     for cluster_id in range(k):
         # Find PC values of all data points from each system
         is_in_cluster = [c == cluster_id for c in cluster_data]
-        pc1 = pc[0][is_in_cluster]
-        pc2 = pc[1][is_in_cluster]
+        pc1 = data_pca[is_in_cluster][0]
+        pc2 = data_pca[is_in_cluster][1]
         ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color="C%i"%(cluster_id%10))
     # Plot the cluster centers
     for cluster_id in range(k):
@@ -176,8 +176,8 @@ def pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl):
         ax.plot(cc1, cc2, 'o', alpha=0.5, mec='k', mew=1,
             color="C%i"%(cluster_id%10), label='%i'%cluster_id)
     # Format and labels
-    ax.set_xlim(np.min(pc[0]), np.max(pc[0]))
-    ax.set_ylim(np.min(pc[1]), np.max(pc[1]))
+    ax.set_xlim(np.min(data_pca[:,0]), np.max(data_pca[:,0]))
+    ax.set_ylim(np.min(data_pca[:,1]), np.max(data_pca[:,1]))
     ax.set_xlabel('PC1')
     ax.set_ylabel('PC2')
     ax.set_xticks([])

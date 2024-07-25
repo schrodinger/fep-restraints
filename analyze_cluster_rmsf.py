@@ -236,9 +236,12 @@ if __name__ == "__main__":
     names, data, origin, orig_id = read_features_from_csv_files(
         simulations[feature_file_key[args.pca_feature_type]]
     )
-    pca = PCA(random_state=args.random_state)
-    pca.fit(data.T)
+    pca = PCA(n_components=args.n_components, random_state=args.random_state)
+    pca.fit(data)
     pc = pca.components_
+    print('Shape of data:', data.shape)
+    print('Shape of PC:', pc.shape)
+    print('Number of input features:', pca.n_features_in_)
     ev_ratio = pca.explained_variance_ratio_
     
     # Write the explained variance ratio to a CSV file and to stdout
@@ -248,35 +251,38 @@ if __name__ == "__main__":
     ev_output['Explained_Variance_Ratio'] = ev_ratio
     ev_output.to_csv(ev_csv, index=False)
     print('Explained variance ratio:')
-    for i, evr in enumerate(ev_ratio[:args.n_components]):
+    for i, evr in enumerate(ev_ratio):
         print(' PC%02i: %1.4f'%(i+1, evr))
 
-    # Write PCA results to CSV file
-    out_csv = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}.csv")
-    pca_output = pd.DataFrame()
+    # Write feature contributions to CSV file
+    contributions_csv = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}_contributions.csv")
+    contributions_output = pd.DataFrame()
+    contributions_output['Feature'] = names
+    for i, pci in enumerate(pc):
+        contributions_output['PC%i'%(i+1)] = pci
+    contributions_output.to_csv(contributions_csv, index=False) 
+
+    # Write the transformed data to a CSV file
+    data_pca = pca.transform(data)
+    pca_csv = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}_transformed.csv")
+    pca_output = pd.DataFrame(data_pca, columns=['PC%i'%(i+1) for i in range(args.n_components)])
     pca_output['Origin'] = origin
-    max_pc = max([12, args.n_components])
-    for i, pci in enumerate(pc[:max_pc]):
-        pca_output['PC%i'%(i+1)] = pci
-    pca_output.to_csv(out_csv, index=False) 
 
     # Plot PCA results by origin system
     out_pdf = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}")
     plot_pca_by_system(
-        pc[:max_pc], origin, simulations, out_pdf, showstart=args.showstart
+        data_pca, origin, simulations, out_pdf, showstart=args.showstart
     )
     scatterplot_pca_by_system(
-        pc, 0, 1, origin, simulations, out_pdf+'_pc1and2', showstart=args.showstart
+        data_pca, 0, 1, origin, simulations, out_pdf+'_pc1and2', showstart=args.showstart
     )
     scatterplot_pca_by_system(
-        pc, 0, 2, origin, simulations, out_pdf+'_pc1and3', showstart=args.showstart
+        data_pca, 0, 2, origin, simulations, out_pdf+'_pc1and3', showstart=args.showstart
     )
     scatterplot_pca_by_system(
-        pc, 1, 2, origin, simulations, out_pdf+'_pc2and3', showstart=args.showstart
+        data_pca, 1, 2, origin, simulations, out_pdf+'_pc2and3', showstart=args.showstart
     )
 
-    # For all further work, only keep the requested number of PCs
-    pc = pc[:args.n_components]
     # Update the parameter string to reflect this
     paramstr = 'n%02i_%s'%(args.n_components, paramstr)
 
@@ -300,8 +306,8 @@ if __name__ == "__main__":
         
         # Run the k-means clustering
         cids, sizes, centers, cdist, cc_orig_sim, cc_orig_id, inertia, cl_files_k, sum_file_k = kmeans_on_pca(
-            pc, k, args.random_state, origin, orig_id, output_base=outputf, input_files=None, write_pc=True
-            )
+            data_pca, k, args.random_state, origin, orig_id, output_base=outputf, input_files=None, write_pc=True
+        )
         sum_sqrd.append(inertia)
         cl_files.append(cl_files_k)
         sum_file.append(sum_file_k)
@@ -344,7 +350,7 @@ if __name__ == "__main__":
         paramstr_k = '%s_k%02i'%(paramstr, k)
         out_name_k = '4-clustering/pca-kmeans_'+paramstr_k+'_pc-clusters'
         out_pca_cl = os.path.join(args.output_dir, out_name_k)
-        pc_cluster_plot(pc, cl_files_k, centers, out_pca_cl)
+        pc_cluster_plot(data_pca, cl_files_k, centers, out_pca_cl)
 
 
     # * ------ * #
