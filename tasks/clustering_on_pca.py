@@ -74,18 +74,20 @@ def scatterplot_pca_by_system(data_pca, index1, index2, origin, simulations, out
     PC indices are zero-based!
     """
     systems = simulations['System_Name'].unique()
+    pc1 = data_pca[:,index1]
+    pc2 = data_pca[:,index2]
     fig, ax = plt.subplots(1,1, figsize=[3,3], dpi=300)
     means = []
     starts = []
     for sys_id, sys in enumerate(systems):
         # Find PC values of all data points from each system
         sys_origin = list(simulations[simulations['System_Name']==sys].index)
-        pc1 = data_pca[[o in sys_origin for o in origin]][index1]
-        pc2 = data_pca[[o in sys_origin for o in origin]][index2]
+        sys_pc1 = pc1[[o in sys_origin for o in origin]]
+        sys_pc2 = pc2[[o in sys_origin for o in origin]]
         # Plot all data points of this system
-        ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color='C%i'%sys_id)
-        means.append([np.mean(pc1), np.mean(pc2)])
-        starts.append([pc1[0], pc2[0]])
+        ax.plot(sys_pc1, sys_pc2, '.', mew=0, ms=2, alpha=0.2, color='C%i'%sys_id)
+        means.append([np.mean(sys_pc1), np.mean(sys_pc2)])
+        starts.append([sys_pc1[0], sys_pc2[0]])
     for sys_id, sys in enumerate(systems):
         if showstart: 
             ax.plot(*starts[sys_id], 's', mew=1, mec='k', alpha=1, color='C%i'%sys_id) 
