@@ -11,7 +11,7 @@ from .io_trajectory import load_trajectory, write_frames, get_an_aid, extract_su
 
 def write_frame(out_fname, old_model, frame, sigma=None):
     model = old_model.copy()
-    print("Writing to model with %i atoms."%(len(model.atom)))
+    print(f"Writing the frame with {len(model.atom)} atoms to {out_fname}.")
     if frame is not None:      
         for i, ct in enumerate(model.comp_ct):
             ct_aids = model.get_fullsys_ct_atom_index_range(i)
@@ -31,7 +31,7 @@ def write_frame(out_fname, old_model, frame, sigma=None):
 
 
 def write_coordinates(out_fname, model, xyz=None, sigma=None):
-    print("Writing to model with %i atoms."%(len(model.atom))) 
+    print(f"Writing the coordinates of {len(model.atom)} atoms to {out_fname}.") 
     # Update the coordinates. 
     if xyz is not None:
         model.fsys_ct.setXYZ(xyz)
@@ -48,36 +48,46 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
                    align_avg=True, threshold=None, start_frame=0, end_frame=None, step=1):
 
     # Read the reference structure
-    _, cms_model_ref = topo.read_cms(reference_fn) 
-    aidlist_ref = cms_model_ref.select_atom(ref_asl_align) 
-    gidlist_ref = topo.aids2gids(cms_model_ref, aidlist_ref, include_pseudoatoms=False)
-    print("The reference selection has %i atoms."%(len(gidlist_ref)))
-    pos_ref_all = cms_model_ref.getXYZ()
-    pos_ref = pos_ref_all[gidlist_ref]
-
-    # Create list in which to store the new positions and distances
+    _, cms_model_ref = topo.read_cms(reference_fn)
+    print(f"Reference structure:\n CMS: {reference_fn}") 
+    print(' Number of atoms:', cms_model_ref.atom_total)
+    # Define the alignment selection for the reference structure
+    aidlist_align_ref = cms_model_ref.select_atom(ref_asl_align)
+    cms_model_align_ref = extract_subset_model(cms_model_ref, aidlist_align_ref)
+    pos_align_ref = cms_model_align_ref.getXYZ()
+    print(" Selected %i atoms for alignment."%(len(cms_model_align_ref.atom)))
+    # Define the writing selection for the reference structure
+    aidlist_write_ref = cms_model_ref.select_atom(str(ref_asl_write))
+    cms_model_write_ref = extract_subset_model(cms_model_ref, aidlist_write_ref)
+    pos_write_ref = cms_model_write_ref.getXYZ()
+    print(" Selected %i atoms for output."%(len(cms_model_write_ref.atom)))
+    
+    # Create the list in which to store the new positions
     pos_sel_aligned = []
-    squared_distances = []
+    
     # Loop through all trajectories, align, and calculate distances
     for cms, trj, csv, sel_align, sel_write in zip(cms_files, trj_files, csv_files, selections_align, selections_write):
+    
         # Read the CSV file with cluster information
         frame_cluster_id = np.array(pd.read_csv(csv)['Cluster_ID'], dtype=int)
+    
         # Read the trajectory
         _, cms_model = topo.read_cms(cms)
-        print('Number of atoms in the system:', cms_model.atom_total)
         trajectory = traj.read_traj(trj)[start_frame:end_frame:step]
-        print('Alignment selection:', str(sel_align))
+        print(f"Trajectory:\n CMS: {cms}\n TRJ: {trj}")
+        print(' Number of atoms:', cms_model.atom_total)
+        # Define the alignment selection
         aidlist_align = cms_model.select_atom(str(sel_align))
         gidlist_align = topo.aids2gids(cms_model, aidlist_align, include_pseudoatoms=False)
-        print("Selected %i atoms for alignment."%(len(gidlist_align)))
-        print('Output Selection:', str(sel_write))
+        print(" Selected %i atoms for alignment."%(len(gidlist_align)))
+        # Define the output selection
         aidlist_write = cms_model.select_atom(str(sel_write)) 
         gidlist_write = topo.aids2gids(cms_model, aidlist_write, include_pseudoatoms=False)
-        print("Selected %i atoms for output."%(len(gidlist_write)))
-        # Loop through trajectory
+        print(" Selected %i atoms for output."%(len(gidlist_write)))
+    
+        # Loop through the trajectory
         model = cms_model.copy()
         ct = model.fsys_ct
-        print('Reading:', cms, trj)
         for f, frame in enumerate(trajectory):
             # Check whether this frame is in the selected cluster
             if frame_cluster_id[f] != cluster_id:
@@ -86,41 +96,32 @@ def calculate_rmsf(reference_fn, cms_files, trj_files, csv_files, cluster_id, re
             topo.update_ct(ct, model, frame)
             # Align frame to reference structure
             pos_all = ct.getXYZ()
-            pos_sel = pos_all[gidlist_align]
-            pos_new = analysis.align_pos(pos_all, pos_sel, pos_ref)
+            pos_align = pos_all[gidlist_align]
+            pos_write = pos_all[gidlist_write]
+            pos_write_aligned = analysis.align_pos(pos_write, pos_align, pos_align_ref)
             # Calculate distances to reference structure and append them to the list
-            new_squ_dist = np.sum((pos_new[gidlist_write]-pos_ref_all[gidlist_write])**2, axis=1)
-            frame_rmsd = np.sqrt(np.mean(new_squ_dist))
+            frame_squ_dist = np.sum((pos_write_aligned-pos_write_ref)**2, axis=1)
+            frame_rmsd = np.sqrt(np.mean(frame_squ_dist))
             if f%100 == 0: 
-                print("RMSD in frame %04i: %1.4f"%(f, frame_rmsd))
+                print(" RMSD to reference in frame %04i: %1.4f"%(f, frame_rmsd))
             if threshold is None or frame_rmsd < threshold: 
-                squared_distances.append(new_squ_dist)
-                pos_sel_aligned.append(pos_new[gidlist_write])
+                pos_sel_aligned.append(pos_write_aligned)
+    num_included_frames = len(pos_sel_aligned)
     pos_sel_aligned = np.array(pos_sel_aligned)
-    squared_distances_from_reference = np.array(squared_distances)
-    print('Squared distances from reference:', squared_distances_from_reference.shape)
 
     # Calculate the average position of each selected atom.
     pos_average = np.mean(pos_sel_aligned, axis=0)
-    # Calculate the RMSD of each frame to the average.
+    # Calculate the squared distances to the average positions for each frame.
     squared_distances_from_average = np.sum((pos_sel_aligned-pos_average)**2, axis=2)
-    print('Squared distances from average:', squared_distances_from_average.shape)
-    # ... and align it to the reference, using all atoms
-    if align_avg:
-        pos_average = analysis.align_pos(pos_average, pos_average, pos_ref_all[gidlist_write])
-
     # Calculate the RMSF for each atom.
     rmsf_per_atom = np.sqrt(np.mean(squared_distances_from_average, axis=0))
-    rmsd_per_frame = np.sqrt(np.mean(squared_distances_from_reference, axis=1))
-    print("Calculated RMSF for %i atoms and %i frames."%(len(rmsf_per_atom), len(rmsd_per_frame)))    
+    print("Calculated average and RMSF for %i atoms and %i frames."%(len(rmsf_per_atom), num_included_frames))    
 
-    # Get the model of the subset to write to the structures.
-    aidlist_write_ref = cms_model_ref.select_atom(str(ref_asl_write))
-    cms_model_ref_new = extract_subset_model(cms_model_ref, aidlist_write_ref )
-    print('The new model has %s atoms.'%cms_model_ref_new.atom_total)
-    print('The new model has %s atoms.'%len(cms_model_ref_new.atom)) 
+    # Align the average to the reference if requested
+    if align_avg:
+        pos_average = analysis.align_pos(pos_average, pos_average, pos_write_ref)
 
-    return rmsf_per_atom, pos_average, cms_model_ref_new
+    return rmsf_per_atom, pos_average, cms_model_write_ref
 
 
 def plot_cluster_rmsf(k, rmsf_files_k, features, out_plot, highlight_feature_residues=True, feature_type='ca-distance'):
@@ -193,6 +194,9 @@ if __name__ == "__main__":
     parser.add_argument('--ref_sel_write', dest='ref_asl_write', type=str, help='output selection for the reference file')
     parser.add_argument('--align_avg', dest='align_avg', action='store_true', help='align the final average structure to the reference, using all atoms in the output selection.', default=False) 
     parser.add_argument('--threshold', dest='threshold', type=float, help='threshold RMSD to exclude frames', default=None)
+    parser.add_argument('--start_frame', dest='start_frame', type=int, help='start frame index', default=0)
+    parser.add_argument('--end_frame', dest='end_frame', type=int, help='end frame index', default=None)
+    parser.add_argument('--step', dest='step', type=int, help='frame step size', default=1)
     args = parser.parse_args()
 
     # Load selection files
@@ -204,7 +208,9 @@ if __name__ == "__main__":
     rmsf_per_atom, pos_average, cms_model_ref_new = calculate_rmsf(
         args.reference_fn, args.cms_files, args.trj_files, 
         args.ref_asl_align, args.ref_asl_write, asl_align, asl_write, 
-        align_avg=args.align_avg, threshold=args.threshold)
+        align_avg=args.align_avg, threshold=args.threshold,
+        start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
+    )
    
     # Write the RMSF to a CSV file.  
     output = pd.DataFrame()

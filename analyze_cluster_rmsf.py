@@ -394,7 +394,7 @@ if __name__ == "__main__":
             ref_asl_align = ''
             for _chain, _resnumstr in zip(cc_selections['BindingPocket_Chain'], 
                                           cc_selections['BindingPocket_ResNum']):
-                ref_asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' AND atom.ptype N,CA,C,O ) OR '
+                ref_asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' AND atom.ptype CA ) OR '
             ref_asl_align = ref_asl_align[:-4] # cut the final OR
             # ... and for writing restraints
             ref_asl_write = ''
@@ -408,30 +408,28 @@ if __name__ == "__main__":
             cluster_top_files, cluster_trj_files, cluster_csv_files = [], [], [] 
             cluster_asl_align, cluster_asl_write = [], []
             for top, trj, csv, sys in zip(top_files, trj_files, csv_files, sys_names):
-                if not args.rmsf_across_all_trajectories:
-                    # Use only the simulations of the same system as the centroid
-                    if sys != cc_origin_sys:
-                        continue
-                cluster_top_files.append(top)
-                cluster_trj_files.append(trj)
-                cluster_csv_files.append(csv)
-                # Construct selection strings
-                cluster_selections = selections[selections['System_Name']==sys] 
-                # ... for alignment
-                asl_align = ''
-                for _chain, _resnumstr in zip(cluster_selections['BindingPocket_Chain'], 
-                                              cluster_selections['BindingPocket_ResNum']):
-                    asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' AND atom.ptype N,CA,C,O ) OR '
-                asl_align = asl_align[:-4] # cut the final OR
-                # ... and for writing restraints.
-                asl_write = ''
-                for _resasl in cluster_selections['Restraints_Res_ASL']:
-                    asl_write += '( '+_resasl+' ) OR '
-                asl_write = asl_write[:-4] # cut the final OR 
-                # Append the selection strings.
-                cluster_asl_align.append(asl_align)
-                cluster_asl_write.append(asl_write)
-                print(' Top. File: %s\n Trj. File: %s\n Align ASL: %s\n Write ASL: %s\n'%(top, trj, asl_align, asl_write))
+                # Use only the simulations of the same system as the centroid (unless flag is set)
+                if args.rmsf_across_all_trajectories or sys == cc_origin_sys:
+                    cluster_top_files.append(top)
+                    cluster_trj_files.append(trj)
+                    cluster_csv_files.append(csv)
+                    # Construct selection strings
+                    cluster_selections = selections[selections['System_Name']==sys] 
+                    # ... for alignment
+                    asl_align = ''
+                    for _chain, _resnumstr in zip(cluster_selections['BindingPocket_Chain'], 
+                                                cluster_selections['BindingPocket_ResNum']):
+                        asl_align += '( chain name '+_chain+' AND res.num '+_resnumstr+' AND atom.ptype CA ) OR '
+                    asl_align = asl_align[:-4] # cut the final OR
+                    # ... and for writing restraints.
+                    asl_write = ''
+                    for _resasl in cluster_selections['Restraints_Res_ASL']:
+                        asl_write += '( '+_resasl+' ) OR '
+                    asl_write = asl_write[:-4] # cut the final OR 
+                    # Append the selection strings.
+                    cluster_asl_align.append(asl_align)
+                    cluster_asl_write.append(asl_write)
+                    print(' Top. File: %s\n Trj. File: %s\n Align ASL: %s\n Write ASL: %s\n'%(top, trj, asl_align, asl_write))
 
             # Calculate the RMSF of this cluster          
             rmsf_per_atom, pos_average, cms_model_ref_new = calculate_rmsf(
