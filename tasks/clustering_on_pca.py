@@ -156,7 +156,9 @@ def elbow_plot(num_clusters, sum_squ_dist, out_file):
     plt.close(fig)
 
 
-def pc_cluster_plot(data_pca, cl_files_k, centers, out_pca_cl):
+def pc_cluster_plot(data_pca, cl_files_k, centers, out_pca_cl, index1=0, index2=1):
+    pc1 = data_pca[:,index1]
+    pc2 = data_pca[:,index2]
     # Get the data 
     cluster_data = []
     for clf in cl_files_k:
@@ -169,19 +171,19 @@ def pc_cluster_plot(data_pca, cl_files_k, centers, out_pca_cl):
     for cluster_id in range(k):
         # Find PC values of all data points from each system
         is_in_cluster = [c == cluster_id for c in cluster_data]
-        pc1 = data_pca[is_in_cluster][0]
-        pc2 = data_pca[is_in_cluster][1]
-        ax.plot(pc1, pc2, '.', mew=0, ms=2, alpha=0.2, color="C%i"%(cluster_id%10))
+        cl_pc1 = pc1[is_in_cluster]
+        cl_pc2 = pc2[is_in_cluster]
+        ax.plot(cl_pc1, cl_pc2, '.', mew=0, ms=2, alpha=0.2, color="C%i"%(cluster_id%10))
     # Plot the cluster centers
     for cluster_id in range(k):
-        cc1, cc2 = centers[cluster_id][0], centers[cluster_id][1]
+        cc1, cc2 = centers[cluster_id,index1], centers[cluster_id,index2]
         ax.plot(cc1, cc2, 'o', alpha=0.5, mec='k', mew=1,
             color="C%i"%(cluster_id%10), label='%i'%cluster_id)
     # Format and labels
-    ax.set_xlim(np.min(data_pca[:,0]), np.max(data_pca[:,0]))
-    ax.set_ylim(np.min(data_pca[:,1]), np.max(data_pca[:,1]))
-    ax.set_xlabel('PC1')
-    ax.set_ylabel('PC2')
+    ax.set_xlim(np.min(data_pca[:,index1]), np.max(data_pca[:,index1]))
+    ax.set_ylim(np.min(data_pca[:,index2]), np.max(data_pca[:,index2]))
+    ax.set_xlabel('PC%i'%(index1+1))
+    ax.set_ylabel('PC%i'%(index2+1))
     ax.set_xticks([])
     ax.set_yticks([])
     ax.legend(fontsize=8) 
