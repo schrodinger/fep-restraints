@@ -14,7 +14,7 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
 
 
-def calculate_features(simulations, selections, args, feature_type='ca-distance', chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
+def calculate_features(simulations, selections, args, feature_type='ca-distance', chain_id_in_name=False, start_frame=0, end_frame=None, step=1, reuse_features=False):
     """
     Calculate features for each simulation in the given dataset.
 
@@ -51,7 +51,8 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
         sys_name = simulations['System_Name'][i]
         sys_prop = selections[selections['System_Name']==sys_name]
         chain_id = list(sys_prop['BindingPocket_Chain'])
-        res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']] 
+        res_nums = [np.array(rn.split(' '),dtype=int) for rn in sys_prop['BindingPocket_ResNum']]
+        out_file = os.path.join(args.output_dir,f'1-features/%ss_%04i.csv' % (feature_type, i))
 
         # Print names and info for this simulation
         print('Top. File:', top_file)
@@ -60,6 +61,11 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
         for _i, _chain in enumerate(chain_id):
             print('Chain:', _chain)
             print('Residues:', res_nums[_i])
+
+        # If the output file already exists, continue with the next one
+        if os.path.exists(out_file) and reuse_features:
+            print(f"Output file {out_file} already exists. Skipping...")
+            continue
 
         # Load the simulation data
         msys_model, cms_model = topo.read_cms(top_file)
@@ -84,8 +90,7 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
                 chain_id_in_name=chain_id_in_name,
                 start_frame=start_frame, end_frame=end_frame, step=step
             )       
-        # ... and write them to a CSV file
-        out_file = os.path.join(args.output_dir,f'1-features/%ss_%04i.csv' % (feature_type, i))
+        # ... and write them to the CSV file
         feature_files.append(out_file)
         write_features_to_csv(out_file, feat_values, feat_names, time)
         print('Wrote %ss from %s to %s.\n'%(feature_type, trj_file, out_file) )
@@ -156,6 +161,7 @@ if __name__ == "__main__":
                         help='Calculate RMSF across all trajectories, not just those of the same system as the centroid. When using this, make sure that the selections exactly correspond to the same atoms in all systems!')
     parser.add_argument('--feature-types', nargs='+', dest='feature_types', type=str, default=['ca-distance','bb-torsion','sc-torsion'], help='Types of features to calculate')
     parser.add_argument('--pca-feature-type', dest='pca_feature_type', type=str, default='ca-distance', help='Type of features to use for PCA')
+    parser.add_argument('--reuse-features', dest='reuse_features', action='store_true', default=False, help='Reuse pre-calculated features if available')
     args = parser.parse_args()
 
     assert args.step > 0, 'Step size must be a positive integer.'
@@ -206,7 +212,7 @@ if __name__ == "__main__":
             raise ValueError(f'Unknown feature type: {feature_type}')
         simulations[feature_file_key[feature_type]] = calculate_features(
             simulations, selections, args, feature_type=feature_type,
-            chain_id_in_name=args.chain_id_in_name,
+            chain_id_in_name=args.chain_id_in_name, reuse_features=args.reuse_features,
             start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
         )
 
