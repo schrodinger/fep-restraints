@@ -45,6 +45,7 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
     feature_files = []
 
     for i in simulations.index:
+
         # Get names and info for this simulation
         top_file = simulations['Topology'][i]
         trj_file = simulations['Trajectory'][i]
@@ -65,35 +66,34 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
         # If the output file already exists, continue with the next one
         if os.path.exists(out_file) and reuse_features:
             print(f"Output file {out_file} already exists. Skipping...")
-            continue
+        else:
+            # Load the simulation data
+            msys_model, cms_model = topo.read_cms(top_file)
+            trj = traj.read_traj(trj_file) 
+            # Calculate the distances between the C-alpha atoms
+            if feature_type == 'ca-distance':
+                time, feat_names, feat_values = calculate_ca_distances(
+                    msys_model, cms_model, trj, chain_id, res_nums,
+                    chain_id_in_name=chain_id_in_name,
+                    start_frame=start_frame, end_frame=end_frame, step=step
+                )
+            elif feature_type == 'bb-torsion':
+                time, feat_names, feat_values = calculate_backbone_torsions(
+                    msys_model, cms_model, trj, chain_id, res_nums,
+                    chain_id_in_name=chain_id_in_name,
+                    start_frame=start_frame, end_frame=end_frame, step=step
+                )
+            elif feature_type == 'sc-torsion':
+                time, feat_names, feat_values = calculate_sidechain_torsions(
+                    msys_model, cms_model, trj, chain_id, res_nums,
+                    chain_id_in_name=chain_id_in_name,
+                    start_frame=start_frame, end_frame=end_frame, step=step
+                )       
+            # ... and write them to the CSV file
+            write_features_to_csv(out_file, feat_values, feat_names, time)
+            print('Wrote %ss from %s to %s.\n'%(feature_type, trj_file, out_file) )
 
-        # Load the simulation data
-        msys_model, cms_model = topo.read_cms(top_file)
-        trj = traj.read_traj(trj_file) 
-        
-        # Calculate the distances between the C-alpha atoms
-        if feature_type == 'ca-distance':
-            time, feat_names, feat_values = calculate_ca_distances(
-                msys_model, cms_model, trj, chain_id, res_nums,
-                chain_id_in_name=chain_id_in_name,
-                start_frame=start_frame, end_frame=end_frame, step=step
-            )
-        elif feature_type == 'bb-torsion':
-            time, feat_names, feat_values = calculate_backbone_torsions(
-                msys_model, cms_model, trj, chain_id, res_nums,
-                chain_id_in_name=chain_id_in_name,
-                start_frame=start_frame, end_frame=end_frame, step=step
-            )
-        elif feature_type == 'sc-torsion':
-            time, feat_names, feat_values = calculate_sidechain_torsions(
-                msys_model, cms_model, trj, chain_id, res_nums,
-                chain_id_in_name=chain_id_in_name,
-                start_frame=start_frame, end_frame=end_frame, step=step
-            )       
-        # ... and write them to the CSV file
         feature_files.append(out_file)
-        write_features_to_csv(out_file, feat_values, feat_names, time)
-        print('Wrote %ss from %s to %s.\n'%(feature_type, trj_file, out_file) )
 
     return feature_files
 
