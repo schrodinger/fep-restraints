@@ -171,7 +171,8 @@ def get_an_aid(cms_model, asl_string, none_for_zero=False):
         return(aid_list[0])
 
 
-def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
+def calculate_ca_distances(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False, 
+                           start_frame=0, end_frame=None, step=1):
     """
     Calculates distances between pairs of C-alpha atoms from a trajectory.
     
@@ -261,7 +262,8 @@ bb_torsion_ptypes['OMEGA'] = ["CA", "C", "N", "CA"]
 bb_torsion_relres['OMEGA'] = [0, 0, 1, 1]
 
 
-def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False, start_frame=0, end_frame=None, step=1):
+def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_numbers, residue_names=None, chain_id_in_name=False, 
+                                start_frame=0, end_frame=None, step=1, phi_psi_only=False):
     """
     Calculates protein backbone torsions from a trajectory.
     
@@ -287,6 +289,8 @@ def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_nu
             The ending frame index. Default is None, which means the last frame.
         step : int, optional
             The step size between frames. Default is 1.
+        phi_psi_only : bool, optional
+            If True, only calculate phi and psi angles. Default is False.
 
     Returns
     -------
@@ -324,7 +328,11 @@ def calculate_backbone_torsions(msys_model, cms_model, tr, chain_ids, residue_nu
         chain, rnum, rname  = residues[r]['chain'], residues[r]['number'], residues[r]['name']
         # There are multiple possible sidechain torsions, try them all!
         # Loop over each of the possible types (chi1-5)
-        for torsion_type in bb_torsion_ptypes.keys():
+        if phi_psi_only:
+            torsion_types = ['PHI', 'PSI']
+        else:
+            torsion_types = bb_torsion_ptypes.keys()
+        for torsion_type in torsion_types:
             # Within each type, get the ptypes (atom names) and relative residue numbers
             atom_ptypes = bb_torsion_ptypes[torsion_type]
             atom_relres = bb_torsion_relres[torsion_type]

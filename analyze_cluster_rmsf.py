@@ -14,7 +14,10 @@ from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, pl
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
 
 
-def calculate_features(simulations, selections, args, feature_type='ca-distance', chain_id_in_name=False, start_frame=0, end_frame=None, step=1, reuse_features=False):
+def calculate_features(simulations, selections, args, 
+                       feature_type='ca-distance', chain_id_in_name=False, 
+                       start_frame=0, end_frame=None, step=1, 
+                       reuse_features=False, phi_psi_only=False):
     """
     Calculate features for each simulation in the given dataset.
 
@@ -36,6 +39,10 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
         The ending frame for feature calculation. Default is None.
     step : int, optional
         The step size for feature calculation. Default is 1.
+    reuse_features : bool, optional
+        Whether to reuse pre-calculated features if available. Default is False.
+    phi_psi_only : bool, optional
+        Whether to calculate only phi and psi angles. Default is False.
 
     Returns:
     -------
@@ -80,7 +87,7 @@ def calculate_features(simulations, selections, args, feature_type='ca-distance'
             elif feature_type == 'bb-torsion':
                 time, feat_names, feat_values = calculate_backbone_torsions(
                     msys_model, cms_model, trj, chain_id, res_nums,
-                    chain_id_in_name=chain_id_in_name,
+                    chain_id_in_name=chain_id_in_name, phi_psi_only=phi_psi_only,
                     start_frame=start_frame, end_frame=end_frame, step=step
                 )
             elif feature_type == 'sc-torsion':
@@ -162,6 +169,7 @@ if __name__ == "__main__":
     parser.add_argument('--feature-types', nargs='+', dest='feature_types', type=str, default=['ca-distance','bb-torsion','sc-torsion'], help='Types of features to calculate')
     parser.add_argument('--pca-feature-type', dest='pca_feature_type', type=str, default='ca-distance', help='Type of features to use for PCA')
     parser.add_argument('--reuse-features', dest='reuse_features', action='store_true', default=False, help='Reuse pre-calculated features if available')
+    parser.add_argument('--phi-psi-only', dest='phi_psi_only', action='store_true', default=False, help='Calculate only phi and psi angles (not omega) in the backbone')
     args = parser.parse_args()
 
     assert args.step > 0, 'Step size must be a positive integer.'
@@ -213,7 +221,8 @@ if __name__ == "__main__":
         simulations[feature_file_key[feature_type]] = calculate_features(
             simulations, selections, args, feature_type=feature_type,
             chain_id_in_name=args.chain_id_in_name, reuse_features=args.reuse_features,
-            start_frame=args.start_frame, end_frame=args.end_frame, step=args.step
+            start_frame=args.start_frame, end_frame=args.end_frame, step=args.step,
+            phi_psi_only=args.phi_psi_only
         )
 
  
