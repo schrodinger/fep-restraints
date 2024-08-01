@@ -193,6 +193,82 @@ def pc_cluster_plot(data_pca, cl_files_k, centers, out_pca_cl, index1=0, index2=
     plt.close(fig)
 
 
+def calculate_residue_contributions(csv, feature_type):
+    """
+    Calculate the maximum contribution of each residue to each principal component.
+    
+    Parameters
+    ----------
+    csv : str
+        The path to the CSV file containing the features.
+    feature_type : str
+        The type of features to consider. Possible values are 'ca-distance', 'bb-torsion', or 'sc-torsion'.
+    
+    Returns
+    -------
+    residue_contributions : pandas.DataFrame
+        A DataFrame containing the maximum contribution of each residue to each principal component.
+        The 'Residue' column contains the unique residue numbers, and each principal component is represented by a separate column.
+    """
+    
+    # Load the features
+    df = pd.read_csv(csv)
+    features = df['Feature']
+    pc_keys = [key for key in df.keys() if key.startswith('PC')]
+    
+    # Construct the data frame for output
+    residue_contributions = pd.DataFrame()
+    if feature_type == 'ca-distance':
+        pair = np.array([n.split('-') for n in features], dtype=int)
+        df['Residue 1'] = pair[:,0]
+        df['Residue 2'] = pair[:,1]
+        unique_residue_numbers = np.unique(pair.flatten())
+        residue_contributions['Residue'] = unique_residue_numbers
+        # Calculate the maximum contribution of all the features in each residue
+        for i, pc in enumerate(pc_keys):
+            residue_contributions_pc = np.zeros(len(unique_residue_numbers))
+            for j, num in enumerate(unique_residue_numbers):
+                df_res1 = df[df['Residue 1']==num]
+                df_res2 = df[df['Residue 2']==num]
+                df_res = df_res2.append(df_res1)
+                residue_contributions_pc[j] = np.max(np.abs(df_res[pc]))
+            residue_contributions[pc] = residue_contributions_pc     
+    elif feature_type == 'bb-torsion' or feature_type == 'sc-torsion':
+        residue_numbers = np.array([n.split('-')[0] for n in features], dtype=int)
+        df['Residue'] = residue_numbers
+        unique_residue_numbers = np.unique(residue_numbers)
+        residue_contributions['Residue'] = unique_residue_numbers
+        # Calculate the maximum contribution of all the features in each residue
+        for i, pc in enumerate(pc_keys):
+            residue_contributions_pc = np.zeros(len(unique_residue_numbers))
+            for j, num in enumerate(unique_residue_numbers):
+                df_res = df[df['Residue']==num]
+                residue_contributions_pc[j] = np.max(np.abs(df_res[pc]))
+            residue_contributions[pc] = residue_contributions_pc 
+            
+    return residue_contributions
+
+
+def plot_residue_contributions(residue_contributions, out_name):
+    """
+    Plot the residue contributions to principal components.
+    """
+    pc_keys = [key for key in residue_contributions.keys() if key.startswith('PC')]
+    residues = residue_contributions['Residue']
+    fig, ax = plt.subplots(len(pc_keys), 1, figsize=[6, 3 * len(pc_keys)], dpi=300)
+    for i, pc in enumerate(pc_keys):
+        ax[i].bar(residues, residue_contributions[pc])
+        ax[i].set_xlim(np.min(residues), np.max(residues))
+        ax[i].set_ylabel('max. abs. contrib. to PC%i' % (i + 1))
+        fig.tight_layout()
+    ax[-1].set_xlabel('residue number')
+    fig.tight_layout()
+    fig.savefig(out_name + '.pdf', dpi=300)
+    fig.savefig(out_name + '.png', dpi=300)
+    plt.close(fig)
+    return
+
+
 if __name__ == "__main__":
     """ 
     Perform k-means clustering in principal component space.

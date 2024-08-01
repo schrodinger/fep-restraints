@@ -10,7 +10,8 @@ from tasks.io_trajectory import write_frames, copy_topology, extract_frames_by_v
 from tasks.io_features import write_features_to_csv, read_features_from_csv_files, sort_features, \
     calculate_ca_distances, calculate_backbone_torsions, calculate_sidechain_torsions
 from tasks.comparison import plot_most_different_distributions, relative_entropy_analysis
-from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot
+from tasks.clustering_on_pca import kmeans_on_pca, scatterplot_pca_by_system, plot_pca_by_system, elbow_plot, pc_cluster_plot, \
+    calculate_residue_contributions, plot_residue_contributions
 from tasks.rmsf_from_trajectories import calculate_rmsf, write_coordinates, plot_cluster_rmsf
 
 
@@ -298,7 +299,11 @@ if __name__ == "__main__":
         data_pca, 1, 2, origin, simulations, out_pdf+'_pc2and3', showstart=args.showstart
     )
 
-    # Update the parameter string to reflect this
+    # Calculate and then plot the residue contributions to the principal components
+    res_contributions = calculate_residue_contributions(contributions_csv, args.pca_feature_type)
+    plot_residue_contributions(res_contributions, out_pdf+'_residue_contributions')
+
+    # Update the parameter string
     paramstr = 'n%02i_%s'%(args.n_components, paramstr)
 
 
