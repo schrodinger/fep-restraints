@@ -300,8 +300,10 @@ if __name__ == "__main__":
     )
 
     # Calculate and then plot the residue contributions to the principal components
-    res_contributions = calculate_residue_contributions(contributions_csv, args.pca_feature_type)
-    plot_residue_contributions(res_contributions, out_pdf+'_residue_contributions')
+     # Only works if chain ID is neglected
+    if not args.chain_id_in_name:
+        res_contributions = calculate_residue_contributions(contributions_csv, args.pca_feature_type)
+        plot_residue_contributions(res_contributions, out_pdf+'_residue_contributions')
 
     # Update the parameter string
     paramstr = 'n%02i_%s'%(args.n_components, paramstr)
