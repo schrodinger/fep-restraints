@@ -225,6 +225,8 @@ if __name__ == "__main__":
             start_frame=args.start_frame, end_frame=args.end_frame, step=args.step,
             phi_psi_only=args.phi_psi_only
         )
+    # Save the simulations and corresponding feature files to a CSV file
+    simulations.to_csv(os.path.join(args.output_dir, '1-features/simulations_and_feature_files.csv'), index=False)
 
  
     # * ------------------------------------------ * #
