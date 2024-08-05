@@ -283,6 +283,7 @@ if __name__ == "__main__":
     pca_csv = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}_transformed.csv")
     pca_output = pd.DataFrame(data_pca, columns=['PC%i'%(i+1) for i in range(args.n_components)])
     pca_output['Origin'] = origin
+    pca_output.to_csv(pca_csv, index=False)
 
     # Plot PCA results by origin system
     out_pdf = os.path.join(args.output_dir,f"3-pca/{args.pca_feature_type}s_pca_{paramstr}")
