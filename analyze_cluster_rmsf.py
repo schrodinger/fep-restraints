@@ -159,8 +159,6 @@ if __name__ == "__main__":
     parser.add_argument('-t', dest='threshold', type=float, default=None)
     parser.add_argument('--showstart', dest='showstart', action='store_true', default=False)
     parser.add_argument('--skip-comparison', dest='skip_comparison', action='store_true', default=False)
-    parser.add_argument('--sim-label-a', dest='sim_label_a', type=str, default='active')
-    parser.add_argument('--sim-label-b', dest='sim_label_b', type=str, default='inactive')
     parser.add_argument('--chain-id-in-name', dest='chain_id_in_name', action='store_true', default=False, help='Store the chain ID in the feature name. Note: For this to work, the chain naming has to be consistent across all input simulations!')
     parser.add_argument('--start-frame', dest='start_frame', type=int, default=0, help='Start frame for trajectory analysis')
     parser.add_argument('--end-frame', dest='end_frame', type=int, default=None, help='End frame for trajectory analysis')
@@ -233,15 +231,23 @@ if __name__ == "__main__":
     # *  Compare the features of the simulations.  * #
     # * ------------------------------------------ * #
 
-    if not args.skip_comparison:
+    # Pair up the labels of the simulations    
+    sim_labels = simulations['Start_Label'].unique()
+    sim_label_pairs = [(sim_labels[i], sim_labels[j]) for i in range(len(sim_labels)) for j in range(i+1, len(sim_labels))]
 
+    if not args.skip_comparison:
+        # iterate over all feature types and pairs of simulation labels
         for feature_type in args.feature_types:
-            print(f"\n* - Comparing the {feature_label[feature_type]} of the simulations. - *\n")
-            _ = compare_features(
-                simulations, args, feature_file_key[feature_type], feature_type=feature_type,
-                output_name=feature_type, out_column=feature_label[feature_type],
-                sim_label_a=args.sim_label_a, sim_label_b=args.sim_label_b
-            )
+            for sim_label_a, sim_label_b in sim_label_pairs:
+                print(f"\n* - Comparing the {feature_label[feature_type]} of the {sim_label_a} simulations to the {sim_label_b} simulations. - *\n")
+                _ = compare_features(
+                    simulations, args, feature_file_key[feature_type], feature_type=feature_type,
+                    output_name=f"{feature_type}_{sim_label_a}_vs_{sim_label_b}", 
+                    out_column=feature_label[feature_type],
+                    sim_label_a=sim_label_a, sim_label_b=sim_label_b
+                )
+    else:
+        print("\n* - Skipping the comparison of individual features. - *\n")
 
 
     # * ------------------------------ * #
