@@ -7,6 +7,7 @@ from sklearn.cluster import KMeans
 from scipy.stats import norm
 from torch import _sobol_engine_initialize_state_
 from .io_features import read_features_from_csv_files
+from .io_trajectory import write_values_to_temperature_factor 
 
 
 def kmeans_on_pca(data_pca, k, rs, origin, orig_id, output_base, input_files=None, write_pc=True, out_names=None):

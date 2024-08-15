@@ -27,7 +27,38 @@ def get_an_aid(cms_model, asl_string, none_for_zero=False):
         raise Exception("The number of chosen atoms is %d."%(len(aid_list)))
     else:
         return(aid_list[0])
-    
+
+
+def select_protein_residue(model, resnum, chain=None):
+    """
+    Selects a protein residue based on the residue number and optional chain.
+
+    Parameters
+    ----------
+    model : object
+        The molecular system model.
+    resnum : int
+        The residue number.
+    chain : str, optional
+        The chain identifier. Defaults to None.
+
+    Returns
+    -------
+    object
+        The selected residue object.
+
+    """
+    selstring = f"res. {resnum} AND at. CA"
+    if chain is not None:
+        selstring += f" AND chain. {chain}"
+    ca = model.select_atom(selstring)
+    if len(ca) == 0:
+        print(f"Warning: No CA atom found for residue number {resnum}.")
+        return None
+    elif len(ca) > 1:
+        print(f"Warning: More than one CA atom found for residue number {resnum}. Using the first one.")
+    return model.atom[ca[0]].residue 
+ 
 
 def load_trajectory(cms_file, xtc_file, trj_dir):
     """
@@ -104,6 +135,45 @@ def extract_subset_model(cms_model, aid):
         ct.ffio.deleteVirtuals(virtual_indices)
     cms_model_new.synchronize_fsys_ct()
     return cms_model_new
+
+
+def write_values_to_temperature_factor(cms_in, values, resnums, cms_out=None, chains=None, default_value=0.0):
+    """
+    Write values to the temperature factor of the residues in a structure, optionally write them to a CMS file.
+
+    Parameters
+    ----------
+    cms_in : str
+        The input CMS file. 
+    values : list
+        The values to be written.
+    resnums : list
+        The residue numbers.
+    cms_out : str, optional
+        The output CMS file. Defaults to None.
+    chains : list, optional
+        The chain identifiers. Defaults to None.
+    default_value : float, optional
+        The default value for the temperature factor. Defaults to 0.0.
+
+    Returns
+    -------
+    object
+        The structure object
+
+    """
+    st = structure.StructureReader.read(cms_in)
+    if chains is None:
+        chains = ['A'] * len(resnums)
+    for res in st.residue:
+        res.temperature_factor = default_value
+    for v, r, c in zip(values, resnums, chains):
+        res = st.findResidue(f"{c}:{r}")
+        if res is not None:
+            res.temperature_factor = v
+    if cms_out:
+        st.write(cms_out)
+    return st
 
 
 def write_frames(cms_model, trajectory, frame_numbers, out_dir, frame_names=None):
