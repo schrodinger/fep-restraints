@@ -9,6 +9,8 @@ from schrodinger.application.scisol.graphdb_interface import jws, driver
 from schrodinger.application.desmond.multisim import parse
 from schrodinger.application.desmond.packages import topo
 
+import base64
+
 
 def construct_atom_asl(st: Structure, atom: _StructureAtom, asl: str) -> str:
     '''Returns an ASL that (should) uniquely identify the provided atom.
