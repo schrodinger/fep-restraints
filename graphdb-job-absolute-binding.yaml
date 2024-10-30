@@ -1,0 +1,8 @@
+jobname: graphdb-job-absolute-binding 
+project-name: desmond-workflow-dev 
+schrodinger-path : OB/2024-3/release
+fep-type: absolute_binding
+fep-sim-time: 5000
+md-sim-time: 1000
+ffbuilder: True
+

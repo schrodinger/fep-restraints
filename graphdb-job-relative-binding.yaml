@@ -1,0 +1,12 @@
+jobname: graphdb-job-relative-binding 
+project-name: desmond-workflow-dev 
+schrodinger-path : OB/2024-3/release
+fep-type: small_molecule
+simulation_time: 5000
+vacuum: False
+ffbuilder: True
+
+lambda-windows: 24
+charged-lambda-windows: 24
+core-hopping-lambda-windows: 24
+
