@@ -18,7 +18,7 @@ git clone https://github.com/schrodinger/fep-restraints.git
 
 This repo contains code to analyze plain MD simulation and set up restraints based on their analysis. 
 If you already know the reference structure and parameters of the restraints, skip the next two sections.
-You can add the restraints to GraphDB jobs for small molecule FEP or absolute binding FEP. 
+You can [add the restraints to GraphDB jobs](https://github.com/schrodinger/fep-restraints/blob/main/README.md#adding-restraints-to-a-graphdb-job) for small molecule FEP or absolute binding FEP. 
 If you would like to add restraints to an ABFEP run by locally altering msj files, check out [Adding Restraints to AB-FEP](https://github.com/schrodinger/fep-restraints?tab=readme-ov-file#adding-restraints-to-ab-fep).
 
 
@@ -85,7 +85,7 @@ $SCHRODINGER/run ~/dev/fep-restraints/cms2fep.py frame.cms -o fep_pv.mae -ligand
 ```
 Then you can model the ligands into this structure or align the experimental structure in which you have already modeled them and copy them over.
 
-### Adding Restraints to AB-FEP
+### Adding Restraints to AB-FEP (Locally)
 
 This section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints in the field "sigma" of the corresponding atom. 
 
