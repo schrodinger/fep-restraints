@@ -44,17 +44,11 @@ def parse_cmdline(argv):
             action='store_false',
             help="Do not align the restraints structure to the reference.")
     parser.add_argument("-w", "--write_restraints_structure",
-            default=False,
-            action='store_true',
-            help="Write the (aligned if reference provided) structure with the restraints to an MAE file.")
-    parser.add_argument("--out",
             default=None,
-            help="MSJ output name")
+            type=str,
+            help="Write the (aligned if requested) structure with the restraints to this MAE file.")
     args = parser.parse_args(argv)
 
-    if args.out is None:
-        base, ext = os.path.splitext(args.msj)
-        args.out = f"{base}_with_restraints{ext}"
     if args.reference is None:
         args.reference = args.pv_or_fmp_file
     return args
@@ -83,16 +77,14 @@ def main():
     check_distances(st, st_fixed, at, at_fixed, sf=args.sf)
 
     # Write the (aligned or non-aligned) restraints structure
-    if args.write_restraints_structure:
-        base, ext = os.path.splitext(args.out)
-        st_out = f"{base}_restraints.mae"
-        with StructureWriter(st_out) as writer:
+    if args.write_restraints_structure is not None:
+        with StructureWriter(args.write_restraints_structure) as writer:
             writer.append(st)
 
     # Create restraints from the structure
     restraints = structure_to_restraints(st, args.asl, args.fc, args.bw, args.sf)
     # Submit the job to GraphDB with the poses from a FMP/PV file and the usual parameters in a yaml file
-    submit_graphdb_job_with_restraints(args.fmp_or_pv_file, args.yaml_file, restraints)
+    submit_graphdb_job_with_restraints(args.pv_or_fmp_file, args.yaml_file, restraints)
 
 if __name__ == "__main__":
     main()
