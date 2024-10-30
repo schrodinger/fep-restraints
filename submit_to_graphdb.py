@@ -47,7 +47,7 @@ def parse_cmdline(argv):
             default=False,
             action='store_true',
             help="Write the (aligned if reference provided) structure with the restraints to an MAE file.")
-    parser.add_argument("out",
+    parser.add_argument("--out",
             default=None,
             help="MSJ output name")
     args = parser.parse_args(argv)
