@@ -1,4 +1,4 @@
-
+import numpy as np
 from collections import defaultdict
 
 from schrodinger.structure import Structure, _StructureAtom
@@ -70,6 +70,29 @@ def read_posre_fbhw(sigma_structure_file: str) -> dict:
                 }
             restraints['posre_fbhw'].append(atom_restraint)
     return restraints
+
+def check_distances(st, st_fixed, at, at_fixed, sf=1.0):
+    """
+    Check the distances between the restraints and the atoms in the reference structure.
+    """
+    assert len(at) == len(at_fixed)
+    counter = 0
+    output_string = 'Residue:  dist., sigma, diff.\n'
+    for i,j in zip(at, at_fixed):
+        atom_i = st.atom[i]
+        atom_j = st_fixed.atom[j]
+        xyz_i = np.array(atom_i.xyz)
+        xyz_j = np.array(atom_j.xyz)
+        sigma = sf*atom_i.property['r_desmond_sigma']
+        d = np.sqrt(np.sum(xyz_j - xyz_i)**2)
+        if d > sigma:
+            output_string += f'{atom_i.pdbres}{atom_i.resnum}: {d:.3f}, {sigma:.3f}, {d-sigma:.3f}\n'
+            counter += 1
+    if counter == 0:
+        print("All restraint centers are within the sigma range of the starting coordinates.")
+    else:
+        print(f"{counter} restraint centers are outside the sigma range of the starting coordinates.")
+        print(output_string)
 
 def set_default(sea_map, key, default):
     '''Analagous to dict.setdefault.'''
