@@ -1,6 +1,6 @@
 # AB-FEP with Restraints
 
-Tools to add restraints to FEP+ runs (currently only AB-FEP). Includes a workflow to determine reference structures and restraint widths from plain MD simulations.
+Tools to add restraints to FEP+ runs. Includes a workflow to determine reference structures and restraint widths from plain MD simulations.
 
 
 ## Installation
@@ -17,7 +17,9 @@ git clone https://github.com/schrodinger/fep-restraints.git
 ## Usage
 
 This repo contains code to analyze plain MD simulation and set up restraints based on their analysis. 
-If you already know the reference structure and parameters of the restraints, skip the next two sections and go straight to "Adding Restraints to AB-FEP"
+If you already know the reference structure and parameters of the restraints, skip the next two sections.
+You can add the restraints to GraphDB jobs for small molecule FEP or absolute binding FEP. 
+If you would like to add restraints to an ABFEP run by locally altering msj files, check out [Adding Restraints to AB-FEP](https://github.com/schrodinger/fep-restraints?tab=readme-ov-file#adding-restraints-to-ab-fep).
 
 
 ### Analysis of Plain MD Simulations
@@ -83,7 +85,6 @@ $SCHRODINGER/run ~/dev/fep-restraints/cms2fep.py frame.cms -o fep_pv.mae -ligand
 ```
 Then you can model the ligands into this structure or align the experimental structure in which you have already modeled them and copy them over.
 
-
 ### Adding Restraints to AB-FEP
 
 This section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints in the field "sigma" of the corresponding atom. 
@@ -114,6 +115,8 @@ The width of the flat-bottom harmonic restraints can be set via `--bw` to a sing
 
 Then `cd` into the job directory and submit the job by running the bash script. 
 You can also make manual adjustments there.
+
+### Adding Restraints to a GraphDB Job
 
 
 ## Support and Contributing
