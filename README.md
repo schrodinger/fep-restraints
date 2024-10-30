@@ -18,9 +18,8 @@ git clone https://github.com/schrodinger/fep-restraints.git
 
 This repo contains code to analyze plain MD simulation and set up restraints based on their analysis. 
 If you already know the reference structure and parameters of the restraints, skip the next two sections.
-You can [add the restraints to GraphDB jobs](https://github.com/schrodinger/fep-restraints/blob/main/README.md#adding-restraints-to-a-graphdb-job) for small molecule FEP or absolute binding FEP. 
-If you would like to add restraints to an ABFEP run by locally altering msj files, check out [Adding Restraints to AB-FEP](https://github.com/schrodinger/fep-restraints?tab=readme-ov-file#adding-restraints-to-ab-fep).
-
+For adding restraints to an ABFEP run by locally altering msj files, check out [Adding Restraints to AB-FEP](https://github.com/schrodinger/fep-restraints?tab=readme-ov-file#adding-restraints-to-ab-fep-locally)). 
+You can also [add the restraints to GraphDB jobs](https://github.com/schrodinger/fep-restraints/blob/main/README.md#adding-restraints-to-a-graphdb-job) for small molecule FEP or absolute binding FEP. 
 
 ### Analysis of Plain MD Simulations
 
@@ -87,7 +86,7 @@ Then you can model the ligands into this structure or align the experimental str
 
 ### Adding Restraints to AB-FEP (Locally)
 
-This section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints in the field "sigma" of the corresponding atom. 
+This section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints is stored in the field `r_desmond_sigma` of the corresponding atom. 
 
 From the file with your modeled input poses, you can generate a job directory for a restrained AB-FEP job, for example:
 ```
@@ -118,6 +117,30 @@ You can also make manual adjustments there.
 
 ### Adding Restraints to a GraphDB Job
 
+This section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints is stored in the field `r_desmond_sigma` of the corresponding atom.
+
+From the file with your modeled input poses and the restraints file, you can submit a GraphDB job using a parameter input file in yaml format and the following command:
+```
+$SCHRODINGER/run ~/dev/fep-restraints/submit_to_graphdb.py \
+	input-poses_pv.maegz \
+	graphdb-job-absolute-binding.yaml \
+	pca-kmeans_n04_s42_k05_cluster00_rmsf_avg.cms \
+	--asl 'protein and chain A and at.ptype CA and ( res. 54 - 75 or res. 86 - 148 or res. 165 - 240 or res. 254 - 282 or res. 298 - 320 )' \
+	--sf 1.0 \
+	--fc 10.0
+	
+```
+where the option `--sf` determines the scaling factor for the restraint width relative to sigma and `--fc` the force constant of the restraints. 
+
+The command above uses an example yaml file for absolute binding FEP. We also provide an example for small molecule (Relative binding) FEP in `graphdb-job-absolute-binding.yaml`. You can see the options to use in the yaml files by running
+```
+$SCHRODINGER/jws submit -fep-type absolute_binding -h
+```
+for absolute binding FEP or
+```
+$SCHRODINGER/jws submit -fep-type small_molecule -h
+```
+for relative binding FEP.
 
 ## Support and Contributing
 
