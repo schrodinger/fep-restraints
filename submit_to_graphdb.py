@@ -1,12 +1,14 @@
 import argparse
 import os
 import sys
+import numpy as np
 
 from schrodinger.structure import StructureReader, StructureWriter
 from schrodinger.structutils import analyze, rmsd
 from schrodinger.application.desmond import cmj
 
-from tasks.restraints import structure_to_restraints, submit_graphdb_job_with_restraints
+from tasks.restraints import structure_to_restraints, submit_graphdb_job_with_restraints, check_distances
+
 
 def parse_cmdline(argv):
     parser = argparse.ArgumentParser()
@@ -35,7 +37,12 @@ def parse_cmdline(argv):
     parser.add_argument("-r", "--reference",
             default=None,
             type=str,
-            help="Reference structure to align the restraints structure to.")
+            help="Reference structure to align the restraints structure to. If none is provided, the PV or FMP file will be used.")
+    parser.add_argument("-na", "--no_align",
+            dest='align',
+            default=True,
+            action='store_false',
+            help="Do not align the restraints structure to the reference.")
     parser.add_argument("-w", "--write_restraints_structure",
             default=False,
             action='store_true',
@@ -48,21 +55,34 @@ def parse_cmdline(argv):
     if args.out is None:
         base, ext = os.path.splitext(args.msj)
         args.out = f"{base}_with_restraints{ext}"
+    if args.reference is None:
+        args.reference = args.pv_or_fmp_file
     return args
+
 
 def main():
 
     args = parse_cmdline(sys.argv[1:])
 
-    # Load the structure with the restraints
+    # Load the structure with the restraints and the structure to align them to
     st = StructureReader.read(args.restraint_file)
     at = analyze.evaluate_asl(st, args.asl)
-    # Align the structure to the reference if given
-    if args.reference is not None:
-        st_fixed = StructureReader.read(args.reference)
-        at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
-        rmsd.superimpose(st_fixed, at_fixed, st, at)
-    # Write the (aligned) restraints structure
+    st_fixed = StructureReader.read(args.reference)
+    at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
+
+    # Align the restraints (if requested) and calculate RMSD
+    if args.align:
+        print(f"Aligning the restraints structure to the starting structure.")
+        restraints_rmsd = rmsd.superimpose(st_fixed, at_fixed, st, at)
+    else:
+        print("Not aligning the restraints structure to the starting structure.")
+        restraints_rmsd = rmsd.calculate_in_place_rmsd(st_fixed, at_fixed, st, at)
+    print(f"The RMSD between the starting structure and the restraint centers is {restraints_rmsd:.2f} A.")
+
+    # Check distances between restraint centers and starting structure
+    check_distances(st, st_fixed, at, at_fixed, sf=args.sf)
+
+    # Write the (aligned or non-aligned) restraints structure
     if args.write_restraints_structure:
         base, ext = os.path.splitext(args.out)
         st_out = f"{base}_restraints.mae"
