@@ -91,7 +91,7 @@ def main():
     submit_graphdb_job_with_restraints(
         args.pv_or_fmp_file, args.yaml_file, restraints,
         overwrite_restraints=args.overwrite_restraints
-)
+        )
 
 if __name__ == "__main__":
     main()

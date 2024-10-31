@@ -13,8 +13,23 @@ import base64
 
 
 def construct_atom_asl(st: Structure, atom: _StructureAtom, asl: str) -> str:
-    '''Returns an ASL that (should) uniquely identify the provided atom.
-    '''
+    """
+        Returns an ASL that (should) uniquely identify the provided atom.
+
+        Parameters:
+        ----------
+        st : schrodinger.structure.Structure
+            The structure object.
+        atom : schrodinger.structure._StructureAtom
+            The atom object.
+        asl : str
+            The original ASL to match the atoms.
+
+        Returns:
+        -------
+        str
+            The ASL that uniquely identifies the atom.
+    """
     # First try a simplified ASL
     simple_asl = f"chain.name {atom.chain.strip()} AND res.ptype {atom.pdbres.strip()} AND res.num {atom.resnum} AND atom.ptype {atom.pdbname.strip()}"
     aids = analyze.evaluate_asl(st, simple_asl)
@@ -28,11 +43,32 @@ def construct_atom_asl(st: Structure, atom: _StructureAtom, asl: str) -> str:
     raise UserWarning("Unable to find an appropriate ASL to uniquely identify an atom")
 
 def structure_to_restraints(st: Structure, asl: str, fc=50.0, bw=None, sf=1.0) -> dict:
-    '''Take a structure and create position restraint (posre) terms from it.
+    """
+        Take a structure and create position restraint (posre) terms from it.
+        If the matched atom has a r_desmond_sigma property it will be assigned to posre_fbhw, otherwise posre_harm.
+        The coordinates of the atom are taken as the center of the restraint.
 
-    If the matched atom has a r_desmond_sigma property it will be assigned to posre_fbhw, otherwise posre_harm.
-    The coordinates of the atom are taken as the center of the restraint.
-    '''
+        Parameters:
+        ----------
+        st : schrodinger.structure.Structure
+            The structure object.
+        asl : str
+            The ASL to match the atoms.
+        fc : float, optional
+            The force constant of the restraints. Default is 50.0.
+        bw : float, optional
+            The bandwidth of the restraints. If None, the sigma value of the atoms will be used. Default is None.
+        sf : float, optional
+            A scaling factor for the sigma values. Default is 1.0.
+
+        Returns:
+        -------
+        dict
+            A dictionary containing the restraints to be added to the MSJs. The keys are the type of 
+            restraints (e.g. 'posre_fbhw', 'posre_harm') and the values are lists of dictionaries 
+            containing the restraint information. Each dictionary contains the following keys: 'atoms', 
+            'ref', 'force_constants', and 'sigma' (optional
+    """
     restraints = defaultdict(list)
     aids = analyze.evaluate_asl(st, asl)
     print(f"ASL '{asl}' matched {len(aids)} atoms.")
@@ -56,7 +92,22 @@ def structure_to_restraints(st: Structure, asl: str, fc=50.0, bw=None, sf=1.0) -
     return restraints
 
 def read_posre_fbhw(sigma_structure_file: str) -> dict:
-    '''Read the sigma values from a Desmond structure file and create restraints.'''
+    """
+        Read the sigma values from a Desmond structure file and create restraints.
+
+        Parameters:
+        ----------
+        sigma_structure_file : str
+            The path to the Desmond structure file containing the sigma values.
+
+        Returns:
+        -------
+        dict
+            A dictionary containing the restraints to be added to the MSJs. The keys are the type of 
+            restraints (e.g. 'posre_fbhw', 'posre_harm') and the values are lists of dictionaries 
+            containing the restraint information. Each dictionary contains the following keys: 'atoms', 
+            'ref', 'force_constants', and 'sigma' (optional
+    """
     _, sigma_cms_model = topo.read_cms(sigma_structure_file)
     restraints = {'posre_fbhw':[]}
     for a, atom in enumerate(sigma_cms_model.atom):
@@ -73,7 +124,24 @@ def read_posre_fbhw(sigma_structure_file: str) -> dict:
 
 def check_distances(st, st_fixed, at, at_fixed, sf=1.0):
     """
-    Check the distances between the restraints and the atoms in the reference structure.
+        Check the distances between the restraints and the atoms in the reference structure.
+
+        Parameters:
+        ----------
+        st : schrodinger.structure.Structure
+            The structure object of the starting coordinates.
+        st_fixed : schrodinger.structure.Structure
+            The structure object of the reference coordinates.
+        at : list
+            A list of atom indices in the starting coordinates.
+        at_fixed : list
+            A list of atom indices in the reference coordinates.
+        sf : float, optional
+            A scaling factor for the sigma values. Default is 1.0.
+
+        Returns:
+        -------
+        None
     """
     assert len(at) == len(at_fixed)
     counter = 0
@@ -95,16 +163,35 @@ def check_distances(st, st_fixed, at, at_fixed, sf=1.0):
         print(output_string)
 
 def set_default(sea_map, key, default):
-    '''Analagous to dict.setdefault.'''
+    """
+        Analagous to dict.setdefault.
+    """
     sea_map[key] = sea_map[key] if key in sea_map else default
     return sea_map[key]
 
 def add_restraints_to_stgs(stgs: sea.Map, restraints: dict, overwrite = False):
-    '''Add the restraints to the first assign_forcefield stage.
+    """
+        Add the restraints to the first assign_forcefield stage.
+        We use the assign_forcefield stage so the terms will not be ignored
+        or altered by `restraints.existing` parameters in later stages.
 
-    We use the assign_forcefield stage so the terms will not be ignored
-    or altered by `restraints.existing` parameters in later stages.
-    '''
+        Parameters:
+        ----------
+        stgs : sea.Map
+            The stages of the MSJ as a sea.Map object.
+        restraints : dict
+            A dictionary containing the restraints to be added to the MSJs. The keys should be 
+            the type of restraints (e.g. 'posre_fbhw', 'posre_harm') and the values should be 
+            lists of dictionaries containing the restraint information. Each dictionary should 
+            contain the following keys: 'atoms', 'ref', 'force_constants', and 'sigma' (optional).
+        overwrite : bool, optional
+            Whether to overwrite existing restraints in the force field assignment stage of the MSJs.
+            Default is False.   
+
+        Returns:
+        -------
+        None
+    """
     for stg in stgs['stage']:
         # Only add once
         if stg.__NAME__ == "assign_forcefield":
@@ -130,7 +217,26 @@ def add_restraints_to_stgs(stgs: sea.Map, restraints: dict, overwrite = False):
             break
 
 def add_restraints_to_graph_msjs(graph_id, restraints, overwrite=False):
-    '''Add restraints to the MSJs of a graph.'''
+    """
+        Add restraints to the forcefield stage of the MSJs in a GraphDB graph.
+
+        Parameters:
+        ----------
+        graph_id : str
+            The ID of the graph in GraphDB.
+        restraints : dict
+            A dictionary containing the restraints to be added to the MSJs. The keys should be 
+            the type of restraints (e.g. 'posre_fbhw', 'posre_harm') and the values should be 
+            lists of dictionaries containing the restraint information. Each dictionary should 
+            contain the following keys: 'atoms', 'ref', 'force_constants', and 'sigma' (optional).
+        overwrite : bool, optional
+            Whether to overwrite existing restraints in the force field assignment stage of the MSJs.
+            Default is False.
+
+        Returns:
+        -------
+        None
+    """
     graph = driver.Graph.load(graph_id)
     for edge in graph.edges():
         edge_update = {}
@@ -147,7 +253,27 @@ def add_restraints_to_graph_msjs(graph_id, restraints, overwrite=False):
         edge.update(edge_update)
 
 def add_restraints_to_msj_string(msj_content, restraints, overwrite=False) -> str:
-    '''Add restraints to the forcefield stage of a Desmond MSJ string.'''
+    """
+        Add restraints to the forcefield stage of a Desmond MSJ string. 
+
+        Parameters:
+        ----------
+        msj_content : str
+            The content of the MSJ as a string.
+        restraints : dict
+            A dictionary containing the restraints to be added to the MSJs. The keys should be 
+            the type of restraints (e.g. 'posre_fbhw', 'posre_harm') and the values should be 
+            lists of dictionaries containing the restraint information. Each dictionary should 
+            contain the following keys: 'atoms', 'ref', 'force_constants', and 'sigma' (optional).
+        overwrite : bool, optional
+            Whether to overwrite existing restraints in the force field assignment stage of the MSJs.
+            Default is False.
+
+        Returns:
+        -------
+        str
+            The updated MSJ content as a string.
+    """
     stgs = cmj.msj2sea('', msj_content)
     add_restraints_to_stgs(stgs, restraints, overwrite=overwrite)
     stgs.add_tag("setbyuser")
@@ -159,7 +285,7 @@ def submit_graphdb_job_with_restraints(fmp_or_pv_file, yaml_file, restraints, ov
     """
         This function submits a job to GraphDB using the provided FMP or PV file and YAML file. 
         It adds the specified restraints to the first `assign_forcefield` stage of the MSJs 
-        (Molecular Simulation Jobs) and optionally overwrites existing restraints.
+        (Molecular Simulation Jobs) and optionally overwrites/replaces existing restraints.
 
         Parameters:
         ----------
@@ -175,6 +301,10 @@ def submit_graphdb_job_with_restraints(fmp_or_pv_file, yaml_file, restraints, ov
         overwrite_restraints : bool, optional
             Whether to overwrite existing restraints in the force field assignment stage of the MSJs.
             Default is False.
+
+        Returns:
+        -------
+        None
     """
     url = 'https://graphdb.schrodinger.com' # Make sure to use this "private"/advanced URL
     jws.login(web_services_addr=url)
