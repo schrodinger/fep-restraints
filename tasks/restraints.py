@@ -129,8 +129,6 @@ def add_restraints_to_graph_msjs(graph_id, restraints):
     '''Add restraints to the MSJs of a graph.'''
     graph = driver.Graph.load(graph_id)
     for edge in graph.edges():
-        if edge.subjob not in ["fep", ""]:
-            continue
         edge_update = {}
         for leg in edge.get_legs():
             msj = add_restraints_to_msj_string(leg.msj, restraints)
