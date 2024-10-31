@@ -99,7 +99,7 @@ def set_default(sea_map, key, default):
     sea_map[key] = sea_map[key] if key in sea_map else default
     return sea_map[key]
 
-def add_restraints_to_stgs(stgs: sea.Map, restraints: dict):
+def add_restraints_to_stgs(stgs: sea.Map, restraints: dict, overwrite = False):
     '''Add the restraints to the first assign_forcefield stage.
 
     We use the assign_forcefield stage so the terms will not be ignored
@@ -109,7 +109,11 @@ def add_restraints_to_stgs(stgs: sea.Map, restraints: dict):
         # Only add once
         if stg.__NAME__ == "assign_forcefield":
             restraint_map = set_default(stg, 'restraints', sea.Map())
-            new_restraints = set_default(restraint_map, 'new', sea.List())
+            if overwrite:
+                old_restraints = stg.restraints.existing = sea.Atom('ignore')
+                new_restraints = stg.restraints.new = sea.List()
+            else:
+                new_restraints = set_default(restraint_map, 'new', sea.List())
             for key, key_restraints in restraints.items():
                 for restraint in key_restraints:
                     sea_restraint = sea.Map()
@@ -125,13 +129,15 @@ def add_restraints_to_stgs(stgs: sea.Map, restraints: dict):
                     new_restraints.append(sea_restraint)
             break
 
-def add_restraints_to_graph_msjs(graph_id, restraints):
+def add_restraints_to_graph_msjs(graph_id, restraints, overwrite=False):
     '''Add restraints to the MSJs of a graph.'''
     graph = driver.Graph.load(graph_id)
     for edge in graph.edges():
         edge_update = {}
         for leg in edge.get_legs():
-            msj = add_restraints_to_msj_string(leg.msj, restraints)
+            if leg.leg_type != 'complex':
+                continue
+            msj = add_restraints_to_msj_string(leg.msj, restraints, overwrite=overwrite)
             edge_update.update({
                 leg.leg_type: {
                     'msj': driver.to_string(
@@ -140,18 +146,38 @@ def add_restraints_to_graph_msjs(graph_id, restraints):
             })
         edge.update(edge_update)
 
-def add_restraints_to_msj_string(msj_content, restraints) -> str:
+def add_restraints_to_msj_string(msj_content, restraints, overwrite=False) -> str:
     '''Add restraints to the forcefield stage of a Desmond MSJ string.'''
     stgs = cmj.msj2sea('', msj_content)
-    add_restraints_to_stgs(stgs, restraints)
+    add_restraints_to_stgs(stgs, restraints, overwrite=overwrite)
     stgs.add_tag("setbyuser")
     msj_content = cmj.write_sea2msj(stgs.stage, to_str=True)
     msj_parser = parse(string=msj_content)
     return str(msj_parser)
 
-def submit_graphdb_job_with_restraints(fmp_or_pv_file, yaml_file, restraints):
+def submit_graphdb_job_with_restraints(fmp_or_pv_file, yaml_file, restraints, overwrite_restraints=True):
+    """
+        This function submits a job to GraphDB using the provided FMP or PV file and YAML file. 
+        It adds the specified restraints to the first `assign_forcefield` stage of the MSJs 
+        (Molecular Simulation Jobs) and optionally overwrites existing restraints.
+
+        Parameters:
+        ----------
+        fmp_or_pv_file : str
+            The path to the FMP or PV file that will be used to generate the graph.
+        yaml_file : str
+            The path to the YAML file that will be used to generate the graph.
+        restraints : dict
+            A dictionary containing the restraints to be added to the MSJs. The keys should be 
+            the type of restraints (e.g. 'posre_fbhw', 'posre_harm') and the values should be 
+            lists of dictionaries containing the restraint information. Each dictionary should 
+            contain the following keys: 'atoms', 'ref', 'force_constants', and 'sigma' (optional).
+        overwrite_restraints : bool, optional
+            Whether to overwrite existing restraints in the force field assignment stage of the MSJs.
+            Default is True.
+    """
     url = 'https://graphdb.schrodinger.com' # Make sure to use this "private"/advanced URL
     jws.login(web_services_addr=url)
     gid = jws.submit(fmp_or_pv_file, yaml_file, graph_generation_only=True)
-    add_restraints_to_graph_msjs(gid, restraints)
+    add_restraints_to_graph_msjs(gid, restraints, overwrite=overwrite_restraints)
     jws.requeue(gid)

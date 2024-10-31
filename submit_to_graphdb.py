@@ -84,7 +84,7 @@ def main():
     # Create restraints from the structure
     restraints = structure_to_restraints(st, args.asl, args.fc, args.bw, args.sf)
     # Submit the job to GraphDB with the poses from a FMP/PV file and the usual parameters in a yaml file
-    submit_graphdb_job_with_restraints(args.pv_or_fmp_file, args.yaml_file, restraints)
+    submit_graphdb_job_with_restraints(args.pv_or_fmp_file, args.yaml_file, restraints, overwrite_restraints=True)
 
 if __name__ == "__main__":
     main()
