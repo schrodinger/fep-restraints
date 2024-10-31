@@ -155,7 +155,7 @@ def add_restraints_to_msj_string(msj_content, restraints, overwrite=False) -> st
     msj_parser = parse(string=msj_content)
     return str(msj_parser)
 
-def submit_graphdb_job_with_restraints(fmp_or_pv_file, yaml_file, restraints, overwrite_restraints=True):
+def submit_graphdb_job_with_restraints(fmp_or_pv_file, yaml_file, restraints, overwrite_restraints=False):
     """
         This function submits a job to GraphDB using the provided FMP or PV file and YAML file. 
         It adds the specified restraints to the first `assign_forcefield` stage of the MSJs 
@@ -174,7 +174,7 @@ def submit_graphdb_job_with_restraints(fmp_or_pv_file, yaml_file, restraints, ov
             contain the following keys: 'atoms', 'ref', 'force_constants', and 'sigma' (optional).
         overwrite_restraints : bool, optional
             Whether to overwrite existing restraints in the force field assignment stage of the MSJs.
-            Default is True.
+            Default is False.
     """
     url = 'https://graphdb.schrodinger.com' # Make sure to use this "private"/advanced URL
     jws.login(web_services_addr=url)

@@ -43,6 +43,10 @@ def parse_cmdline(argv):
             default=True,
             action='store_false',
             help="Do not align the restraints structure to the reference.")
+    parser.add_argument("-ow", "--overwrite_restraints",
+            default=False,
+            action='store_true',
+            help="Overwrite/remove existing restraints in the assign_forcefield stage of the MSJ file.")
     parser.add_argument("-w", "--write_restraints_structure",
             default=None,
             type=str,
@@ -84,7 +88,10 @@ def main():
     # Create restraints from the structure
     restraints = structure_to_restraints(st, args.asl, args.fc, args.bw, args.sf)
     # Submit the job to GraphDB with the poses from a FMP/PV file and the usual parameters in a yaml file
-    submit_graphdb_job_with_restraints(args.pv_or_fmp_file, args.yaml_file, restraints, overwrite_restraints=True)
+    submit_graphdb_job_with_restraints(
+        args.pv_or_fmp_file, args.yaml_file, restraints,
+        overwrite_restraints=args.overwrite_restraints
+)
 
 if __name__ == "__main__":
     main()
