@@ -193,7 +193,11 @@ def add_restraints_to_stgs(stgs: sea.Map, restraints: dict, overwrite = False):
         None
     """
     for stg in stgs['stage']:
-        # Only add once
+        # Make sure that the system is not recentered at the building stage
+        # because restraint center coordinates are defined explicitly
+        if stg.__NAME__ == "build_geometry":
+            stg.rezero_system = sea.Atom(False)
+        # Add the restraints to the forcefield stage
         if stg.__NAME__ == "assign_forcefield":
             restraint_map = set_default(stg, 'restraints', sea.Map())
             if overwrite:
