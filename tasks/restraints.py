@@ -197,9 +197,6 @@ def add_restraints_to_stgs(stgs: sea.Map, restraints: dict, overwrite = False):
         # because restraint center coordinates are defined explicitly
         if stg.__NAME__ == "build_geometry":
             stg.rezero_system = sea.Atom(False)
-        # Disable the restraint correction
-        if stg.__NAME__ == "fep_analysis":
-            stg.correct_restr = sea.Atom('no')
         # Add the restraints to the forcefield stage
         if stg.__NAME__ == "assign_forcefield":
             restraint_map = set_default(stg, 'restraints', sea.Map())
@@ -221,7 +218,9 @@ def add_restraints_to_stgs(stgs: sea.Map, restraints: dict, overwrite = False):
                             sea_val = sea.Atom(restraint_val)
                         sea_restraint[restraint_key] = sea_val
                     new_restraints.append(sea_restraint)
-            break
+        # Disable the restraint correction
+        if stg.__NAME__ == "fep_analysis":
+            stg.correct_restr = sea.Atom(False)
 
 def add_restraints_to_graph_msjs(graph_id, restraints, overwrite=False):
     """
