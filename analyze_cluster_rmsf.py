@@ -108,7 +108,7 @@ def calculate_features(simulations, selections, args,
 
 def compare_features(simulations, args, feature_files_key, feature_type='ca-distance',
                      output_name='features', out_column='FeatureName',
-                     sim_label_a='active', sim_label_b='inactive'):
+                     sim_label_a='active', sim_label_b='inactive', bin_num=10):
     # Read the input files
     names, data, origin, orig_id = read_features_from_csv_files(simulations[feature_files_key])
     # Split data in active and inactive (according to their origin simulation)
@@ -126,7 +126,7 @@ def compare_features(simulations, args, feature_files_key, feature_type='ca-dist
     # Run the relative-entropy analysis
     data_names, jsd, kld_ab, kld_ba = relative_entropy_analysis(
         names, names, data_a, data_b, 
-        bin_width=None, bin_num=10, verbose=True
+        bin_width=None, bin_num=bin_num, verbose=True
     )
     # Sort the features by how much their distributions differ
     jsd_sorted = sort_features(data_names, jsd)
@@ -136,7 +136,7 @@ def compare_features(simulations, args, feature_files_key, feature_type='ca-dist
     # Plot the 20 most different distributions
     out_plot = os.path.join(args.output_dir, f'2-comparison/%s_largest-jsd' % output_name)
     plot_most_different_distributions(
-        jsd_sorted, names, names, data_a, data_b, out_plot,
+        jsd_sorted, names, names, data_a, data_b, out_plot, bin_num=bin_num
         showstart=args.showstart, feature_type = feature_type
     )
     return jsd_sorted

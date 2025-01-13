@@ -94,7 +94,7 @@ def relative_entropy_analysis(features_a, features_b, all_data_a, all_data_b, bi
     return data_names, data_jsdist, data_kld_ab, data_kld_ba
 
 
-def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a, out_plot, feature_type='ca-distance', showstart=False, subtract_avg=False):
+def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a, out_plot, feature_type='ca-distance', bin_num=10, showstart=False, subtract_avg=False):
 
     fig, ax = plt.subplots(5,4, figsize=[10,8], dpi=300)
     ax = ax.flatten()
@@ -113,7 +113,7 @@ def plot_most_different_distributions(jsd_sorted, feat_i, feat_a, data_i, data_a
             axi.axvline(fdata_i[0], lw=2, color='C0')
             axi.axvline(fdata_a[0], lw=2, color='C1')
 
-        hist_c, bins_c = np.histogram(np.concatenate([fdata_i,fdata_a]), bins=60, density=True)
+        hist_c, bins_c = np.histogram(np.concatenate([fdata_i,fdata_a]), bins=bin_num, density=True)
         hist_i, bins_i = np.histogram(fdata_i, bins=bins_c, density=True)
         hist_a, bins_a = np.histogram(fdata_a, bins=bins_c, density=True)
         bin_centers_c = .5 * (bins_c[1:] + bins_c[:-1])
