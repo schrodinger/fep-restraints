@@ -108,7 +108,7 @@ def calculate_features(simulations, selections, args,
 
 def compare_features(simulations, args, feature_files_key, feature_type='ca-distance',
                      output_name='features', out_column='FeatureName',
-                     sim_label_a='active', sim_label_b='inactive', bin_num=10):
+                     sim_label_a='active', sim_label_b='inactive', bin_num=30):
     # Read the input files
     names, data, origin, orig_id = read_features_from_csv_files(simulations[feature_files_key])
     # Split data in active and inactive (according to their origin simulation)
@@ -151,7 +151,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', dest='input_file',  type=str, help='Name of the input file in csv format determining topology+trajectory files.')
     parser.add_argument('-s', dest='select_file', type=str, help='Name of the input file in csv format determining residue selections for binding pocket and restraints.') 
-    parser.add_argument('-o', dest='output_dir',  type=str, help='Name of the output directory', default='clustering_results')       
+    parser.add_argument('-o', dest='output_dir',  type=str, help='Name of the output directory', default='clustering_results')      
+    parser.add_argument('-b', dest='bin_num', type=int, help='Number of bins for the relative entropy analysis', default=30) 
     parser.add_argument('-n', dest='n_components',type=int, help='Number of top principal components to consider', default=3)     
     parser.add_argument('-k', nargs='+', dest='n_clusters', type=int, help='numbers k of clusters to attempt (arbitrary number)', default=[1,2,3,4]) 
     parser.add_argument('-r', dest='random_state', type=int, help='random state for k-means algorithm', default=42)    
@@ -244,7 +245,8 @@ if __name__ == "__main__":
                     simulations, args, feature_file_key[feature_type], feature_type=feature_type,
                     output_name=f"{feature_type}_{sim_label_a}_vs_{sim_label_b}", 
                     out_column=feature_label[feature_type],
-                    sim_label_a=sim_label_a, sim_label_b=sim_label_b
+                    sim_label_a=sim_label_a, sim_label_b=sim_label_b,
+                    bin_num=args.bin_num
                 )
     else:
         print("\n* - Skipping the comparison of individual features. - *\n")
