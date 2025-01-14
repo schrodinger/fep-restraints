@@ -136,7 +136,7 @@ def compare_features(simulations, args, feature_files_key, feature_type='ca-dist
     # Plot the 20 most different distributions
     out_plot = os.path.join(args.output_dir, f'2-comparison/%s_largest-jsd' % output_name)
     plot_most_different_distributions(
-        jsd_sorted, names, names, data_a, data_b, out_plot, bin_num=bin_num
+        jsd_sorted, names, names, data_a, data_b, out_plot, bin_num=bin_num,
         showstart=args.showstart, feature_type = feature_type
     )
     return jsd_sorted
