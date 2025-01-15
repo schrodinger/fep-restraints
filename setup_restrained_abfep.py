@@ -12,8 +12,8 @@ from schrodinger.forcefield.custom_params import create_archive_from_oplsdir, me
 
 def write_abfep_restraints_job_script(
     job_name, rest_file, align_ref, atom_sel, fep_force_const, md_force_const, scaling, 
-    fep_sim_time, md_sim_time, host, subhost, project, maxjob, retries, 
-    salt=None, opls=None, ffhost=None, bottom_width=None
+    fep_sim_time, md_sim_time, host, subhost, maxjob, retries, 
+    salt=None, opls=None, ffhost=None, bottom_width=None, project=None, account=None
     ):
 
     # Get the directory where the code is
@@ -62,6 +62,8 @@ def write_abfep_restraints_job_script(
                 f'  -maxjob {maxjob} -RETRIES {retries}')
         if project is not None:
             f.write(f' \\\n  -QARG \"-P {project}\"')
+        if account is not None:
+            f.write(f' \\\n  -QARG \"-A {account}\"')
         if opls is not None: 
             f.write(f' \\\n  -OPLSDIR "{opls}"')
         f.write('\n')
@@ -83,6 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('--host', type=str, default='driver-4core-standard')
     parser.add_argument('--subhost', type=str, default='gpu-t4-4x-ondemand')
     parser.add_argument('--project', type=str, default=None)
+    parser.add_argument('--account', type=str, default=None)
     parser.add_argument('--maxjob', type=int, default=0)
     parser.add_argument('--retries', type=int, default=5)
     parser.add_argument('--oplsdir', type=str, default=None)
@@ -142,11 +145,13 @@ if __name__ == '__main__':
         args.job_name, rsfile, alfile, args.atom_sel, 
         args.fep_force_const, args.md_force_const, args.scaling_factor,
         args.fep_sim_time, args.md_sim_time, args.host, args.subhost, 
-        args.project, args.maxjob, args.retries, 
+        args.maxjob, args.retries, 
         salt=args.salt,
         opls=opls, 
         ffhost=args.ffhost, 
-        bottom_width=args.bottom_width
+        bottom_width=args.bottom_width,
+        project=args.project,
+        account=args.account
     )        
     # Leave the job directory
     os.chdir('..')
