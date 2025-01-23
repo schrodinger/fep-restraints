@@ -78,7 +78,9 @@ def main():
     print(f"The RMSD between the starting structure and the restraint centers is {restraints_rmsd:.2f} A.")
 
     # Check distances between restraint centers and starting structure
-    check_distances(st, st_fixed, at, at_fixed, sf=args.sf)
+    # only works when sigma values are provided in the restraints structure
+    if args.bw is None:
+        check_distances(st, st_fixed, at, at_fixed, sf=args.sf)
 
     # Write the (aligned or non-aligned) restraints structure
     if args.write_restraints_structure is not None:
