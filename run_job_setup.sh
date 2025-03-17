@@ -12,12 +12,12 @@ $S/run setup_restrained_abfep.py \
 	--fep-force-const 1.0 \
 	--asl 'protein and chain A and at.ptype CA and ( res. 54 - 75 or res. 86 - 148 or res. 165 - 240 or res. 254 - 282 or res. 298 - 320 )' \
 	--ffbuilder \
-	--host bolt_cpu \
-	--subhost bolt_gpu \
-	--project dev_GPU \
+	--host driver \
+	--subhost gpu \
+	--account dev \
 	--maxjob 0 \
 	--retries 5 \
-	--ffhost bolt_cpu \
+	--ffhost cpu \
 	--md-sim-time 2000 \
 	--fep-sim-time 10000
 
