@@ -17,7 +17,7 @@ git clone https://github.com/schrodinger/fep-restraints.git
 ## Usage
 
 This repo contains code to analyze plain MD simulation and set up restraints based on their analysis. 
-If you already know the reference structure and parameters of the restraints, skip the next two sections.
+If you already know the reference structure and parameters of the restraints (for example, if you just want harmonic retraints to the starting structure), skip the next two sections.
 For adding restraints to an ABFEP run by locally altering msj files, check out [Adding Restraints to AB-FEP](https://github.com/schrodinger/fep-restraints?tab=readme-ov-file#adding-restraints-to-ab-fep-locally)). 
 You can also [add the restraints to GraphDB jobs](https://github.com/schrodinger/fep-restraints/blob/main/README.md#adding-restraints-to-a-graphdb-job) for small molecule FEP or absolute binding FEP. 
 
@@ -86,7 +86,7 @@ Then you can model the ligands into this structure or align the experimental str
 
 ### Adding Restraints to AB-FEP (Locally)
 
-This section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints is stored in the field `r_desmond_sigma` of the corresponding atom. 
+Note: The example in this section assumes that the reference structure for the restraints is stored in a cms file and the width of the restraints is stored in the field `r_desmond_sigma` of the corresponding atom. In case you simply want restraints to the starting structure, save the receptor in a separate file, e.g., `receptor.mae` and use it as the restraint file. See below for more details.
 
 From the file with your modeled input poses, you can generate a job directory for a restrained AB-FEP job, for example:
 ```
