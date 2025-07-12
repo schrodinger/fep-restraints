@@ -13,7 +13,7 @@ from schrodinger.forcefield.custom_params import create_archive_from_oplsdir, me
 def write_abfep_restraints_job_script(
     job_name, rest_file, align_ref, atom_sel, fep_force_const, md_force_const, scaling, 
     fep_sim_time, md_sim_time, host, subhost, maxjob, retries, 
-    salt=None, opls=None, ffhost=None, bottom_width=None, project=None, account=None
+    salt=None, ff='OPLS4', opls=None, ffhost=None, bottom_width=None, project=None, account=None
     ):
 
     # Get the directory where the code is
@@ -25,7 +25,7 @@ def write_abfep_restraints_job_script(
         f.write('# Run the preparation step\n'
                 f'$SCHRODINGER/fep_absolute_binding \\\n  "{job_name}.fmp" \\\n'
                 f'  -JOBNAME "{job_name}" \\\n  -prepare -ppj 4 -maxjob {maxjob} -ensemble muVT \\\n'
-                f'  -fep-sim-time {fep_sim_time} -md-sim-time {md_sim_time} -seed 2007 \\\n'
+                f'  -fep-sim-time {fep_sim_time} -md-sim-time {md_sim_time} -ff {ff} -seed 2007 \\\n'
                 f'  -HOST "{host}" \\\n  -SUBHOST "{subhost}"')
         if salt is not None:
             f.write(f' \\\n  -salt {salt} ')
@@ -88,6 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--account', type=str, default=None)
     parser.add_argument('--maxjob', type=int, default=0)
     parser.add_argument('--retries', type=int, default=5)
+    parser.add_argument('--ff', choices=['OPLS4', 'OPLS5'], default='OPLS4', help='Specify the forcefield to use. Default: OPLS4.')
     parser.add_argument('--oplsdir', type=str, default=None)
     parser.add_argument('--ffbuilder', action='store_true')
     parser.add_argument('--ffhost', type=str, default='compute-16core-64gb-ondemand')
@@ -147,6 +148,7 @@ if __name__ == '__main__':
         args.fep_sim_time, args.md_sim_time, args.host, args.subhost, 
         args.maxjob, args.retries, 
         salt=args.salt,
+        ff=args.ff,
         opls=opls, 
         ffhost=args.ffhost, 
         bottom_width=args.bottom_width,
