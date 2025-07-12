@@ -12,7 +12,7 @@ from schrodinger.forcefield.custom_params import create_archive_from_oplsdir, me
 
 def write_abfep_job_script(
     job_name, fep_sim_time, md_sim_time, host, subhost, project, maxjob, retries, 
-    salt=None, ff='OPLS4', opls=None, ffhost=None
+    salt=None, ff='OPLS4', opls=None, ffhost=None, seed=2007
     ):
 
     # Get the directory where the code is
@@ -24,7 +24,7 @@ def write_abfep_job_script(
         f.write('# Run the preparation step\n'
                 f'$SCHRODINGER/fep_absolute_binding \\\n  "{job_name}.fmp" \\\n'
                 f'  -JOBNAME "{job_name}" \\\n  -ppj 4 -maxjob {maxjob} -ensemble muVT \\\n'
-                f'  -fep-sim-time {fep_sim_time} -md-sim-time {md_sim_time} -ff {ff} -seed 2007 \\\n'
+                f'  -fep-sim-time {fep_sim_time} -md-sim-time {md_sim_time} -ff {ff} -seed {seed} \\\n'
                 f'  -HOST "{host}" \\\n  -SUBHOST "{subhost}"')
         if salt is not None:
             f.write(f' \\\n  -salt {salt} ')
@@ -57,6 +57,7 @@ if __name__ == '__main__':
     parser.add_argument('--salt', type=float, default=None)
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--lig-rest', action='store_true')
+    parser.add_argument('--seed', type=int, default=2007)
     args = parser.parse_args()
 
     # Remove FFB host if no ff is generated
@@ -99,7 +100,8 @@ if __name__ == '__main__':
         salt=args.salt,
         ff=args.ff,
         opls=opls, 
-        ffhost=args.ffhost
+        ffhost=args.ffhost,
+        seed=args.seed
     )        
     # Leave the job directory
     os.chdir('..')
