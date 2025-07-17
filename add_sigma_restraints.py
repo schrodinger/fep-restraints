@@ -48,6 +48,14 @@ def parse_cmdline(argv):
         args.out = f"{base}_with_restraints{ext}"
     return args
 
+def is_membrane_or_solvent(st):
+    """Check if the structure is a membrane or solvent."""
+    # if it has the property 's_ffio_ct_type' and it is set to 'membrane' or 'solvent', return True
+    is_mem_or_solv = False
+    if st.property.keys() and 's_ffio_ct_type' in st.property.keys():
+        is_mem_or_solv = st.property['s_ffio_ct_type'] in ['membrane', 'solvent']
+    return is_mem_or_solv
+    
 def main():
 
     args = parse_cmdline(sys.argv[1:])
@@ -55,10 +63,13 @@ def main():
     # Load the structure with the restraints
     st = StructureReader.read(args.structure)
     at = analyze.evaluate_asl(st, args.asl)
-    # Align the structure to the reference if given
+     # Align the structure to the reference if given
     if args.reference is not None:
-        st_fixed = StructureReader.read(args.reference)
-        at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
+        with StructureReader(args.reference) as reader:
+            for st_fixed in reader:
+                if not is_membrane_or_solvent(st_fixed):
+                    at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
+                    break
         rmsd.superimpose(st_fixed, at_fixed, st, at)
     # Write the (aligned) restraints structure
     if args.write_restraints_structure:
