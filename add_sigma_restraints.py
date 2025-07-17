@@ -66,10 +66,15 @@ def main():
      # Align the structure to the reference if given
     if args.reference is not None:
         with StructureReader(args.reference) as reader:
+            # Find the first structure that is not a membrane or solvent
             for st_fixed in reader:
+                # Only align if the reference structure is not a membrane or solvent
                 if not is_membrane_or_solvent(st_fixed):
                     at_fixed = analyze.evaluate_asl(st_fixed, args.asl)
                     break
+        # if no fixed structure is found, raise an error
+        if at_fixed is None:
+            raise ValueError(f"Could not find a valid reference structure in {args.reference}.")
         rmsd.superimpose(st_fixed, at_fixed, st, at)
     # Write the (aligned) restraints structure
     if args.write_restraints_structure:
