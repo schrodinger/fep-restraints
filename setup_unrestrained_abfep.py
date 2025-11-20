@@ -12,7 +12,8 @@ from schrodinger.forcefield.custom_params import create_archive_from_oplsdir, me
 
 def write_abfep_job_script(
     job_name, fep_sim_time, md_sim_time, host, subhost, maxjob, retries, 
-    salt=None, ff='OPLS4', opls=None, ffhost=None, seed=2007, project=None, account=None
+    salt=None, ff='OPLS4', opls=None, ffhost=None, seed=2007, 
+    project=None, account=None, qarg=None
     ):
 
     # Get the directory where the code is
@@ -32,8 +33,20 @@ def write_abfep_job_script(
             f.write(f' \\\n  -OPLSDIR "{opls}" ')
         if ffhost is not None:
             f.write(f' \\\n  -ffbuilder \\\n  -ff-host "{ffhost}"')
+        # Construct the QARG string (including project or account if given)
+        qarg_out = qarg
         if project is not None:
-            f.write(f' \\\n  -QARG \"-P {project}\"')
+            if qarg_out is None:
+                qarg_out = f'-P {project}'
+            else:
+                qarg_out += f' -P {project}'
+        if account is not None:
+            if qarg_out is None:
+                qarg_out = f'-A {account}'
+            else:
+                qarg_out += f' -A {account}'
+        if qarg_out is not None:
+            f.write(f' \\\n  -QARG "{qarg_out}"')
         f.write('\n')
 
 
@@ -47,6 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--subhost', type=str, default='gpu', help='Subhost for the job submission. Default: gpu')
     parser.add_argument('--project', type=str, default=None, help='Project name for the job submission (only on Bolt).')
     parser.add_argument('--account', type=str, default=None, help='Account name for the job submission (only on Ada).')
+    parser.add_argument('--qarg', type=str, default=None, help='Additional arguments for the job submission.')
     parser.add_argument('--maxjob', type=int, default=0, help='Maximum number of jobs to run in parallel. Default: 0 (no limit).')
     parser.add_argument('--retries', type=int, default=5, help='Number of retries for failed jobs. Default: 5.')
     parser.add_argument('--ff', choices=['OPLS4', 'OPLS5'], default='OPLS4', help='Specify the forcefield to use. Default: OPLS4.')
@@ -104,7 +118,8 @@ if __name__ == '__main__':
         ffhost=args.ffhost,
         seed=args.seed,
         project=args.project,
-        account=args.account
+        account=args.account,
+        qarg=args.qarg
     )        
     # Leave the job directory
     os.chdir('..')

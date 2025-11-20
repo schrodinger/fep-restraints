@@ -15,6 +15,7 @@ $S/run setup_restrained_abfep.py \
 	--host driver \
 	--subhost gpu \
 	--account dev \
+	--qarg '--constraint 2tb' \
 	--maxjob 0 \
 	--retries 5 \
 	--ffhost cpu \
