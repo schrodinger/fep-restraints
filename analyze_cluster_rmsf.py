@@ -167,7 +167,7 @@ if __name__ == "__main__":
     parser.add_argument('--rmsf-across-all-trajectories', dest='rmsf_across_all_trajectories', action='store_true', default=False, 
                         help='Calculate RMSF across all trajectories, not just those of the same system as the centroid. When using this, make sure that the selections exactly correspond to the same atoms in all systems!')
     parser.add_argument('--feature-types', nargs='+', dest='feature_types', type=str, default=['ca-distance','bb-torsion','sc-torsion'], help='Types of features to calculate. Supported types: ca-distance, bb-torsion, sc-torsion')
-    parser.add_argument('--pca-feature-type', dest='pca_feature_type', type=str, default='ca-distance', help='Type of features to use for PCA. Supported types: ca-distance, bb-torsion, sc-torsion')
+    parser.add_argument('--pca-feature-type', dest='pca_feature_type', type=str, default='ca-distance', help='Type of features to use for PCA. Supported types: ca-distance, bb-torsion, sc-torsion. Default is ca-distance')
     parser.add_argument('--reuse-features', dest='reuse_features', action='store_true', default=False, help='Reuse pre-calculated features if available')
     parser.add_argument('--phi-psi-only', dest='phi_psi_only', action='store_true', default=False, help='Calculate only phi and psi angles (not omega) in the backbone')
     args = parser.parse_args()
