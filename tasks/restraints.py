@@ -6,7 +6,7 @@ from schrodinger.structutils import analyze
 from schrodinger.utils import sea
 from schrodinger.application.desmond import cmj
 from schrodinger.application.scisol.graphdb_interface import jws, driver
-from schrodinger.application.desmond.multisim import parse
+from schrodinger.application.desmond.multisim.parser import parse
 from schrodinger.application.desmond.packages import topo
 
 import base64
