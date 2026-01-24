@@ -13,7 +13,8 @@ from schrodinger.forcefield.custom_params import create_archive_from_oplsdir, me
 def write_abfep_restraints_job_script(
     job_name, rest_file, align_ref, atom_sel, fep_force_const, md_force_const, scaling, 
     fep_sim_time, md_sim_time, host, subhost, maxjob, retries, 
-    salt=None, ff='OPLS4', opls=None, ffhost=None, bottom_width=None, 
+    salt=None, membrane=False, membrane_type='POPC',
+    ff='OPLS4', opls=None, ffhost=None, bottom_width=None, 
     project=None, account=None, qarg=None, seed=2007
     ):
 
@@ -30,6 +31,8 @@ def write_abfep_restraints_job_script(
                 f'  -HOST "{host}" \\\n  -SUBHOST "{subhost}"')
         if salt is not None:
             f.write(f' \\\n  -salt {salt} ')
+        if membrane:
+            f.write(f' \\\n  -membrane \\\n  -membrane-type {membrane_type}')
         if opls is not None: 
             f.write(f' \\\n  -OPLSDIR "{opls}" ')
         if ffhost is not None:
@@ -107,6 +110,8 @@ if __name__ == '__main__':
     parser.add_argument('--md-sim-time', type=float, default=2000, help='MD simulation time in ps. Default: 2000.')
     parser.add_argument('--fep-sim-time', type=float, default=10000, help='FEP simulation time in ps. Default: 10000.')
     parser.add_argument('--salt', type=float, default=None, help='Salt concentration in Molar. Default: None (no salt).')
+    parser.add_argument('--membrane', action='store_true', help='Indicates the model system is a membrane-bound protein system, such as the GPCR or an ion channel. If membrane/water components are not provided, the bilayer specified by --membrane-type will be added and equilibrated. The protein coordinates should be OPM-compatible. If the membrane is included in the inputs, then the equilibration will be skipped. Default: False.')
+    parser.add_argument('--membrane-type', choices=['POPC', 'DPPC', 'DMPC', 'POPE'], default='POPC', help='Specify the type of membrane to use. Default: POPC.')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite the job directory if it already exists.')
     parser.add_argument('--lig-rest', action='store_true', help='Use the ligand restraints from the input file. Default: False.')
     parser.add_argument('--seed', type=int, default=2007, help='Random seed for the job. Default: 2007.')
@@ -161,6 +166,8 @@ if __name__ == '__main__':
         args.fep_sim_time, args.md_sim_time, args.host, args.subhost, 
         args.maxjob, args.retries, 
         salt=args.salt,
+        membrane=args.membrane,
+        membrane_type=args.membrane_type,
         ff=args.ff,
         opls=opls, 
         ffhost=args.ffhost, 
