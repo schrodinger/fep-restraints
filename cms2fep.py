@@ -83,9 +83,7 @@ def _cms_to_fep_inputs(st_list, lig_asl=None):
     if solvent_ct:
         for atom in solvent_ct.atom:
             atom.property.pop(FFIO_ENERGY_GROUP, None)
-    out_sys = [
-        st for st in [solute_ct, membrane_ct, solvent_ct, ligand_ct] if st
-    ]
+    out_sys = [st for st in [solute_ct, membrane_ct, solvent_ct, ligand_ct] if st]
     return out_sys
 
 
@@ -120,10 +118,10 @@ def main(argv=None):
 
     streader = structure.StructureReader(args.cms_file)
     cms_components = [st for st in streader]
-    #    if constants.CT_TYPE.VAL.MEMBRANE not in [
-    #            st.property.get(constants.CT_TYPE) for st in cms_components
-    #    ]:
-    #        cui.error("Provided system does not contain membrane-CT.")
+#    if constants.CT_TYPE.VAL.MEMBRANE not in [
+#            st.property.get(constants.CT_TYPE) for st in cms_components
+#    ]:
+#        cui.error("Provided system does not contain membrane-CT.")
 
     output_cts = _cms_to_fep_inputs(cms_components, args.ligand_asl)
     stwriter = structure.StructureWriter(args.output_fn)
