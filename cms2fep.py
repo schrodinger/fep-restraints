@@ -9,6 +9,11 @@ import schrodinger.structure as structure
 from schrodinger.application.desmond import constants
 from schrodinger.application.desmond.packages import cui
 from schrodinger.structutils import analyze
+try:
+    from schrodinger.application.desmond.constants import FFIO_ENERGY_GROUP
+except ImportError:
+    from schrodinger.application.desmond.constants \
+        import FEP_ABSOLUTE_ENERGY as FFIO_ENERGY_GROUP
 
 KEEP_CT_TYPE = [
     constants.CT_TYPE.VAL.MEMBRANE, constants.CT_TYPE.VAL.SOLUTE,
@@ -77,7 +82,7 @@ def _cms_to_fep_inputs(st_list, lig_asl=None):
         ligand_ct.title = 'ligand-0'
     if solvent_ct:
         for atom in solvent_ct.atom:
-            atom.property.pop(constants.FEP_ABSOLUTE_ENERGY, None)
+            atom.property.pop(FFIO_ENERGY_GROUP, None)
     out_sys = [st for st in [solute_ct, membrane_ct, solvent_ct, ligand_ct] if st]
     return out_sys
 
